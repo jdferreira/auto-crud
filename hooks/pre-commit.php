@@ -1,0 +1,51 @@
+#!/usr/bin/env php
+<?php
+
+// Get a list of files in the staging area
+exec('git status --porcelain | egrep "^([AM]| M)" | cut -c4-', $staged);
+
+$fixed = [];
+
+foreach ($staged as $filename) {
+    // Unescape escaped charaters
+    if (preg_match('/^".*"$/', $filename)) {
+        $unescaped = stripcslashes(substr($filename, 1, -1));
+    } else {
+        $unescaped = $filename;
+    }
+
+    // is_file - to avoid problems with "renamed" and "deleted" files.
+    if (preg_match('/\.php$/', $unescaped) && is_file($unescaped)) {
+        $output = [];
+
+        $command = sprintf('php-cs-fixer fix "%s" 2>/dev/null', $unescaped);
+        echo $command . PHP_EOL;
+        exec($command, $output);
+
+        if (count($output) > 0) {
+            // Any output means that fixes were applied to this file,
+            // in which case add the fixed file back to the staging area.
+            $command = sprintf('git add "%s"', $unescaped);
+            echo $command . PHP_EOL;
+            exec($command);
+
+            $fixed[] = $filename;
+        }
+    }
+}
+
+if (count($fixed) > 0) {
+    echo "\033[32m"; // Green text
+    echo 'Code style fixes were applied to the following files:';
+    echo "\033[m";
+    echo PHP_EOL . PHP_EOL;
+
+    $counter = 1;
+    foreach ($fixed as $filename) {
+        echo '  ' . $counter . ') ' . $filename . PHP_EOL;
+        $counter++;
+    }
+}
+
+// Allow commit by returing with an exist code of 0
+exit(0);
