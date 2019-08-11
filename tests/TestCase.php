@@ -6,6 +6,7 @@ use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use Orchestra\Testbench\TestCase as BaseTestCase;
+use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -23,6 +24,13 @@ abstract class TestCase extends BaseTestCase
      * @var null|string
      */
     protected $migrations;
+
+    /**
+     * The DatabaseInformation instance describing the migrations.
+     *
+     * @var \Ferreira\AutoCrud\Database\DatabaseInformation
+     */
+    protected $db;
 
     /**
      * Load this package's service provider.
@@ -84,6 +92,8 @@ abstract class TestCase extends BaseTestCase
                 '--path' => $this->migrations,
                 '--realpath' => true,
             ]);
+
+            $this->db = app(DatabaseInformation::class);
         }
     }
 
@@ -93,6 +103,8 @@ abstract class TestCase extends BaseTestCase
     protected function rollbackMigrations()
     {
         if ($this->migrations) {
+            $this->db = null;
+
             Artisan::call('migrate:reset', [
                 '--path' => $this->migrations,
                 '--realpath' => true,
