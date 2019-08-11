@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Filesystem\Filesystem;
+use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
@@ -22,6 +23,18 @@ abstract class TestCase extends BaseTestCase
      * @var null|string
      */
     protected $migrations;
+
+    /**
+     * Load this package's service provider.
+     *
+     * @param  \Illuminate\Foundation\Application $app
+     *
+     * @return lasselehtinen\MyPackage\MyPackageServiceProvider
+     */
+    protected function getPackageProviders($app)
+    {
+        return [ServiceProvider::class];
+    }
 
     /**
      * Setup the test environment by removing previously generated files
