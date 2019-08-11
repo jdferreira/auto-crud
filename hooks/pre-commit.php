@@ -1,6 +1,9 @@
 #!/usr/bin/env php
 <?php
 
+// Let's save the non-staged files
+exec('git stash save --keep-index');
+
 // Get a list of files in the staging area
 exec('git status --porcelain | egrep "^([AM]| M)" | cut -c4-', $staged);
 
@@ -18,16 +21,12 @@ foreach ($staged as $filename) {
     if (preg_match('/\.php$/', $unescaped) && is_file($unescaped)) {
         $output = [];
 
-        $command = sprintf('php-cs-fixer fix "%s" 2>/dev/null', $unescaped);
-        echo $command . PHP_EOL;
-        exec($command, $output);
+        exec(sprintf('php-cs-fixer fix "%s" 2>/dev/null', $unescaped), $output);
 
         if (count($output) > 0) {
             // Any output means that fixes were applied to this file,
             // in which case add the fixed file back to the staging area.
-            $command = sprintf('git add "%s"', $unescaped);
-            echo $command . PHP_EOL;
-            exec($command);
+            exec(sprintf('git add "%s"', $unescaped));
 
             $fixed[] = $filename;
         }
@@ -48,4 +47,6 @@ if (count($fixed) > 0) {
 }
 
 // Allow commit by returing with an exist code of 0
+exec('git stash pop');
+
 exit(0);
