@@ -4,6 +4,24 @@
 // Let's save the non-staged files
 exec('git stash save --keep-index');
 
+// Run phpunit before committing and make sure all tests pass
+exec('script --return --quiet -c "phpunit" /dev/null', $output, $code);
+
+if ($code !== 0) {
+    echo "\033[31m"; // Red text
+    echo 'PHPUnit failed';
+    echo "\033[0m"; // Reset
+    echo ' - see output below' . PHP_EOL;
+
+    echo PHP_EOL;
+    echo implode(PHP_EOL, $output) . PHP_EOL;
+    echo PHP_EOL;
+
+    exec('git stash pop');
+
+    exit(1);
+}
+
 // Get a list of files in the staging area
 exec('git status --porcelain | egrep "^([AM]| M)" | cut -c4-', $staged);
 
