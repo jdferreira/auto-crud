@@ -121,7 +121,7 @@ abstract class TestCase extends BaseTestCase
      * @param array $expected
      * @param array $relationships
      */
-    protected function assertObjectSetsEqual(array $expected, array $actual): void
+    protected function assertSetsEqual(array $expected, array $actual): void
     {
         static::assertThat(
             $actual,

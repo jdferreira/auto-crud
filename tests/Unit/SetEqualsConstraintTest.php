@@ -43,4 +43,13 @@ class SetEqualsConstraintTest extends TestCase
             new LogicalNot(new SetEqualsConstraint([1, 2, 3]))
         );
     }
+
+    /** @test */
+    public function test_case_has_helper_method()
+    {
+        $this->assertSetsEqual(
+            [1, 2, 3, 4],
+            [4, 3, 2, 1]
+        );
+    }
 }

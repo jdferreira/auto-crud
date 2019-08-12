@@ -64,7 +64,7 @@ class DatabaseInformationTest extends TestCase
             new ManyToMany('role_user', 'role_id', 'roles', 'id', 'user_id', 'users', 'id'),
         ];
 
-        $this->assertObjectSetsEqual($expected, $relationships);
+        $this->assertSetsEqual($expected, $relationships);
     }
 
     /** @test */
