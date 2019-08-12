@@ -10,7 +10,7 @@ use PHPUnit\Framework\Constraint\Constraint;
  *
  * The expected array of values is passed in the constructor.
  */
-class SetEqualsConstraint extends Constraint
+class SetsEqualConstraint extends Constraint
 {
     /**
      * The expected array of values.

@@ -125,7 +125,7 @@ abstract class TestCase extends BaseTestCase
     {
         static::assertThat(
             $actual,
-            new SetEqualsConstraint($expected)
+            new SetsEqualConstraint($expected)
         );
     }
 

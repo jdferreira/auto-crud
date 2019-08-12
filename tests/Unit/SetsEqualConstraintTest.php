@@ -3,17 +3,17 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Tests\SetEqualsConstraint;
+use Tests\SetsEqualConstraint;
 use PHPUnit\Framework\Constraint\LogicalNot;
 
-class SetEqualsConstraintTest extends TestCase
+class SetsEqualConstraintTest extends TestCase
 {
     /** @test */
     public function it_matches_on_equal_arrays()
     {
         static::assertThat(
             [1, 2, 3],
-            new SetEqualsConstraint([1, 2, 3])
+            new SetsEqualConstraint([1, 2, 3])
         );
     }
 
@@ -22,7 +22,7 @@ class SetEqualsConstraintTest extends TestCase
     {
         static::assertThat(
             [3, 2, 1],
-            new SetEqualsConstraint([1, 2, 3])
+            new SetsEqualConstraint([1, 2, 3])
         );
     }
 
@@ -31,7 +31,7 @@ class SetEqualsConstraintTest extends TestCase
     {
         static::assertThat(
             [1, 2, 3],
-            new LogicalNot(new SetEqualsConstraint([1, 2, 3, 4]))
+            new LogicalNot(new SetsEqualConstraint([1, 2, 3, 4]))
         );
     }
 
@@ -40,7 +40,7 @@ class SetEqualsConstraintTest extends TestCase
     {
         static::assertThat(
             [1, 2, 3, 4],
-            new LogicalNot(new SetEqualsConstraint([1, 2, 3]))
+            new LogicalNot(new SetsEqualConstraint([1, 2, 3]))
         );
     }
 
