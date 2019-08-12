@@ -2,7 +2,7 @@
 <?php
 
 // Let's save the non-staged files
-exec('git stash save --keep-index');
+exec('git stash save --keep-index --include-untracked');
 
 // Run phpunit before committing and make sure all tests pass
 exec('script --return --quiet -c "phpunit" /dev/null', $output, $code);
@@ -23,7 +23,7 @@ if ($code !== 0) {
 }
 
 // Get a list of files in the staging area
-exec('git status --porcelain | egrep "^([AM]| M)" | cut -c4-', $staged);
+exec('git status --porcelain | egrep "^[AM]" | cut -c4-', $staged);
 
 $fixed = [];
 
