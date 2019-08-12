@@ -111,4 +111,19 @@ abstract class TestCase extends BaseTestCase
             ]);
         }
     }
+
+    /**
+     * Asserts that that all elements in the first array are contained in the second,
+     * and that all elements in the second array are contained in the first.
+     *
+     * @param array $expected
+     * @param array $relationships
+     */
+    protected function assertObjectSetsEqual(array $expected, array $actual): void
+    {
+        static::assertThat(
+            $actual,
+            new SetEqualsConstraint($expected)
+        );
+    }
 }
