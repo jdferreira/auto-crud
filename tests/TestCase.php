@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Constraint\LogicalNot;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 use PHPUnit\Framework\Constraint\Exception as ExceptionConstraint;
@@ -131,7 +132,7 @@ abstract class TestCase extends BaseTestCase
 
     /**
      * Assert that an exception of the provided class is thrown
-     * when running the code of the given callable
+     * when running the code of the given callable.
      *
      * @param string $class
      * @param callable $test
@@ -149,6 +150,42 @@ abstract class TestCase extends BaseTestCase
         $this->assertThat(
             $exception,
             new ExceptionConstraint($class),
+            $message
+        );
+    }
+
+    /**
+     * Asserts that the given excerpt is found within the larger piece of code.
+     * Notice that the common indentation of the lines is disregarded, so that
+     * your source code can contain indentation to keep formatting consistent.
+     *
+     * @param string $excerpt
+     * @param string $code
+     * @param string $message
+     */
+    protected static function assertCodeContains(string $excerpt, string $code, string $message = '')
+    {
+        static::assertThat(
+            $code,
+            new CodeContainsConstraint($excerpt),
+            $message
+        );
+    }
+
+    /**
+     * Asserts that the given excerpt is not found within the larger piece of code.
+     * Notice that the common indentation of the lines is disregarded, so that
+     * your source code can contain indentation to keep formatting consistent.
+     *
+     * @param string $excerpt
+     * @param string $code
+     * @param string $message
+     */
+    protected function assertCodeNotContains(string $code, string $content, string $message = '')
+    {
+        static::assertThat(
+            $content,
+            new LogicalNot(new CodeContainsConstraint($code)),
             $message
         );
     }
