@@ -1,0 +1,10 @@
+<?php
+
+class TheClass
+{
+
+    protected $another = 'another';
+
+    // Final
+}
+

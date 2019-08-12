@@ -2,11 +2,13 @@
 
 namespace Tests;
 
+use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
+use PHPUnit\Framework\Constraint\Exception as ExceptionConstraint;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -124,6 +126,30 @@ abstract class TestCase extends BaseTestCase
         static::assertThat(
             $actual,
             new SetEqualsConstraint($expected)
+        );
+    }
+
+    /**
+     * Assert that an exception of the provided class is thrown
+     * when running the code of the given callable
+     *
+     * @param string $class
+     * @param callable $test
+     * @param string $message
+     */
+    protected function assertException(string $class, callable $test, $message = null)
+    {
+        try {
+            $test();
+            $exception = null;
+        } catch (Exception $e) {
+            $exception = $e;
+        }
+
+        $this->assertThat(
+            $exception,
+            new ExceptionConstraint($class),
+            $message
         );
     }
 }

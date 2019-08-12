@@ -1,0 +1,13 @@
+<?php
+
+class TheClass
+{
+    private $other1 = 1;
+    private $other2 = 2;
+
+    protected $another = 'another';
+
+    // Comment
+}
+
+// Outside comment

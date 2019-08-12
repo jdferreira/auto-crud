@@ -1,0 +1,12 @@
+<?php
+
+class TheClass
+{
+    private $other = 'id';
+
+    protected $another = 'another';
+
+    // Comment
+}
+
+// Outside comment

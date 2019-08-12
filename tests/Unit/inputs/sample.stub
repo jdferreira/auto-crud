@@ -1,0 +1,12 @@
+<?php
+
+class {{ name }}
+{
+    {{ other }}
+
+    protected $another = {{ another }};
+
+    {{ final }}
+}
+
+{{ comment }}
