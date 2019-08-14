@@ -116,17 +116,20 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Asserts that that all elements in the first array are contained in the second,
-     * and that all elements in the second array are contained in the first.
+     * Asserts that the elements in the array are exactly the ones expected,
+     * without missing or extra ones. In practice, this asserts that the two arrays
+     * contain the same elements, disregarding order.
      *
      * @param array $expected
-     * @param array $relationships
+     * @param array $actual
+     * @param string $message
      */
-    protected function assertSetsEqual(array $expected, array $actual): void
+    protected function assertSetsEqual(array $expected, array $actual, string $message = '')
     {
         static::assertThat(
             $actual,
-            new SetsEqualConstraint($expected)
+            new SetsEqualConstraint($expected),
+            $message
         );
     }
 
@@ -138,7 +141,7 @@ abstract class TestCase extends BaseTestCase
      * @param callable $test
      * @param string $message
      */
-    protected function assertException(string $class, callable $test, $message = null)
+    protected function assertException(string $class, callable $test, string $message = '')
     {
         try {
             $test();

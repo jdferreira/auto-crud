@@ -36,7 +36,7 @@ class DatabaseInformationTest extends TestCase
     /** @test */
     public function it_knows_to_ignore_the_migrations_table()
     {
-        $this->assertArrayNotHasKey('migrations', $this->db->tablenames());
+        $this->assertNotContains('migrations', $this->db->tablenames());
     }
 
     /** @test */

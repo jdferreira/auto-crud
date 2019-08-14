@@ -1,7 +1,8 @@
 <?php
 
-namespace Tests;
+namespace Tests\Unit;
 
+use Tests\TestCase;
 use Ferreira\AutoCrud\Stub\StubPart;
 use Ferreira\AutoCrud\Stub\StubRenderer;
 use Ferreira\AutoCrud\Stub\StubRenderingException;
