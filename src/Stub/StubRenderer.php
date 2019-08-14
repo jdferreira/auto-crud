@@ -2,8 +2,8 @@
 
 namespace Ferreira\AutoCrud\Stub;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class StubRenderer
 {
@@ -32,7 +32,7 @@ class StubRenderer
     {
         $this->stub = $stub;
 
-        if (!Str::endsWith($stub, "\n")) {
+        if (! Str::endsWith($stub, "\n")) {
             // $this->stub .= "\n";
             // $this->virtualEndOfLine = true;
         }
@@ -57,7 +57,7 @@ class StubRenderer
             } elseif ($part->isPlaceholder()) {
                 $replacement = Arr::get($replacements, $part->getPayload(), '');
 
-                if (!is_array($replacement)) {
+                if (! is_array($replacement)) {
                     $replacement = explode("\n", $replacement);
                 }
 
@@ -167,7 +167,7 @@ class StubRenderer
 
             $pos--;
 
-            if (!$this->isWhitespace($pos)) {
+            if (! $this->isWhitespace($pos)) {
                 $lastNonSpace = $pos;
             }
         }
@@ -211,7 +211,7 @@ class StubRenderer
             $after = 0;
         }
 
-        if (!$removeBefore || !$removeAfter) {
+        if (! $removeBefore || ! $removeAfter) {
             $before = $after = 0;
         }
 
