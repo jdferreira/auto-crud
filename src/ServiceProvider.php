@@ -8,9 +8,7 @@ use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 class ServiceProvider extends BaseServiceProvider
 {
     /**
-     * Register this service provider by adding the autocrud artisan
-     * command, as well as by merging the configuration file with
-     * the general configuration file of the full application.
+     * Register this service provider by adding the autocrud artisan command.
      */
     public function register()
     {
