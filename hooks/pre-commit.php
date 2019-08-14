@@ -39,11 +39,22 @@ foreach ($staged as $filename) {
     if (preg_match('/\.php$/', $unescaped) && is_file($unescaped)) {
         $output = [];
 
+        // Record the modification time of the file to determine in any fixes
+        // were applied
+        $modified_at = filemtime($unescaped);
+
         exec(sprintf('php-cs-fixer fix "%s" 2>/dev/null', $unescaped), $output);
 
-        if (count($output) > 0) {
-            // Any output means that fixes were applied to this file,
-            // in which case add the fixed file back to the staging area.
+        // Clear the cache that stores the modification date of a file so that
+        // we can detect changes.
+        clearstatcache($unescaped);
+
+        if (filemtime($filename) > $modified_at) {
+            // The file has been fixed in some way or another. As such, re-add
+            // it back to the staging area. Notice that this will likely cause
+            // merging issues when we pop back the stash we saved before. If
+            // those exist, we should simply force the stashed version to
+            // overwrite what php-cs-fixer fixed. TODO: Let's try to do that in
             exec(sprintf('git add "%s"', $unescaped));
 
             $fixed[] = $filename;
@@ -63,8 +74,5 @@ if (count($fixed) > 0) {
         $counter++;
     }
 }
-
-// Allow commit by returing with an exist code of 0
-exec('git stash pop');
 
 exit(0);
