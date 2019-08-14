@@ -98,9 +98,10 @@ abstract class TestCase extends BaseTestCase
 
             // We need to re-bind the DatabaseInformation singleton because the
             // instance bound by the service provider was created before the
-            // migrations ran. This is not usual for the use case of the
-            // package where the instance will be requested after the
-            // migrations have run.
+            // migrations ran. This is not usual for the use case of the package
+            // where the instance will be requested after the migrations have
+            // run. Also, different test cases may have different migrations,
+            // and so we must recompute all database information anyway.
             $this->app->singleton(DatabaseInformation::class);
 
             $this->db = app(DatabaseInformation::class);
