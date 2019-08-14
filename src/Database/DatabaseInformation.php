@@ -38,6 +38,9 @@ class DatabaseInformation
 
     private function computeTables()
     {
+        // TODO: Remove the pivots?
+        // DO not forget to add the --pivot option to the commands
+
         return collect($this->doctrine->listTableNames())
             ->filter(function ($name) {
                 return $name !== config('database.migrations');
