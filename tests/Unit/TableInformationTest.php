@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Exception;
 use Tests\TestCase;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\StringType;
@@ -24,6 +25,14 @@ class TableInformationTest extends TestCase
         $table = new TableInformation('users');
 
         $this->assertEquals('users', $table->name());
+    }
+
+    /** @test */
+    public function it_throws_on_non_existing_tables()
+    {
+        $this->assertException(Exception::class, function () {
+            new TableInformation('non_existing_table');
+        });
     }
 
     /** @test */
@@ -121,5 +130,15 @@ class TableInformationTest extends TestCase
         $this->assertEquals(['owner_id'], $foreignKey->getColumns());
         $this->assertEquals('users', $foreignKey->getForeignTableName());
         $this->assertEquals(['id'], $foreignKey->getForeignColumns());
+    }
+
+    /** @test */
+    public function it_knows_if_a_table_is_a_pivot()
+    {
+        $table = new TableInformation('users');
+        $pivot = new TableInformation('role_user');
+
+        // $this->assertFalse($table->isPivot());
+        $this->assertTrue($pivot->isPivot());
     }
 }

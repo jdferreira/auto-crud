@@ -38,9 +38,6 @@ class DatabaseInformation
 
     private function computeTables()
     {
-        // TODO: Remove the pivots?
-        // DO not forget to add the --pivot option to the commands
-
         return collect($this->doctrine->listTableNames())
             ->filter(function ($name) {
                 return $name !== config('database.migrations');
@@ -58,8 +55,7 @@ class DatabaseInformation
         foreach ($this->tables as $table) {
             $fks = $table->foreignKeys();
 
-            // Tables with exactly two foreign keys are pivots
-            if (count($fks) == 2) {
+            if ($table->isPivot()) {
                 $result[] = ManyToMany::fromKeys($table->name(), ...$fks);
             } else {
                 foreach ($fks as $fk) {
@@ -77,14 +73,24 @@ class DatabaseInformation
     }
 
     /**
-     * Returns an array with the names of all tables in the database.
-     * The name of the 'migrations' table is not included in the result.
+     * Returns an array with the names of all tables in the database. The name
+     * of the 'migrations' table is not included in the result.
+     *
+     * @param bool $pivots Whether to include pivot tables. Defaults to true
      *
      * @return string[]
      */
-    public function tablenames(): array
+    public function tablenames(bool $pivots = true): array
     {
-        return array_keys($this->tables);
+        $tables = collect($this->tables);
+
+        if (! $pivots) {
+            $tables = $tables->filter(function ($table) {
+                return ! $table->isPivot();
+            });
+        }
+
+        return $tables->keys()->all();
     }
 
     /**
@@ -177,5 +183,20 @@ class DatabaseInformation
         }
 
         return Str::snake(Str::singular($table->name())) . '_' . $table->primaryKey();
+    }
+
+    /**
+     * Return the names of the tables that are not pivots.
+     *
+     * @return string[]
+     */
+    public function pivots(): array
+    {
+        return collect($this->tables)
+            ->filter(function (TableInformation $table) {
+                return $table->isPivot();
+            })
+            ->keys()
+            ->all();
     }
 }

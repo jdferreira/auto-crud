@@ -43,6 +43,10 @@ class TableInformation
     {
         $doctrine = app('db.connection')->getDoctrineSchemaManager();
 
+        if (! $doctrine->tablesExist($name)) {
+            throw new DatabaseException("Table $name does not exist");
+        }
+
         $this->name = $name;
 
         $this->columns = $this->computeColumns($doctrine);
@@ -181,5 +185,19 @@ class TableInformation
     public function foreignKeys(): array
     {
         return $this->foreignKeys;
+    }
+
+    /**
+     * Determines whether this table is a pivot. Currently, a pivot is a table
+     * that contains two foreign keys and, apart from possibly an identifier and
+     * the creation and update timestamps, nothing else.
+     *
+     * @return bool
+     */
+    public function isPivot(): bool
+    {
+        return
+            count($this->foreignKeys()) === 2 &&
+            count(array_diff($this->columns(), ['id', 'created_at', 'updated_at'])) === 2;
     }
 }

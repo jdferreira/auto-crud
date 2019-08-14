@@ -20,7 +20,7 @@ class DatabaseInformationTest extends TestCase
     /** @test */
     public function it_can_retrieve_tables()
     {
-        $this->assertEqualsCanonicalizing(
+        $this->assertSetsEqual(
             [
                 'users',
                 'avatars',
@@ -37,6 +37,14 @@ class DatabaseInformationTest extends TestCase
     public function it_knows_to_ignore_the_migrations_table()
     {
         $this->assertNotContains('migrations', $this->db->tablenames());
+    }
+
+    /** @test */
+    public function it_retrieves_pivot_tablenames()
+    {
+        $this->assertSetsEqual(['role_user'], $this->db->pivots());
+
+        $this->assertNotContains('role_user', $this->db->tablenames(false));
     }
 
     /** @test */
