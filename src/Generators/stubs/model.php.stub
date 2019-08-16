@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Model;
+{{ importSoftDeletesTrait }}
+
+class {{ class }} extends Model
+{
+    {{ useSoftDeletesTrait }}
+
+    {{ customPrimaryKey }}
+
+    {{ relationships }}
+}
