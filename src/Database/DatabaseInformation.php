@@ -116,6 +116,20 @@ class DatabaseInformation
     }
 
     /**
+     * Retrieve the relationships relevant for a given table.
+     *
+     * @param string $table
+     *
+     * @return Relationship[]
+     */
+    public function relationshipsFor(string $table): array
+    {
+        return collect($this->relationships)->filter(function ($relation) use ($table) {
+            return in_array($table, $relation->tables());
+        })->all();
+    }
+
+    /**
      * Determine whether there is a UNIQUE index on the provided column.
      * The input can be a single column, as a string, or an array of them,
      * in which case the function returns true if there is a UNIQUE index
@@ -186,7 +200,7 @@ class DatabaseInformation
     }
 
     /**
-     * Return the names of the tables that are not pivots.
+     * Return the names of the tables that are pivots.
      *
      * @return string[]
      */

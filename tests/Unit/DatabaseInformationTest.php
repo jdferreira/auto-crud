@@ -76,6 +76,20 @@ class DatabaseInformationTest extends TestCase
     }
 
     /** @test */
+    public function it_retrieves_relationships_for_a_table()
+    {
+        $relationships = $this->db->relationshipsFor('users');
+
+        $expected = [
+            new OneToOne('avatars', 'user_id', 'users', 'id'),
+            new OneToMany('products', 'owner_id', 'users', 'id'),
+            new ManyToMany('role_user', 'role_id', 'roles', 'id', 'user_id', 'users', 'id'),
+        ];
+
+        $this->assertSetsEqual($expected, $relationships);
+    }
+
+    /** @test */
     public function it_detects_unique_columns()
     {
         $this->assertTrue($this->db->unique('avatars', 'id'));
