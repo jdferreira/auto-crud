@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use {{ modelNamespace }}\{{ modelClass }};
+use App\Http\Requests\{{ modelClass }}Request;
+
+class {{ modelClass }}Controller extends Controller
+{
+    public function index()
+    {
+        return view('{{ modelPlural }}.index');
+    }
+
+    public function show({{ modelClass }} ${{ modelSingular }})
+    {
+        return view('{{ modelPlural }}.show', compact('{{ modelSingular }}'));
+    }
+
+    public function create()
+    {
+        return view('{{ modelPlural }}.create');
+    }
+
+    public function store({{ modelClass }}Request $request)
+    {
+        ${{ modelSingular }} = {{ modelClass }}::create($request->all());
+
+        return redirect(${{ modelSingular }}->path());
+    }
+
+    public function edit({{ modelClass }} ${{ modelSingular }})
+    {
+        return view('{{ modelPlural }}.edit', compact('{{ modelSingular }}'));
+    }
+
+    public function update({{ modelClass }} ${{ modelSingular }}, {{ modelClass }}Request $request)
+    {
+        ${{ modelSingular }}->update($request->all());
+
+        return redirect(${{ modelSingular }}->path());
+    }
+
+    public function destroy({{ modelClass }} ${{ modelSingular }})
+    {
+        ${{ modelSingular }}->delete();
+
+        return redirect(route('{{ modelPlural }}.index'));
+    }
+}

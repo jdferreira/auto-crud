@@ -36,6 +36,7 @@ class AutoCrudCommand extends Command
         }
 
         $this->inner('autocrud:model');
+        $this->inner('autocrud:controller');
     }
 
     private function valid()

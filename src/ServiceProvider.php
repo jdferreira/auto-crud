@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud;
 
 use Ferreira\AutoCrud\Commands\ModelCommand;
 use Ferreira\AutoCrud\Commands\AutoCrudCommand;
+use Ferreira\AutoCrud\Commands\ControllerCommand;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
@@ -16,6 +17,7 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->commands(AutoCrudCommand::class);
         $this->commands(ModelCommand::class);
+        $this->commands(ControllerCommand::class);
 
         $this->app->singleton(DatabaseInformation::class);
     }

@@ -90,13 +90,13 @@ class AutoCrudCommandTest extends TestCase
     public function it_calls_the_inner_commands()
     {
         $this->assertCommandIsCalled('autocrud:model');
+        $this->assertCommandIsCalled('autocrud:controller');
 
         $this->markTestIncomplete(
             'Keep moving the lines below this to above it ' .
                 'and when the time comes, remove this line altogether!'
         );
 
-        $this->assertCommandIsCalled('autocrud:controller');
         $this->assertCommandIsCalled('autocrud:factory');
         $this->assertCommandIsCalled('autocrud:request');
         $this->assertCommandIsCalled('autocrud:view');
@@ -114,6 +114,18 @@ class AutoCrudCommandTest extends TestCase
             'table' => ['users'],
             'dir' => 'Models',
         ]);
+
+        $this->assertOptionsPassedToInner('autocrud:controller', [
+            '--table' => ['users'],
+            '--dir' => 'Models',
+        ], [
+            'table' => ['users'],
+            'dir' => 'Models',
+        ]);
+
+        $this->markTestIncomplete(
+            'Keep adding equivalent assertions for the other tables!'
+        );
     }
 
     /** @test */
