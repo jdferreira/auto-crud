@@ -122,6 +122,20 @@ class CodeContainsConstraintTest extends TestCase
     }
 
     /** @test */
+    public function it_skips_the_first_line_indentation_for_common_indentation()
+    {
+        static::assertThat(
+            $this->code,
+            new CodeContainsConstraint(
+                "public function abc()
+                {
+                    return 'abc';
+                }"
+            )
+        );
+    }
+
+    /** @test */
     public function it_requires_correct_relative_indentation_levels()
     {
         static::assertThat($this->code, new LogicalNot(new CodeContainsConstraint("

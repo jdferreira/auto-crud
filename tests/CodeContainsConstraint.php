@@ -24,6 +24,14 @@ class CodeContainsConstraint extends Constraint
      */
     private $lines;
 
+    /**
+     * Whether the given excerpt starts directly on the first line or not. If
+     * true, the first line is not analysed when detecting common indentation.
+     *
+     * @var bool
+     */
+    private $startsOnFirstLine;
+
     public function __construct(string $excerpt)
     {
         parent::__construct();
@@ -47,7 +55,9 @@ class CodeContainsConstraint extends Constraint
         $commonIndentation = strlen($this->commonIndentation($lines));
 
         for ($i = 0; $i < count($lines); $i++) {
-            $lines[$i] = substr($lines[$i], $commonIndentation);
+            if ($i !== 0 || ! $this->startsOnFirstLine) {
+                $lines[$i] = substr($lines[$i], $commonIndentation);
+            }
         }
 
         return $lines;
@@ -105,6 +115,8 @@ class CodeContainsConstraint extends Constraint
             $first++;
         }
 
+        $this->startsOnFirstLine = $first === 0;
+
         while ($last > $first && $this->isOnlySpaces($lines[$last - 1])) {
             $last--;
         }
@@ -119,13 +131,19 @@ class CodeContainsConstraint extends Constraint
 
     private function commonIndentation($lines): string
     {
-        if (preg_match('/^[ \t]*/', $lines[0], $matches) !== 1) {
+        $firstLine = $this->startsOnFirstLine ? 1 : 0;
+
+        if (count($lines) <= $firstLine) {
+            return '';
+        }
+
+        if (preg_match('/^[ \t]*/', $lines[$firstLine], $matches) !== 1) {
             return '';
         }
 
         $indentation = $matches[0];
 
-        for ($i = 1; $i < count($lines); $i++) {
+        for ($i = $firstLine + 1; $i < count($lines); $i++) {
             if (! $this->isOnlySpaces($line = $lines[$i])) {
                 $indentation = $this->minimizeIndentation($indentation, $line);
             }
