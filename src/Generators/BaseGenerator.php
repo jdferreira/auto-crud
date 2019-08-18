@@ -109,7 +109,7 @@ abstract class BaseGenerator
      */
     public function save()
     {
-        $filename = app_path($this->filename());
+        $filename = $this->filename();
 
         if ($this->force || ! $this->files->exists($filename)) {
             $this->ensureDirectory($filename);
@@ -185,7 +185,9 @@ abstract class BaseGenerator
     abstract protected function replacements(): array;
 
     /**
-     * Return the output filename where this file will be saved to.
+     * Return the output filename where this file will be saved to. The returned
+     * value must be the absolute path of the file. Use one of the laravel
+     * `*_path` helper functions (eg. `app_path`).
      *
      * @return string
      */

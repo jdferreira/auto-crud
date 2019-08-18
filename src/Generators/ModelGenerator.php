@@ -34,7 +34,7 @@ class ModelGenerator extends BaseGenerator
             $parts[] = $filename;
         }
 
-        return implode(DIRECTORY_SEPARATOR, $parts);
+        return app_path(implode(DIRECTORY_SEPARATOR, $parts));
     }
 
     /**

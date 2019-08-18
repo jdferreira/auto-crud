@@ -20,7 +20,7 @@ class ControllerGenerator extends BaseGenerator
      */
     protected function filename(): string
     {
-        return 'Http/Controllers/' . $this->class() . '.php';
+        return app_path('Http/Controllers/' . $this->class() . '.php');
     }
 
     /**
