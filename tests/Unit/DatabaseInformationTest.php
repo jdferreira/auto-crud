@@ -90,6 +90,18 @@ class DatabaseInformationTest extends TestCase
     }
 
     /** @test */
+    public function it_retrieves_foreign_keys_references()
+    {
+        $references = $this->db->foreignKeysReferences('role_user', 'user_id');
+
+        $expected = ['users', 'id'];
+
+        $this->assertSetsEqual($expected, $references);
+
+        $this->assertNull($this->db->foreignKeysReferences('non_existing_table', 'non_existing_column'));
+    }
+
+    /** @test */
     public function it_detects_unique_columns()
     {
         $this->assertTrue($this->db->unique('avatars', 'id'));

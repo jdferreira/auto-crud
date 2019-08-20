@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud\Database;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 
 class DatabaseInformation
 {
@@ -28,12 +29,20 @@ class DatabaseInformation
      */
     private $relationships;
 
+    /**
+     * The foreign key references for each table.
+     *
+     * @var ForeignKeyConstraint[][]
+     */
+    private $foreignKeysReferences;
+
     public function __construct()
     {
         $this->doctrine = app('db.connection')->getDoctrineSchemaManager();
 
         $this->tables = $this->computeTables();
         $this->relationships = $this->computeRelationships();
+        $this->foreignKeysReferences = $this->computeForeignKeysReferences();
     }
 
     private function computeTables()
@@ -70,6 +79,15 @@ class DatabaseInformation
         }
 
         return $this->relationships = $result;
+    }
+
+    private function computeForeignKeysReferences()
+    {
+        return collect($this->tables)
+            ->mapWithKeys(function ($table) {
+                return [$table->name() => $table->foreignKeys()];
+            })
+            ->all();
     }
 
     /**
@@ -127,6 +145,34 @@ class DatabaseInformation
         return collect($this->relationships)->filter(function ($relation) use ($table) {
             return in_array($table, $relation->tables());
         })->all();
+    }
+
+    /**
+     * Retrieve the foreign references that must be respected for the given
+     * column.
+     *
+     * @param string $table
+     * @param string $column
+     *
+     * @return array|null
+     */
+    public function foreignKeysReferences(string $table, string $column): ?array
+    {
+        if (! isset($this->foreignKeysReferences[$table])) {
+            return null;
+        }
+
+        $constraints = $this->foreignKeysReferences[$table];
+
+        foreach ($constraints as $key) {
+            $localColumns = $key->getLocalColumns();
+
+            if (count($localColumns) === 1 && $localColumns[0] === $column) {
+                return [$key->getForeignTableName(), $key->getForeignColumns()[0]];
+            }
+        }
+
+        return null;
     }
 
     /**
