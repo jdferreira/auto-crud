@@ -15,9 +15,10 @@ class CreateProductsTable extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->bigIncrements('product_id');
-            $table->string('owner_id');
+            $table->unsignedBigInteger('owner_id');
             $table->enum('type', ['food', 'stationery', 'other'])->nullable();
             $table->decimal('value', 6, 2);
+            $table->dateTime('start_at')->useCurrent();
             $table->softDeletes();
             $table->timestamps();
 

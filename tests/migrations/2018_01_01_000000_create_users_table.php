@@ -16,7 +16,7 @@ class CreateUsersTable extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
-            $table->string('email')->nullable();
+            $table->string('email')->unique()->nullable();
             $table->boolean('subscribed')->default(false); // TODO: Do I want to handle default values in some way?
             $table->date('birthday');
             $table->time('wake_up')->nullable();
