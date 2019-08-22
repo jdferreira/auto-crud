@@ -61,28 +61,23 @@ class ColumnFaker
             return $fake;
         }
 
-        if ($modifiers = $this->getModifiers()) {
-            $modifiers = implode('->', $modifiers);
-
-            return "\$faker->$modifiers->$fake";
-        } else {
-            return "\$faker->$fake";
+        if ($this->isUnique() && $this->isNullable()) {
+            // If the column is both unique and nullable, we want to apply both
+            // `unique()` and `optional(0.9)`. However, since Faker is not
+            // prepared to handle both modifiers simultaneously, we must roll
+            // out the potential for null ourselves.
+            return "mt_rand() / mt_getrandmax() <= 0.9 ? \$faker->unique()->$fake : null";
         }
-    }
-
-    private function getModifiers(): array
-    {
-        $modifiers = [];
 
         if ($this->isNullable()) {
-            $modifiers[] = 'optional(0.1)';
+            $fake = "optional(0.9)->$fake";
         }
 
         if ($this->isUnique()) {
-            $modifiers[] = 'unique()';
+            $fake = "unique()->$fake";
         }
 
-        return $modifiers;
+        return "\$faker->$fake";
     }
 
     private function isNullable(): bool

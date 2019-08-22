@@ -190,7 +190,7 @@ class ColumnFakerTest extends TestCase
         );
 
         $this->assertEquals(
-            '$faker->optional(0.1)->email',
+            '$faker->optional(0.9)->email',
             $faker->fake()
         );
     }
@@ -212,7 +212,7 @@ class ColumnFakerTest extends TestCase
     }
 
     /** @test */
-    public function it_handles_multiple_nullable_uniques()
+    public function it_fakes_unique_nullable_columns()
     {
         $this->makeColumnsUnique();
 
@@ -222,7 +222,7 @@ class ColumnFakerTest extends TestCase
         );
 
         $this->assertEquals(
-            '$faker->optional(0.1)->unique()->email',
+            'mt_rand() / mt_getrandmax() <= 0.9 ? $faker->unique()->email : null',
             $faker->fake()
         );
     }

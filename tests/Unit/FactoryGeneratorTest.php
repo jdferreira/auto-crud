@@ -78,10 +78,10 @@ class FactoryGeneratorTest extends TestCase
         $this->assertCodeContains("
             return [
                 'name' => \$faker->name,
-                'email' => \$faker->optional(0.1)->unique()->email,
+                'email' => mt_rand() / mt_getrandmax() <= 0.9 ? \$faker->unique()->email : null,
                 'subscribed' => \$faker->boolean,
                 'birthday' => \$faker->date,
-                'wake_up' => \$faker->optional(0.1)->time,
+                'wake_up' => \$faker->optional(0.9)->time,
             ];
         ", $code);
     }
@@ -111,10 +111,10 @@ class FactoryGeneratorTest extends TestCase
                 'owner_id' => function () {
                     return factory(User::class)->create()->id;
                 },
-                'type' => \$faker->optional(0.1)->sentence,
+                'type' => \$faker->optional(0.9)->sentence,
                 'value' => \$faker->numerify('###.##'),
                 'start_at' => \$faker->dateTimeBetween('-10 years', 'now'),
-                'deleted_at' => \$faker->optional(0.1)->dateTimeBetween('-10 years', 'now'),
+                'deleted_at' => \$faker->optional(0.9)->dateTimeBetween('-10 years', 'now'),
             ];
         ", $code);
     }
