@@ -46,8 +46,11 @@ class AutoCrudCommandTest extends TestCase
      * @param array $makeArguments
      * @param array $expectedOptions
      */
-    private function assertOptionsPassedToInner(string $name, array $makeArguments, array $expectedOptions)
+    private function assertOptionsPassedToInner(string $name, array $makeArguments = [], array $expectedOptions = [])
     {
+        $makeArguments = ['--table' => ['users'], '--dir' => 'Models'] + $makeArguments;
+        $expectedOptions = ['table' => ['users'], 'dir' => 'Models'] + $expectedOptions;
+
         $command = app(Kernel::class)->all()[$name];
 
         $this->artisan('autocrud:make', $makeArguments);
@@ -91,13 +94,14 @@ class AutoCrudCommandTest extends TestCase
     {
         $this->assertCommandIsCalled('autocrud:model');
         $this->assertCommandIsCalled('autocrud:controller');
+        $this->assertCommandIsCalled('autocrud:factory');
+        $this->assertCommandIsCalled('autocrud:seeder');
 
         $this->markTestIncomplete(
             'Keep moving the lines below this to above it ' .
                 'and when the time comes, remove this line altogether!'
         );
 
-        $this->assertCommandIsCalled('autocrud:factory');
         $this->assertCommandIsCalled('autocrud:request');
         $this->assertCommandIsCalled('autocrud:view');
         $this->assertCommandIsCalled('autocrud:test');
@@ -107,21 +111,10 @@ class AutoCrudCommandTest extends TestCase
     /** @test */
     public function it_sends_the_correct_options_to_the_inner_commands()
     {
-        $this->assertOptionsPassedToInner('autocrud:model', [
-            '--table' => ['users'],
-            '--dir' => 'Models',
-        ], [
-            'table' => ['users'],
-            'dir' => 'Models',
-        ]);
-
-        $this->assertOptionsPassedToInner('autocrud:controller', [
-            '--table' => ['users'],
-            '--dir' => 'Models',
-        ], [
-            'table' => ['users'],
-            'dir' => 'Models',
-        ]);
+        $this->assertOptionsPassedToInner('autocrud:model');
+        $this->assertOptionsPassedToInner('autocrud:controller');
+        $this->assertOptionsPassedToInner('autocrud:factory');
+        $this->assertOptionsPassedToInner('autocrud:seeder');
 
         $this->markTestIncomplete(
             'Keep adding equivalent assertions for the other tables!'
