@@ -14,6 +14,7 @@ The main contribution of this package, therefore, is a artisan command that gene
 - a controller
 - a form request for validation
 - a factory
+- a database seeder
 - views to the regular CRUD actions
 - a test file
 - resource routes
@@ -45,6 +46,7 @@ The command `php artisan autocrud:generate Customer` reads the information on ta
 It also updates:
 
 - `routes/web.php` to add `customers` resource route
+- `database/seeds/DatabaseSeeder.php` to call the generated seeders
 
 ## How to install
 
