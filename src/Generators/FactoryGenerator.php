@@ -72,13 +72,13 @@ class FactoryGenerator extends BaseGenerator
                 continue;
             }
 
-            $this->extendFake($result, $fake, $name);
+            $result = array_merge($result, $this->extendFake($fake, $name));
         }
 
         return $result;
     }
 
-    private function extendFake(&$result, $fake, $name)
+    private function extendFake($fake, $name)
     {
         if (strpos($fake, "\n") !== false) {
             $lines = explode("\n", $fake);
@@ -89,6 +89,6 @@ class FactoryGenerator extends BaseGenerator
         $lines[0] = "'$name' => " . $lines[0];
         $lines[count($lines) - 1] .= ',';
 
-        $result = array_merge($result, $lines);
+        return $lines;
     }
 }
