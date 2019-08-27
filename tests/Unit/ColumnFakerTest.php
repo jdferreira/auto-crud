@@ -11,7 +11,7 @@ use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class ColumnFakerTest extends TestCase
 {
-    private function mockColumn(array $options)
+    private function mockColumn(array $options = [])
     {
         $mockedType = $this->mock(Type::class, function ($mock) {
             $mock->shouldReceive('getName')->andReturn('unrecognized_column_type_name');
@@ -69,11 +69,14 @@ class ColumnFakerTest extends TestCase
     /** @test */
     public function it_accepts_a_tablename_and_column()
     {
-        $column = $this->mockColumn(['name' => 'name']);
+        $faker = new ColumnFaker(
+            'tablename',
+            $this->mockColumn()
+        );
 
         $this->assertInstanceOf(
             ColumnFaker::class,
-            new ColumnFaker('users', $column)
+            $faker
         );
     }
 
