@@ -35,6 +35,11 @@ class ColumnFaker
      */
     public function fake(): string
     {
+        return $this->postProcess($this->raw());
+    }
+
+    private function raw()
+    {
         $fakers = [
             'ignoredColumns',
             'foreignKeysFaker',
@@ -51,10 +56,13 @@ class ColumnFaker
             }
         }
 
-        if ($fake === '') {
-            return '';
-        } elseif ($fake === null) {
-            return 'null';
+        return $fake ?? 'null';
+    }
+
+    private function postProcess($fake)
+    {
+        if ($fake === '' || $fake === 'null') {
+            return $fake;
         }
 
         if (Str::startsWith($fake, 'function')) {
@@ -66,15 +74,15 @@ class ColumnFaker
             // `unique()` and `optional(0.9)`. However, since Faker is not
             // prepared to handle both modifiers simultaneously, we must roll
             // out the potential for null ourselves.
-            return "mt_rand() / mt_getrandmax() <= 0.9 ? \$faker->unique()->$fake : null";
+            return "\$faker->randomFloat() <= 0.9 ? \$faker->unique()->$fake : null";
         }
 
         if ($this->isNullable()) {
-            $fake = "optional(0.9)->$fake";
+            return "\$faker->optional(0.9)->$fake";
         }
 
         if ($this->isUnique()) {
-            $fake = "unique()->$fake";
+            return "\$faker->unique()->$fake";
         }
 
         return "\$faker->$fake";

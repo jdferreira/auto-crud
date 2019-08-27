@@ -78,7 +78,7 @@ class FactoryGeneratorTest extends TestCase
         $this->assertCodeContains("
             return [
                 'name' => \$faker->name,
-                'email' => mt_rand() / mt_getrandmax() <= 0.9 ? \$faker->unique()->email : null,
+                'email' => \$faker->randomFloat() <= 0.9 ? \$faker->unique()->email : null,
                 'subscribed' => \$faker->boolean,
                 'birthday' => \$faker->date,
                 'wake_up' => \$faker->optional(0.9)->time,

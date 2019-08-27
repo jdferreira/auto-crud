@@ -222,7 +222,7 @@ class ColumnFakerTest extends TestCase
         );
 
         $this->assertEquals(
-            'mt_rand() / mt_getrandmax() <= 0.9 ? $faker->unique()->email : null',
+            '$faker->randomFloat() <= 0.9 ? $faker->unique()->email : null',
             $faker->fake()
         );
     }
