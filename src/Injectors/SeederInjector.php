@@ -76,7 +76,7 @@ class SeederInjector
     private function getSeederClasses(): array
     {
         // We will seed the provided tables respecting the order of seeding:
-        // tables with foreign keys are seeded after their supporitng tables.
+        // tables with foreign keys are seeded after their supporting tables.
         // Note: one-to-one and one-to-many relationship work regardless of
         // order, because the factories create new models when a foreign key is
         // necessary; however, pivot tables MUST be seeded after their
