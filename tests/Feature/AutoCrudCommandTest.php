@@ -96,13 +96,13 @@ class AutoCrudCommandTest extends TestCase
         $this->assertCommandIsCalled('autocrud:controller');
         $this->assertCommandIsCalled('autocrud:factory');
         $this->assertCommandIsCalled('autocrud:seeder');
+        $this->assertCommandIsCalled('autocrud:request');
 
         $this->markTestIncomplete(
             'Keep moving the lines below this to above it ' .
                 'and when the time comes, remove this line altogether!'
         );
 
-        $this->assertCommandIsCalled('autocrud:request');
         $this->assertCommandIsCalled('autocrud:view');
         $this->assertCommandIsCalled('autocrud:test');
         $this->assertCommandIsCalled('autocrud:route');
@@ -115,6 +115,7 @@ class AutoCrudCommandTest extends TestCase
         $this->assertOptionsPassedToInner('autocrud:controller');
         $this->assertOptionsPassedToInner('autocrud:factory');
         $this->assertOptionsPassedToInner('autocrud:seeder');
+        $this->assertOptionsPassedToInner('autocrud:request');
 
         $this->markTestIncomplete(
             'Keep adding equivalent assertions for the other tables!'

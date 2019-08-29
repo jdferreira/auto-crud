@@ -39,6 +39,7 @@ class AutoCrudCommand extends Command
         $this->inner('autocrud:controller');
         $this->inner('autocrud:factory');
         $this->inner('autocrud:seeder');
+        $this->inner('autocrud:request');
     }
 
     private function valid()
