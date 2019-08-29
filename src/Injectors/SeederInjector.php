@@ -39,10 +39,13 @@ class SeederInjector
 
     public function inject()
     {
-        $this->ensureMainSeederExists();
+        $this->ensureFileExists(
+            $filename = database_path('seeds/DatabaseSeeder.php'),
+            __DIR__ . '/stubs/DatabaseSeeder.php'
+        );
 
         $this->files->put(
-            $filename = database_path('seeds/DatabaseSeeder.php'),
+            $filename,
             $this->injectInto($this->files->get($filename))
         );
     }
@@ -104,12 +107,10 @@ class SeederInjector
         return $result;
     }
 
-    private function ensureMainSeederExists()
+    private function ensureFileExists($filename, $copyFrom)
     {
-        $filename = database_path('seeds/DatabaseSeeder.php');
-
         if (! $this->files->exists($filename)) {
-            $this->files->put($filename, $this->files->get(__DIR__ . '/stubs/DatabaseSeeder.php'));
+            $this->files->put($filename, $this->files->get($copyFrom));
         }
     }
 }
