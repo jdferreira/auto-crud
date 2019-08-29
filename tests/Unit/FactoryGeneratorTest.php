@@ -41,11 +41,11 @@ class FactoryGeneratorTest extends TestCase
     /** @test */
     public function it_detects_model_namespace()
     {
-        $code = $this->generator('users')->setModelDirectory('Models')->save();
+        $code = $this->generator('users')->setModelDirectory('Models')->generate();
 
         $this->assertContains(
             'use App\Models\User;',
-            $this->files->get(database_path('factories/UserFactory.php'))
+            $code
         );
     }
 
