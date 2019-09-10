@@ -39,7 +39,6 @@ class RequestGenerator extends BaseGenerator
         return [
             'modelClass' => $this->modelClass(),
             'rules' => $this->rules(),
-            'columns' => $this->columns(),
             'useModel' => $this->useModel(),
         ];
 
@@ -105,11 +104,6 @@ class RequestGenerator extends BaseGenerator
         $lines[count($lines) - 1] .= ',';
 
         return $lines;
-    }
-
-    private function columns()
-    {
-        return '';
     }
 
     private function useModel()

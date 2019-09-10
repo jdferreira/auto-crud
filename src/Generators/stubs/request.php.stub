@@ -27,11 +27,4 @@ class {{ modelClass }}Request extends FormRequest
     {
         {{ rules }}
     }
-
-    public function getSafeInput()
-    {
-        return $this->only([
-            {{ columns }}
-        ]);
-    }
 }
