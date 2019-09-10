@@ -48,8 +48,8 @@ class AutoCrudCommandTest extends TestCase
      */
     private function assertOptionsPassedToInner(string $name, array $makeArguments = [], array $expectedOptions = [])
     {
-        $makeArguments = ['--table' => ['users'], '--dir' => 'Models'] + $makeArguments;
-        $expectedOptions = ['table' => ['users'], 'dir' => 'Models'] + $expectedOptions;
+        $makeArguments = ['--table' => ['users']] + $makeArguments;
+        $expectedOptions = ['table' => ['users']] + $expectedOptions;
 
         $command = app(Kernel::class)->all()[$name];
 
@@ -97,6 +97,7 @@ class AutoCrudCommandTest extends TestCase
         $this->assertCommandIsCalled('autocrud:factory');
         $this->assertCommandIsCalled('autocrud:seeder');
         $this->assertCommandIsCalled('autocrud:request');
+        $this->assertCommandIsCalled('autocrud:route');
 
         $this->markTestIncomplete(
             'Keep moving the lines below this to above it ' .
@@ -105,20 +106,20 @@ class AutoCrudCommandTest extends TestCase
 
         $this->assertCommandIsCalled('autocrud:view');
         $this->assertCommandIsCalled('autocrud:test');
-        $this->assertCommandIsCalled('autocrud:route');
     }
 
     /** @test */
     public function it_sends_the_correct_options_to_the_inner_commands()
     {
-        $this->assertOptionsPassedToInner('autocrud:model');
-        $this->assertOptionsPassedToInner('autocrud:controller');
-        $this->assertOptionsPassedToInner('autocrud:factory');
-        $this->assertOptionsPassedToInner('autocrud:seeder');
-        $this->assertOptionsPassedToInner('autocrud:request');
+        $this->assertOptionsPassedToInner('autocrud:model', ['--dir' => 'Models'], ['dir' => 'Models']);
+        $this->assertOptionsPassedToInner('autocrud:controller', ['--dir' => 'Models'], ['dir' => 'Models']);
+        $this->assertOptionsPassedToInner('autocrud:factory', ['--dir' => 'Models'], ['dir' => 'Models']);
+        $this->assertOptionsPassedToInner('autocrud:seeder', ['--dir' => 'Models'], ['dir' => 'Models']);
+        $this->assertOptionsPassedToInner('autocrud:request', ['--dir' => 'Models'], ['dir' => 'Models']);
+        $this->assertOptionsPassedToInner('autocrud:route', ['--skip-api' => true], ['skip-api' => true]);
 
         $this->markTestIncomplete(
-            'Keep adding equivalent assertions for the other tables!'
+            'Keep adding equivalent assertions for the other commands!'
         );
     }
 

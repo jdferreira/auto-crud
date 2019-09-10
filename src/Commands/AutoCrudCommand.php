@@ -17,6 +17,7 @@ class AutoCrudCommand extends Command
         autocrud:make
         {--table=* : The table names to base the generation on. Defaults to all tables in the database that are not pivot tables.}
         {--dir= : The directory where the models will be written to.}
+        {--skip-api : Whether to skip generating API routes.}
     ';
 
     /**
@@ -40,6 +41,7 @@ class AutoCrudCommand extends Command
         $this->inner('autocrud:factory');
         $this->inner('autocrud:seeder');
         $this->inner('autocrud:request');
+        $this->inner('autocrud:route');
     }
 
     private function valid()

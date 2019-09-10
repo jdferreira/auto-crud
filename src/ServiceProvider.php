@@ -3,6 +3,7 @@
 namespace Ferreira\AutoCrud;
 
 use Ferreira\AutoCrud\Commands\ModelCommand;
+use Ferreira\AutoCrud\Commands\RouteCommand;
 use Ferreira\AutoCrud\Commands\SeederCommand;
 use Ferreira\AutoCrud\Commands\FactoryCommand;
 use Ferreira\AutoCrud\Commands\RequestCommand;
@@ -24,6 +25,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->commands(FactoryCommand::class);
         $this->commands(SeederCommand::class);
         $this->commands(RequestCommand::class);
+        $this->commands(RouteCommand::class);
 
         $this->app->singleton(DatabaseInformation::class);
     }
