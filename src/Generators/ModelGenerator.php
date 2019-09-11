@@ -2,7 +2,9 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Doctrine\DBAL\Types\Type;
 use Ferreira\AutoCrud\Database\OneToOne;
 use Ferreira\AutoCrud\Database\OneToMany;
 use Ferreira\AutoCrud\Database\ManyToMany;
@@ -48,6 +50,7 @@ class ModelGenerator extends BaseGenerator
             'importSoftDeletesTrait' => $this->importSoftDeletes(),
             'useSoftDeletesTrait' => $this->useSoftDeletes(),
             'customPrimaryKey' => $this->primaryKey(),
+            'casts' => $this->casts(),
             'relationships' => $this->relationships(),
         ];
     }
@@ -101,6 +104,77 @@ class ModelGenerator extends BaseGenerator
             // There's a lot that needs to be added in this case.
             // TODO: Add me later
 
+            return [];
+        }
+    }
+
+    protected function casts(): array
+    {
+        static $map = [
+            Type::BIGINT => 'integer',
+            Type::INTEGER => 'integer',
+            Type::SMALLINT => 'integer',
+            Type::BOOLEAN => 'boolean',
+            Type::DATETIME => 'datetime',
+            Type::DATETIME_IMMUTABLE => 'datetime',
+            Type::DATETIMETZ => 'datetime',
+            Type::DATETIMETZ_IMMUTABLE => 'datetime',
+            Type::DATE => 'date',
+            Type::DATE_IMMUTABLE => 'date',
+            Type::TIME => 'time',
+            Type::TIME_IMMUTABLE => 'time',
+            Type::FLOAT => 'float',
+            Type::DECIMAL => 'decimal:2',
+            Type::TARRAY => 'array',
+            Type::SIMPLE_ARRAY => 'array',
+            Type::JSON_ARRAY => 'array',
+            Type::JSON => 'array',
+        ];
+
+        $casts = [];
+
+        foreach ($this->table->columns() as $name) {
+            if (in_array($name, ['created_at', 'updated_at', 'deleted_at'])) {
+                continue;
+            }
+
+            if ($name === $this->table->primaryKey()) {
+                continue;
+            }
+
+            $isForeignKey = collect($this->table->foreignKeys())
+                ->filter(function ($fk) use ($name) {
+                    return in_array($name, $fk->getLocalColumns());
+                })
+                ->isNotEmpty();
+
+            if ($isForeignKey) {
+                continue;
+            }
+
+            $column = $this->table->column($name);
+
+            if (($cast = Arr::get($map, $column->getType()->getName())) !== null) {
+                $casts[] = "    '$name' => '$cast',";
+            }
+        }
+
+        if (count($casts) > 0) {
+            return array_merge(
+                [
+                    '/**',
+                    ' * The attributes that should be cast to native types.',
+                    ' *',
+                    ' * @var array',
+                    ' */',
+                    'protected $casts = [',
+                ],
+                $casts,
+                [
+                    '];',
+                ]
+            );
+        } else {
             return [];
         }
     }

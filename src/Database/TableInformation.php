@@ -199,5 +199,6 @@ class TableInformation
         return
             count($this->foreignKeys()) === 2 &&
             count(array_diff($this->columns(), ['id', 'created_at', 'updated_at'])) === 2;
+        // TODO: What about soft deletes?
     }
 }

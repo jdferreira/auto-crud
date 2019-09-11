@@ -110,6 +110,36 @@ class ModelGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_handles_attribute_casting()
+    {
+        $this->assertCodeContains("
+            protected \$casts = [
+                'subscribed' => 'boolean',
+                'birthday' => 'date',
+                'wake_up' => 'time',
+            ];
+        ", $this->generator('users')->generate());
+
+        $this->assertNotContains('protected $casts', $this->generator('avatars')->generate());
+
+        $this->assertCodeContains("
+            protected \$casts = [
+                'value' => 'decimal:2',
+                'start_at' => 'datetime',
+            ];
+        ", $this->generator('products')->generate());
+
+        $this->assertNotContains('protected $casts', $this->generator('roles')->generate());
+
+        $this->assertCodeContains("
+            protected \$casts = [
+                'amount' => 'integer',
+                'date' => 'date',
+            ];
+        ", $this->generator('sales')->generate());
+    }
+
+    /** @test */
     public function it_handles_one_to_one_relationships()
     {
         $users = $this->generator('users')->generate();
