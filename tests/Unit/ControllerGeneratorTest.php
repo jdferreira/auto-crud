@@ -99,14 +99,14 @@ class ControllerGeneratorTest extends TestCase
         $this->assertCodeContains("
             public function index()
             {
-                return view('users.index');
+                return view('users.index', ['users' => User::paginate()]);
             }
         ", $users);
 
         $this->assertCodeContains("
             public function index()
             {
-                return view('avatars.index');
+                return view('avatars.index', ['avatars' => Avatar::paginate()]);
             }
         ", $avatars);
     }
@@ -162,7 +162,7 @@ class ControllerGeneratorTest extends TestCase
         $this->assertCodeContains('
             public function store(UserRequest $request)
             {
-                $user = User::create($request->all());
+                $user = User::create($request->validated());
 
                 return redirect($user->path());
             }
@@ -171,7 +171,7 @@ class ControllerGeneratorTest extends TestCase
         $this->assertCodeContains('
             public function store(AvatarRequest $request)
             {
-                $avatar = Avatar::create($request->all());
+                $avatar = Avatar::create($request->validated());
 
                 return redirect($avatar->path());
             }
@@ -208,7 +208,7 @@ class ControllerGeneratorTest extends TestCase
         $this->assertCodeContains('
             public function update(User $user, UserRequest $request)
             {
-                $user->update($request->all());
+                $user->update($request->validated());
 
                 return redirect($user->path());
             }
@@ -217,7 +217,7 @@ class ControllerGeneratorTest extends TestCase
         $this->assertCodeContains('
             public function update(Avatar $avatar, AvatarRequest $request)
             {
-                $avatar->update($request->all());
+                $avatar->update($request->validated());
 
                 return redirect($avatar->path());
             }

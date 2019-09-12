@@ -9,7 +9,7 @@ class {{ modelClass }}Controller extends Controller
 {
     public function index()
     {
-        return view('{{ modelPlural }}.index');
+        return view('{{ modelPlural }}.index', ['{{ modelPlural }}' => {{ modelClass }}::paginate()]);
     }
 
     public function show({{ modelClass }} ${{ modelSingular }})
@@ -24,7 +24,7 @@ class {{ modelClass }}Controller extends Controller
 
     public function store({{ modelClass }}Request $request)
     {
-        ${{ modelSingular }} = {{ modelClass }}::create($request->all());
+        ${{ modelSingular }} = {{ modelClass }}::create($request->validated());
 
         return redirect(${{ modelSingular }}->path());
     }
@@ -36,7 +36,7 @@ class {{ modelClass }}Controller extends Controller
 
     public function update({{ modelClass }} ${{ modelSingular }}, {{ modelClass }}Request $request)
     {
-        ${{ modelSingular }}->update($request->all());
+        ${{ modelSingular }}->update($request->validated());
 
         return redirect(${{ modelSingular }}->path());
     }
