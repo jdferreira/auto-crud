@@ -200,4 +200,23 @@ abstract class TestCase extends BaseTestCase
             $message
         );
     }
+
+    /**
+     * This method is here because PHPUnit 8
+     * [deprecated](https://github.com/sebastianbergmann/phpunit/issues/3494)
+     * the `assertArraySubset` method.
+     *
+     * This simplified version of that method asserts that a given associative
+     * array contains another one. In other words, it is equivalent to checking
+     * that an array contains all the keys of a second array, and that the
+     * values associated with those keys are equal. Equality is the strict
+     * version. Order is not checked.
+     *
+     * @param array $subset
+     * @param array $array
+     */
+    protected function assertArrayHasSubset(array $subset, array $array)
+    {
+        static::assertThat($array, new ArrayHasSubset($subset));
+    }
 }

@@ -55,7 +55,7 @@ class AutoCrudCommandTest extends TestCase
 
         $this->artisan('autocrud:make', $makeArguments);
 
-        $this->assertArraySubset($expectedOptions, $command->options());
+        $this->assertArrayHasSubset($expectedOptions, $command->options());
     }
 
     /**
