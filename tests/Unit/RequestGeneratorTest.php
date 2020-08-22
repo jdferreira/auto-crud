@@ -113,6 +113,7 @@ class RequestGeneratorTest extends TestCase
                     'exists:users,id',
                     Rule::unique('avatars')->ignore(\$model),
                 ],
+                'file' => 'required',
                 'data' => 'required',
             ];
         ", $code);

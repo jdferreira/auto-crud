@@ -16,6 +16,7 @@ class CreateAvatarsTable extends Migration
         Schema::create('avatars', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id')->unique(); // Needed to ensure one-to-one relationship
+            $table->string('file');
             $table->binary('data');
             $table->timestamps();
 
