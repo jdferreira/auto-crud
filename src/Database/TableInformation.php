@@ -166,7 +166,7 @@ class TableInformation
     /**
      * Determine whether this table has a column named `deleted_at` whose type
      * is one of the possible types used by laravel for this column, which,
-     * by laravel documention means either `TIMESTAMP` or `TIMESTAMPTZ`.
+     * by laravel documentation means either `TIMESTAMP` or `TIMESTAMPTZ`.
      *
      * @return bool
      */

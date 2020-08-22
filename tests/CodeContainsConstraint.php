@@ -41,8 +41,8 @@ class CodeContainsConstraint extends Constraint
     }
 
     /**
-     * Explodes the exceprt into lines, removes heading and trailing empty lines,
-     * and dedents all the remaining lines.
+     * Explodes the excerpt into lines, removes heading and trailing empty lines,
+     * and de-dents all the remaining lines.
      *
      * @param string $excerpt
      *
@@ -82,7 +82,7 @@ class CodeContainsConstraint extends Constraint
 
         for ($i = 0; $i < count($lines); $i++) {
             // When a line is all spaces, the regular expression is not
-            // those exact spaces: any combinaion of spaces works.
+            // those exact spaces: any combination of spaces works.
             if ($this->isOnlySpaces($lines[$i])) {
                 $lines[$i] = '[ \t]*';
                 continue;

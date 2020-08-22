@@ -42,7 +42,7 @@ abstract class BaseGenerator
     protected $force;
 
     /**
-     * Create a new generator, resposible for generating the CRUD files for a certain table.
+     * Create a new generator, responsible for generating the CRUD files for a certain table.
      *
      * @param string $table The table name
      */
@@ -187,7 +187,7 @@ abstract class BaseGenerator
     /**
      * Return the output filename where this file will be saved to. The returned
      * value must be the absolute path of the file. Use one of the laravel
-     * `*_path` helper functions (eg. `app_path`).
+     * `*_path` helper functions (e.g. `app_path`).
      *
      * @return string
      */
