@@ -119,6 +119,25 @@ class StubRenderer
                 );
             }
 
+            // Three (or `n`) consecutive curly braces are the escaped version
+            // of two (or `n-1`) curly braces in the output. This is handled by
+            // emitting a literal part if the very next characters are also
+            // curly braces.
+            //
+            // Note that the A modifier makes it so that the regular expression
+            // matches only exactly at `$pos + 2`, as we are only interested in
+            // the curly braces right after the (apparently) opening placeholder
+            // syntax
+            if (preg_match('/\{+/A', $this->stub, $matches, 0, $pos + 2) === 1) {
+                $extraBraces = $matches[0];
+
+                $parts[] = StubPart::literal('{' . $extraBraces);
+
+                $previousEnd = $pos + 2 + strlen($extraBraces);
+
+                continue;
+            }
+
             // We found a `{{` in the stub. If the contents between this and the
             // next `}}` is a single word, this is a placeholder that needs to
             // be replaced

@@ -146,6 +146,15 @@ class StubRendererTest extends TestCase
     }
 
     /** @test */
+    public function it_interprets_three_curly_braces_as_escaped_mustache_operators()
+    {
+        $this->assertEquals(
+            '{{ this was good }}',
+            StubRenderer::render('{{{ this {{ is }} good }}', ['is' => 'was'])
+        );
+    }
+
+    /** @test */
     public function it_replaces_placeholders()
     {
         $rendered = StubRenderer::render($this->stub('sample'), [
