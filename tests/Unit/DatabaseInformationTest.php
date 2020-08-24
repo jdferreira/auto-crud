@@ -28,6 +28,7 @@ class DatabaseInformationTest extends TestCase
                 'roles',
                 'role_user',
                 'sales',
+                'payment_methods',
             ],
             $this->db->tablenames()
         );

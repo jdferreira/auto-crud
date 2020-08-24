@@ -141,6 +141,7 @@ class TableInformationTest extends TestCase
             'products' => null,
             'roles' => 'name',
             'sales' => null,
+            'payment_methods' => 'name',
         ];
 
         foreach ($data as $table => $expected) {
