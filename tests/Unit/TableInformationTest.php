@@ -133,6 +133,25 @@ class TableInformationTest extends TestCase
     }
 
     /** @test */
+    public function it_retrieves_the_label_column_of_tables()
+    {
+        $data = [
+            'users' => 'name',
+            'avatars' => 'file',
+            'products' => null,
+            'roles' => 'name',
+            'sales' => null,
+        ];
+
+        foreach ($data as $table => $expected) {
+            $this->assertEquals(
+                $expected,
+                (new TableInformation($table))->labelColumn()
+            );
+        }
+    }
+
+    /** @test */
     public function it_knows_if_a_table_is_a_pivot()
     {
         $table = new TableInformation('users');
@@ -140,5 +159,18 @@ class TableInformationTest extends TestCase
 
         $this->assertFalse($table->isPivot());
         $this->assertTrue($pivot->isPivot());
+    }
+
+    /** @test */
+    public function it_handles_enum_columns()
+    {
+        $this->assertNull(
+            (new TableInformation('users'))->getEnumValid('name')
+        );
+
+        $this->assertSetsEqual(
+            ['food', 'stationery', 'other'],
+            (new TableInformation('products'))->getEnumValid('type')
+        );
     }
 }

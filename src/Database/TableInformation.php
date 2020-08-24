@@ -5,8 +5,13 @@ namespace Ferreira\AutoCrud\Database;
 use Illuminate\Support\Arr;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Schema\Column;
+use Illuminate\Database\Connection;
 use Doctrine\DBAL\Types\DateTimeType;
 use Doctrine\DBAL\Types\DateTimeTzType;
+use Ferreira\AutoCrud\Validation\MySqlEnumChecker;
+use Ferreira\AutoCrud\Validation\SQLiteEnumChecker;
+use Ferreira\AutoCrud\Validation\PostgresEnumChecker;
+use Ferreira\AutoCrud\Validation\SqlServerEnumChecker;
 
 class TableInformation
 {
@@ -35,6 +40,11 @@ class TableInformation
     private $foreignKeys;
 
     /**
+     * @var string|null
+     */
+    private $labelColumn;
+
+    /**
      * Create an instance of this class.
      *
      * @param  string  $name
@@ -52,6 +62,7 @@ class TableInformation
         $this->columns = $this->computeColumns($doctrine);
         $this->primaryKey = $this->computePrimaryKey($doctrine);
         $this->foreignKeys = $this->computeForeignKeys($doctrine);
+        $this->labelColumn = $this->computeLabelColumn();
     }
 
     private function computeColumns($doctrine): array
@@ -81,6 +92,19 @@ class TableInformation
     private function computeForeignKeys($doctrine)
     {
         return $doctrine->listTableForeignKeys($this->name);
+    }
+
+    private function computeLabelColumn()
+    {
+        $stringColumns = collect($this->columns)->filter(function (Column $column) {
+            return
+                $column->getType()->getName() === Type::STRING && // String type
+                $this->getEnumValid($column->getName()) === null; // Non-enum
+        })->map(function (Column $column) {
+            return $column->getName();
+        })->values();
+
+        return $stringColumns->contains('name') ? 'name' : $stringColumns->first();
     }
 
     /**
@@ -200,5 +224,45 @@ class TableInformation
             count($this->foreignKeys()) === 2 &&
             count(array_diff($this->columns(), ['id', 'created_at', 'updated_at'])) === 2;
         // TODO: What about soft deletes?
+    }
+
+    /**
+     * Retrieves the name of the column that should be used to represent
+     * instances of this table. A label column has type string and is either the
+     * column `name`, if one exists, or the first string column of the table. If
+     * no such column exists, return `null`. Note that `enum` columns are never
+     * considered.
+     *
+     * @return string|null
+     */
+    public function labelColumn(): ?string
+    {
+        return $this->labelColumn;
+    }
+
+    /**
+     * Retrieve the valid `enum` options of the given `enum` column. If the
+     * column is of the `enum` type, return null.
+     *
+     * TODO: This is only implemented to MySQL and SQLite drivers; Postgres and
+     * SqlServer are still required.
+     *
+     * @return array|null
+     */
+    public function getEnumValid(string $column): ?array
+    {
+        switch (app(Connection::class)->getDriverName()) {
+            case 'mysql':
+                return (new MySqlEnumChecker($this->name, $this->columns[$column]))->valid();
+            case 'sqlite':
+                return (new SQLiteEnumChecker($this->name, $this->columns[$column]))->valid();
+            case 'pgsql':
+                return (new PostgresEnumChecker($this->name, $this->columns[$column]))->valid();
+            case 'sqlsrv':
+                // TODO: We need to implement SqlServerEnumChecker
+                return (new SqlServerEnumChecker($this->name, $this->columns[$column]))->valid();
+            default:
+                return null;
+        }
     }
 }
