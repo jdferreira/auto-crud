@@ -1,0 +1,19 @@
+@extends('layouts.app')
+
+@section('content')
+<h1>{{ modelPluralCapitalized }}</h1>
+
+<table>
+    <tr>
+        {{ labels }}
+    </tr>
+
+    @foreach (${{ modelPlural }} as ${{ modelSingular }})
+        <tr>
+            {{ values }}
+        </tr>
+    @endforeach
+</table>
+
+{{{ ${{ modelPlural }}->links() }}
+@endsection

@@ -98,13 +98,13 @@ class AutoCrudCommandTest extends TestCase
         $this->assertCommandIsCalled('autocrud:seeder');
         $this->assertCommandIsCalled('autocrud:request');
         $this->assertCommandIsCalled('autocrud:route');
+        $this->assertCommandIsCalled('autocrud:view');
 
         $this->markTestIncomplete(
             'Keep moving the lines below this to above it ' .
                 'and when the time comes, remove this line altogether!'
         );
 
-        $this->assertCommandIsCalled('autocrud:view');
         $this->assertCommandIsCalled('autocrud:test');
     }
 
