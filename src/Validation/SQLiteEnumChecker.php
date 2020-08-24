@@ -15,7 +15,7 @@ class SQLiteEnumChecker
     private $tablename;
 
     /**
-     * @var Column
+     * @var string
      */
     private $column;
 
@@ -78,7 +78,7 @@ class SQLiteEnumChecker
 
         $columns = $this->getColumnDefinitions();
 
-        return Arr::get($columns, $this->column->getName());
+        return Arr::get($columns, $this->column);
     }
 
     private function getColumnDefinitions()

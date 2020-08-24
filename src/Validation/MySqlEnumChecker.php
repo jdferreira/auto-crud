@@ -2,7 +2,6 @@
 
 namespace Ferreira\AutoCrud\Validation;
 
-use Doctrine\DBAL\Schema\Column;
 use Illuminate\Support\Facades\DB;
 
 class MySqlEnumChecker
@@ -13,11 +12,11 @@ class MySqlEnumChecker
     private $tablename;
 
     /**
-     * @var Column
+     * @var string
      */
     private $column;
 
-    public function __construct(string $tablename, Column $column)
+    public function __construct(string $tablename, string $column)
     {
         // TODO: /!\ Needs tests
         //       ‾‾‾
@@ -41,8 +40,8 @@ class MySqlEnumChecker
     private function getEnum()
     {
         $results = DB::select(DB::raw(
-            "SHOW COLUMNS FROM {$this->table} WHERE Field = '{$this->column->getName()}'"
-        ))->first();
+            "SHOW COLUMNS FROM {$this->table} WHERE Field = '{$this->column}'"
+        ))->first(); // TODO: This is probably wrong! DB::select returns an array, not a collection
 
         return $results === null ? null : $results->Type;
     }

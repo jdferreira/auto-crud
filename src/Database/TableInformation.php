@@ -247,20 +247,22 @@ class TableInformation
      * TODO: This is only implemented to MySQL and SQLite drivers; Postgres and
      * SqlServer are still required.
      *
+     * @param string $column
+     *
      * @return array|null
      */
     public function getEnumValid(string $column): ?array
     {
         switch (app(Connection::class)->getDriverName()) {
             case 'mysql':
-                return (new MySqlEnumChecker($this->name, $this->columns[$column]))->valid();
+                return (new MySqlEnumChecker($this->name, $column))->valid();
             case 'sqlite':
-                return (new SQLiteEnumChecker($this->name, $this->columns[$column]))->valid();
+                return (new SQLiteEnumChecker($this->name, $column))->valid();
             case 'pgsql':
-                return (new PostgresEnumChecker($this->name, $this->columns[$column]))->valid();
+                return (new PostgresEnumChecker($this->name, $column))->valid();
             case 'sqlsrv':
                 // TODO: We need to implement SqlServerEnumChecker
-                return (new SqlServerEnumChecker($this->name, $this->columns[$column]))->valid();
+                return (new SqlServerEnumChecker($this->name, $column))->valid();
             default:
                 return null;
         }
