@@ -138,7 +138,7 @@ class TableInformationTest extends TestCase
         $table = new TableInformation('users');
         $pivot = new TableInformation('role_user');
 
-        // $this->assertFalse($table->isPivot());
+        $this->assertFalse($table->isPivot());
         $this->assertTrue($pivot->isPivot());
     }
 }
