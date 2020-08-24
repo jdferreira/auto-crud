@@ -6,7 +6,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Schema\Column;
-use Illuminate\Database\Connection;
+use Ferreira\AutoCrud\Database\TableInformation;
+use Ferreira\AutoCrud\Database\DatabaseException;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class RuleGenerator
@@ -163,7 +164,12 @@ class RuleGenerator
             return;
         }
 
-        if (($valid = $this->getEnumValid()) === null) {
+        $table = $this->table();
+        if (! $table) {
+            return;
+        }
+
+        if (($valid = $table->getEnumValid($this->column->getName())) === null) {
             return;
         }
 
@@ -176,21 +182,12 @@ class RuleGenerator
         return $this->quote('in:' . implode(',', $valid));
     }
 
-    private function getEnumValid(): ?array
+    private function table()
     {
-        switch (app(Connection::class)->getDriverName()) {
-            case 'mysql':
-                return (new MySqlEnumChecker($this->tablename, $this->column))->valid();
-            case 'sqlite':
-                return (new SQLiteEnumChecker($this->tablename, $this->column))->valid();
-            case 'pgsql':
-                // TODO: We need to implement PostgresEnumChecker
-                return (new PostgresEnumChecker($this->tablename, $this->column))->valid();
-            case 'sqlsrv':
-                // TODO: We need to implement SqlServerEnumChecker
-                return (new SqlServerEnumChecker($this->tablename, $this->column))->valid();
-            default:
-                return null;
+        try {
+            return app(TableInformation::class, ['name' => $this->tablename]);
+        } catch (DatabaseException $e) {
+            return;
         }
     }
 
