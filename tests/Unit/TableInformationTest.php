@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Exception;
 use Tests\TestCase;
+use Ferreira\AutoCrud\EnumType;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\DateTimeType;
@@ -86,13 +87,22 @@ class TableInformationTest extends TestCase
     }
 
     /** @test */
-    public function it_represents_column_types_with_doctrine_strings()
+    public function it_represents_column_types_with_doctrine_types()
     {
         $table = new TableInformation('users');
 
         $this->assertInstanceOf(StringType::class, $table->type('name'));
         $this->assertInstanceOf(DateTimeType::class, $table->type('created_at'));
         $this->assertNull($table->type('non_existing_column'));
+    }
+
+    /** @test */
+    public function it_constructs_virtual_enum_types_for_enum_columns()
+    {
+        $type = (new TableInformation('products'))->type('type');
+
+        $this->assertInstanceOf(EnumType::class, $type);
+        $this->assertSetsEqual(['food', 'stationery', 'other'], $type->validValues());
     }
 
     /** @test */

@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud\Database;
 
 use Illuminate\Support\Arr;
 use Doctrine\DBAL\Types\Type;
+use Ferreira\AutoCrud\EnumType;
 use Doctrine\DBAL\Schema\Column;
 use Illuminate\Database\Connection;
 use Doctrine\DBAL\Types\DateTimeType;
@@ -172,9 +173,13 @@ class TableInformation
      */
     public function type(string $column): ?Type
     {
-        $column = $this->column($column);
-
-        return $column === null ? null : $column->getType();
+        if (! $this->has($column)) {
+            return null;
+        } elseif ($valid = $this->getEnumValid($column)) {
+            return EnumType::generateDynamicEnumType($this->name, $column, $valid);
+        } else {
+            return $this->column($column)->getType();
+        }
     }
 
     /**
