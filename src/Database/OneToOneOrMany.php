@@ -7,7 +7,7 @@ use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 class OneToOneOrMany extends Relationship
 {
     /**
-     * The name of the tabel that contains the foreign key.
+     * The name of the table that contains the foreign key.
      *
      * @var string
      */
@@ -21,7 +21,7 @@ class OneToOneOrMany extends Relationship
     public $column;
 
     /**
-     * The name of the table beging referenced.
+     * The name of the table being referenced.
      *
      * @var string
      */
