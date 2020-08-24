@@ -1,0 +1,10 @@
+@extends('layouts.app')
+
+@section('content')
+<h1>New {{ modelSingular }}</h1>
+
+<form method="POST">
+    {{ fields }}
+    {{ buttons }}
+</form>
+@endsection

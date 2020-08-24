@@ -5,6 +5,7 @@ namespace Ferreira\AutoCrud\Commands;
 use Illuminate\Console\Command;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 use Ferreira\AutoCrud\Generators\ViewIndexGenerator;
+use Ferreira\AutoCrud\Generators\ViewCreateGenerator;
 
 class ViewCommand extends Command
 {
@@ -37,10 +38,17 @@ class ViewCommand extends Command
             ? $requested
             : $this->laravel->make(DatabaseInformation::class)->tablenames(false);
 
-        foreach ($tablenames as $table) {
-            $this->laravel->make(ViewIndexGenerator::class, [
-                'table' => $table,
-            ])->save();
+        $generators = [
+            ViewIndexGenerator::class,
+            ViewCreateGenerator::class,
+        ];
+
+        foreach ($generators as $generator) {
+            foreach ($tablenames as $table) {
+                $this->laravel->make($generator, [
+                    'table' => $table,
+                ])->save();
+            }
         }
     }
 }
