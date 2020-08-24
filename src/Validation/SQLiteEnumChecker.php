@@ -4,7 +4,6 @@ namespace Ferreira\AutoCrud\Validation;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Doctrine\DBAL\Schema\Column;
 use Illuminate\Support\Facades\DB;
 
 class SQLiteEnumChecker

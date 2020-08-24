@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Doctrine\DBAL\Types\Type;
 use InvalidArgumentException;
+use Ferreira\AutoCrud\EnumType;
 use Doctrine\DBAL\Schema\Column;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
@@ -42,6 +43,7 @@ class ColumnFaker
     {
         $fakers = [
             'ignoredColumns',
+            'enumFaker',
             'foreignKeysFaker',
             'knownFakerFormatters',
             'default',
@@ -128,6 +130,19 @@ class ColumnFaker
         ];
 
         return Arr::get($map, $this->column->getType()->getName());
+    }
+
+    private function enumFaker()
+    {
+        $type = $this->column->getType();
+
+        if ($type instanceof EnumType) {
+            $choices = collect($type->validValues())->map(function ($value) {
+                return '\'' . str_replace('\'', '\\\'', str_replace('\\', '\\\\', $value)) . '\'';
+            })->join(', ');
+
+            return 'randomElement([' . $choices . '])';
+        }
     }
 
     private function foreignKeysFaker()

@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Illuminate\Support\Arr;
 use Doctrine\DBAL\Types\Type;
+use Ferreira\AutoCrud\EnumType;
 use Doctrine\DBAL\Schema\Column;
 use Ferreira\AutoCrud\Generators\ColumnFaker;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
@@ -252,6 +253,22 @@ class ColumnFakerTest extends TestCase
                 '    return factory(User::class)->create()->id;',
                 '}',
             ]),
+            $faker->fake()
+        );
+    }
+
+    /** @test */
+    public function it_fakes_enum_types()
+    {
+        $faker = new ColumnFaker(
+            'tablename',
+            $this->mockColumn([
+                'type' => EnumType::generateDynamicEnumType('tablename', 'enum_column', ['one', 'two']),
+            ])
+        );
+
+        $this->assertEquals(
+            '$faker->randomElement([\'one\', \'two\'])',
             $faker->fake()
         );
     }
