@@ -49,8 +49,10 @@ class ViewCreateGeneratorTest extends TestCase
     public function it_is_titled_based_on_the_model_name()
     {
         $code = $this->generator('users')->generate();
-
         $this->assertContains('<h1>New user</h1>', $code);
+
+        $code = $this->generator('payment_methods')->generate();
+        $this->assertContains('<h1>New payment method</h1>', $code);
     }
 
     /** @test */

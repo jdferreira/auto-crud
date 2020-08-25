@@ -47,7 +47,7 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function modelSingular()
     {
-        return Str::snake(Str::singular($this->table->name()), ' ');
+        return str_replace('_', ' ', Str::singular($this->table->name()));
     }
 
     public function fields()
