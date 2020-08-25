@@ -39,10 +39,16 @@ class ViewCreateGenerator extends BaseGenerator
     protected function replacements(): array
     {
         return [
+            'verb' => $this->verb(),
             'modelSingular' => $this->modelSingular(),
             'fields' => $this->fields(),
             'buttons' => $this->buttons(),
         ];
+    }
+
+    protected function verb()
+    {
+        return 'New';
     }
 
     protected function modelSingular()
@@ -166,11 +172,18 @@ class ViewCreateGenerator extends BaseGenerator
                 return '<input ' . $attrs . ' type="file">';
 
             case Type::TEXT:
-                return '<textarea ' . $attrs . '></textarea>';
+                // This is its own method because it needs to be overwritten in
+                // the `ViewEditGenerator` class
+                return $this->textareaInput($column);
 
             default:
                 break;
         }
+    }
+
+    protected function textareaInput(string $column)
+    {
+        return '<textarea name="' . str_replace('_', '-', $column) . '"></textarea>';
     }
 
     public function buttons()
