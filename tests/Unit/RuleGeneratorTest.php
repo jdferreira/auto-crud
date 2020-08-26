@@ -3,117 +3,86 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Support\Arr;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Schema\Column;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
-use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class RuleGeneratorTest extends TestCase
 {
-    private function mockColumn(array $options = [])
-    {
-        $mockedType = $this->mock(Type::class, function ($mock) {
-            $mock->shouldReceive('getName')->andReturn('unrecognized_column_type_name');
-        });
-
-        $options = [
-            'type' => Arr::get($options, 'type', $mockedType),
-            'name' => Arr::get($options, 'name', 'random_column_name'),
-            'autoincrement' => Arr::get($options, 'autoincrement', false),
-            'required' => Arr::get($options, 'required', true),
-            'default' => Arr::get($options, 'default', null),
-        ];
-
-        if (is_string($options['type'])) {
-            $options['type'] = Type::getType($options['type']);
-        }
-
-        return $this->mock(Column::class, function ($mock) use ($options) {
-            $mock->shouldReceive('getAutoincrement')->andReturn($options['autoincrement']);
-            $mock->shouldReceive('getName')->andReturn($options['name']);
-            $mock->shouldReceive('getType')->andReturn($options['type']);
-            $mock->shouldReceive('getNotnull')->andReturn($options['required']);
-            $mock->shouldReceive('getDefault')->andReturn($options['default']);
-        });
-    }
-
-    public function makeColumnsUnique()
-    {
-        $this->mock(DatabaseInformation::class, function ($mock) {
-            $mock->shouldReceive('unique')->andReturn(true);
-            $mock->shouldReceive('foreignKeysReferences')->andReturn(null);
-        });
-    }
-
     /** @test */
-    public function it_accepts_a_tablename_and_column()
+    public function it_accepts_a_table_information_and_a_column_name_as_arguments()
     {
-        $rule = new RuleGenerator(
-            'tablename',
-            $this->mockColumn()
-        );
+        $table = $this->mockTable('tablename');
 
-        $this->assertInstanceOf(
-            RuleGenerator::class,
-            $rule
-        );
+        $faker = new RuleGenerator($table, 'column');
+
+        $this->assertInstanceOf(RuleGenerator::class, $faker);
     }
 
     /** @test */
     public function it_ignores_autoincrement_columns()
     {
-        $rule = new RuleGenerator(
-            'tablename',
-            $this->mockColumn(['autoincrement' => true])
-        );
+        $table = $this->mockTable('tablename', [
+            'id' => ['autoincrement' => true],
+        ]);
 
-        $this->assertEquals('', $rule->generate());
+        $rule = new RuleGenerator($table, 'id');
+
+        $this->assertEquals(null, $rule->generate());
     }
 
     /** @test */
-    public function it_ignores_timestamp_columns()
+    public function it_ignores_timestamp_columns_and_soft_deleted_at()
     {
-        foreach (['created_at', 'updated_at'] as $name) {
-            $rule = new RuleGenerator(
-                'tablename',
-                $this->mockColumn(['name' => $name, 'type' => Type::DATETIME])
-            );
+        $table = $this->mockTable('tablename');
 
-            $this->assertEquals('', $rule->generate());
+        foreach (['created_at', 'updated_at', 'deleted_at'] as $column) {
+            $rule = new RuleGenerator($table, $column);
+
+            $this->assertEquals(null, $rule->generate());
         }
     }
 
     /** @test */
     public function it_detects_required_or_nullable()
     {
-        $nullable = new RuleGenerator(
-            'tablename',
-            $this->mockColumn(['required' => false])
-        );
+        $table = $this->mockTable('tablename', [
+            'name' => ['required' => true],
+            'email' => ['required' => false],
+        ]);
 
-        $required = new RuleGenerator(
-            'tablename',
-            $this->mockColumn(['required' => true])
-        );
+        $rule = new RuleGenerator($table, 'name');
+        $this->assertContains("'required'", $rule->makeRules());
 
-        $this->assertContains("'nullable'", $nullable->makeRules());
-        $this->assertContains("'required'", $required->makeRules());
+        $rule = new RuleGenerator($table, 'email');
+        $this->assertContains("'nullable'", $rule->makeRules());
     }
 
     /** @test */
-    public function it_knows_of_email_date_and_uuid_column_names()
+    public function it_generates_nullable_rule_for_columns_with_default_value()
     {
+        $table = $this->mockTable('tablename', [
+            'count' => ['required' => true, 'hasDefault' => true],
+        ]);
+
+        $rule = new RuleGenerator($table, 'count');
+        $this->assertContains("'nullable'", $rule->makeRules());
+    }
+
+    /** @test */
+    public function it_knows_of_email_and_uuid_column_names()
+    {
+        $table = $this->mockTable('tablename', [
+            'email' => [],
+            'uuid' => [],
+        ]);
+
         $customs = [
             'email' => 'email:rfc',
             'uuid' => 'uuid',
         ];
 
         foreach ($customs as $key => $value) {
-            $rule = new RuleGenerator(
-                'tablename',
-                $this->mockColumn(['name' => $key])
-            );
+            $rule = new RuleGenerator($table, $key);
 
             $this->assertContains("'$value'", $rule->makeRules());
         }
@@ -123,46 +92,23 @@ class RuleGeneratorTest extends TestCase
     public function it_generates_rules_for_column_types()
     {
         $validation = [
-            // Integers
-            Type::BIGINT => 'integer',
             Type::INTEGER => 'integer',
-            Type::SMALLINT => 'integer',
-
-            // Boolean
             Type::BOOLEAN => 'boolean',
-
-            // Date, time and related
             Type::DATETIME => 'date',
-            Type::DATETIME_IMMUTABLE => 'date',
-            Type::DATETIMETZ => 'date',
-            Type::DATETIMETZ_IMMUTABLE => 'date',
-
             Type::DATE => 'date_format:Y-m-d',
-            Type::DATE_IMMUTABLE => 'date_format:Y-m-d',
-
             Type::TIME => 'date_format:H:i:s',
-            Type::TIME_IMMUTABLE => 'date_format:H:i:s',
-
-            // Floats
-            Type::FLOAT => 'numeric',
-
-            // Other
-            Type::GUID => 'uuid',
-
-            // TODO: This test is missing the following database type, which I am not sure how to handle.
-            //   - Type::TARRAY
-            //   - Type::SIMPLE_ARRAY
-            //   - Type::JSON_ARRAY
-            //   - Type::JSON
-            //   - Type::DATEINTERVAL
-            //   - Type::OBJECT
         ];
 
+        $table = $this->mockTable('tablename', [
+            'integer' => ['type' => Type::INTEGER],
+            'boolean' => ['type' => Type::BOOLEAN],
+            'datetime' => ['type' => Type::DATETIME],
+            'date' => ['type' => Type::DATE],
+            'time' => ['type' => Type::TIME],
+        ]);
+
         foreach ($validation as $key => $value) {
-            $rule = new RuleGenerator(
-                'tablename',
-                $this->mockColumn(['type' => $key])
-            );
+            $rule = new RuleGenerator($table, $key);
 
             $this->assertContains("'$value'", $rule->makeRules());
         }
@@ -171,102 +117,51 @@ class RuleGeneratorTest extends TestCase
     /** @test */
     public function it_accepts_all_values_for_string_and_binary_columns()
     {
-        $types = [
-            Type::STRING,
-            Type::TEXT,
-            Type::BINARY,
-            Type::BLOB,
-        ];
+        $table = $this->mockTable('tablename', [
+            'string' => ['type' => Type::STRING, 'required' => true],
+            'text' => ['type' => Type::TEXT, 'required' => true],
+            'binary' => ['type' => Type::BINARY, 'required' => true],
+        ]);
 
-        foreach ($types as $type) {
-            $rule = new RuleGenerator(
-                'tablename',
-                $this->mockColumn([
-                    'type' => $type,
-                    'required' => true,
-                ])
-            );
+        foreach (['string', 'text', 'binary'] as $column) {
+            $rule = new RuleGenerator($table, $column);
 
             $this->assertEquals(["'required'"], $rule->makeRules());
         }
     }
 
     /** @test */
-    public function it_generates_rules_for_enum_columns()
-    {
-        // This particular test needs the machinery of the back-end migration
-        // since we cannot easily mock an enum column (which is Doctrine's
-        // fault, actually).
-
-        $this->migrations = __DIR__ . '/../migrations';
-
-        $this->runMigrations();
-
-        $rule = new RuleGenerator(
-            'products',
-            $this->db->table('products')->column('type')
-        );
-
-        $this->assertContains("'in:food,stationery,other'", $rule->makeRules());
-
-        // Undo the migrations, as the rest of the class has no need for them
-
-        $this->rollbackMigrations();
-
-        $this->migrations = null;
-    }
-
-    /** @test */
     public function it_generates_regex_rules_for_decimal_columns()
     {
-        $rule = new RuleGenerator(
-            'tablename',
-            $this->mockColumn([
-                'type' => Type::DECIMAL,
-            ])
-        );
+        $table = $this->mockTable('tablename', [
+            'decimal' => ['type' => Type::DECIMAL],
+        ]);
+
+        $rule = new RuleGenerator($table, 'decimal');
 
         $this->assertContains("'regex:/^(?:\d+\.?|\d*\.\d+)$/'", $rule->makeRules());
     }
 
     /** @test */
-    public function it_generates_rules_for_foreign_keys()
+    public function it_generates_rules_for_enum_columns()
     {
-        // Test where the name of the foreign column is not the same as the name
-        // of the field under validation.
-        $this->mock(DatabaseInformation::class, function ($mock) {
-            $mock
-                ->shouldReceive('foreignKeysReferences')
-                ->with('products', 'owner_id')
-                ->andReturn(['users', 'id']);
-            $mock->shouldReceive('unique')->andReturn(false);
-        });
+        $table = $this->mockTable('tablename', [
+            'color' => ['enum' => ['red', 'green', 'blue']],
+        ]);
 
-        $rule = new RuleGenerator('products', $this->mockColumn(['name' => 'owner_id']));
+        $rule = new RuleGenerator($table, 'color');
 
-        $this->assertContains("'exists:users,id'", $rule->makeRules());
-
-        // Test where the name of the foreign column is the same as the name of
-        // the field under validation.
-        $this->mock(DatabaseInformation::class, function ($mock) {
-            $mock
-                ->shouldReceive('foreignKeysReferences')
-                ->with('products', 'state')
-                ->andReturn(['states', 'state']);
-            $mock->shouldReceive('unique')->andReturn(false);
-        });
-
-        $rule = new RuleGenerator('products', $this->mockColumn(['name' => 'state']));
-
-        $this->assertContains("'exists:states'", $rule->makeRules());
+        $this->assertContains("'in:red,green,blue'", $rule->makeRules());
     }
 
     /** @test */
     public function it_generates_rules_for_unique_columns()
     {
-        $this->makeColumnsUnique();
+        $table = $this->mockTable('tablename', [
+            'email' => ['unique' => true],
+        ]);
 
-        $rule = new RuleGenerator('tablename', $this->mockColumn());
+        $rule = new RuleGenerator($table, 'email');
 
         $this->assertContains(
             'Rule::unique(\'tablename\')->ignore($model)',
@@ -274,5 +169,43 @@ class RuleGeneratorTest extends TestCase
         );
 
         $this->assertTrue($rule->needsModel());
+    }
+
+    /** @test */
+    public function it_generates_rules_for_foreign_keys()
+    {
+        $table = $this->mockTable('tablename', [
+            'user_id' => ['reference' => ['users', 'id']],
+            'state' => ['reference' => ['states', 'state']],
+        ]);
+
+        $rule = new RuleGenerator($table, 'user_id');
+        $this->assertContains("'exists:users,id'", $rule->makeRules());
+
+        // Test where the name of the foreign column is the same as the name of
+        // the field under validation.
+
+        $rule = new RuleGenerator($table, 'state');
+        $this->assertContains("'exists:states'", $rule->makeRules());
+    }
+
+    /** @test */
+    public function it_implodes_rules_if_possible()
+    {
+        $table = $this->mockTable('users', [
+            'birthday' => ['required' => true, 'type' => Type::DATE],
+            'username' => ['required' => true, 'unique' => true],
+        ]);
+
+        $rule = new RuleGenerator($table, 'birthday');
+        $this->assertEquals(["'required|date_format:Y-m-d'"], $rule->generate());
+
+        $rule = new RuleGenerator($table, 'username');
+        $this->assertEquals([
+            '[',
+            "    'required',",
+            "    Rule::unique('users')->ignore(\$model),",
+            ']',
+        ], $rule->generate());
     }
 }

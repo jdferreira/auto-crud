@@ -2,9 +2,9 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Doctrine\DBAL\Types\Type;
 use Ferreira\AutoCrud\Database\OneToOne;
 use Ferreira\AutoCrud\Database\OneToMany;
 use Ferreira\AutoCrud\Database\ManyToMany;
@@ -111,24 +111,12 @@ class ModelGenerator extends BaseGenerator
     protected function casts(): array
     {
         static $map = [
-            Type::BIGINT => 'integer',
             Type::INTEGER => 'integer',
-            Type::SMALLINT => 'integer',
             Type::BOOLEAN => 'boolean',
             Type::DATETIME => 'datetime',
-            Type::DATETIME_IMMUTABLE => 'datetime',
-            Type::DATETIMETZ => 'datetime',
-            Type::DATETIMETZ_IMMUTABLE => 'datetime',
             Type::DATE => 'date',
-            Type::DATE_IMMUTABLE => 'date',
             Type::TIME => 'time',
-            Type::TIME_IMMUTABLE => 'time',
-            Type::FLOAT => 'float',
             Type::DECIMAL => 'decimal:2',
-            Type::TARRAY => 'array',
-            Type::SIMPLE_ARRAY => 'array',
-            Type::JSON_ARRAY => 'array',
-            Type::JSON => 'array',
         ];
 
         $casts = [];
@@ -142,19 +130,15 @@ class ModelGenerator extends BaseGenerator
                 continue;
             }
 
-            $isForeignKey = collect($this->table->foreignKeys())
-                ->filter(function ($fk) use ($name) {
-                    return in_array($name, $fk->getLocalColumns());
-                })
-                ->isNotEmpty();
+            $isForeignKey = $this->table->reference($name) !== null;
 
             if ($isForeignKey) {
                 continue;
             }
 
-            $column = $this->table->column($name);
+            $type = $this->table->type($name);
 
-            if (($cast = Arr::get($map, $column->getType()->getName())) !== null) {
+            if (($cast = Arr::get($map, $type)) !== null) {
                 $casts[] = "    '$name' => '$cast',";
             }
         }

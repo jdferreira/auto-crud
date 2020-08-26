@@ -2,10 +2,9 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Doctrine\DBAL\Types\Type;
-use Ferreira\AutoCrud\EnumType;
 
 class ViewCreateGenerator extends BaseGenerator
 {
@@ -115,8 +114,8 @@ class ViewCreateGenerator extends BaseGenerator
 
         $type = $this->table->type($column);
 
-        if ($type instanceof EnumType) {
-            $values = collect($type->validValues())->map(function ($value) {
+        if ($type === Type::ENUM) {
+            $values = collect($this->table->getEnumValid($column))->map(function ($value) {
                 $label = Str::ucfirst(str_replace('_', ' ', $value));
 
                 return "    <option value=\"$value\">$label</option>";
@@ -133,20 +132,13 @@ class ViewCreateGenerator extends BaseGenerator
             );
         }
 
-        if (
-            $column === 'email' &&
-            ($type->getName() === Type::STRING || $type->getName() === Type::TEXT)
-        ) {
+        if ($column === 'email' && $type === Type::STRING) {
             return '<input ' . $attrs . ' type="email">';
         }
 
-        switch ($type->getName()) {
+        switch ($type) {
             case Type::STRING:
-            case Type::GUID:
-            case Type::BIGINT:
             case Type::INTEGER:
-            case Type::SMALLINT:
-            case Type::FLOAT:
             case Type::DECIMAL:
                 return '<input ' . $attrs . ' type="text">';
 
@@ -154,22 +146,16 @@ class ViewCreateGenerator extends BaseGenerator
                 return '<input ' . $attrs . ' type="checkbox">';
 
             case Type::DATE:
-            case Type::DATE_IMMUTABLE:
                 return '<input ' . $attrs . ' type="date">';
 
             case Type::TIME:
-            case Type::TIME_IMMUTABLE:
                 return '<input ' . $attrs . ' type="time">';
 
             case Type::DATETIME:
-            case Type::DATETIME_IMMUTABLE:
-            case Type::DATETIMETZ:
-            case Type::DATETIMETZ_IMMUTABLE:
-                return '<input ' . $attrs . ' type="datetime">'; // TODO: This has been deprecated!
+                return '<input ' . $attrs . ' type="datetime">'; // TODO: This has been deprecated in HTML!
 
             case Type::BINARY:
-            case Type::BLOB:
-                return '<input ' . $attrs . ' type="file">';
+                return '<input ' . $attrs . ' type="file">'; // TODO: This must be converted to binary on the controller!
 
             case Type::TEXT:
                 // This is its own method because it needs to be overwritten in

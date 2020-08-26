@@ -2,23 +2,20 @@
 
 namespace Ferreira\AutoCrud\Validation;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Schema\Column;
 use Ferreira\AutoCrud\Database\TableInformation;
-use Ferreira\AutoCrud\Database\DatabaseException;
-use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class RuleGenerator
 {
     /**
-     * @var string
+     * @var TableInformation
      */
-    private $tablename;
+    private $table;
 
     /**
-     * @var Column
+     * @var string
      */
     private $column;
 
@@ -32,9 +29,9 @@ class RuleGenerator
      */
     private $needsModel = false;
 
-    public function __construct(string $tablename, Column $column)
+    public function __construct(TableInformation $table, string $column)
     {
-        $this->tablename = $tablename;
+        $this->table = $table;
         $this->column = $column;
     }
 
@@ -111,10 +108,15 @@ class RuleGenerator
     private function nullable()
     {
         return $this->quote(
-            $this->column->getNotnull() && $this->column->getDefault() === null
+            $this->required()
                 ? 'required'
                 : 'nullable'
         );
+    }
+
+    private function required()
+    {
+        return $this->table->required($this->column) && ! $this->table->hasDefault($this->column);
     }
 
     private function byColumnName()
@@ -124,34 +126,25 @@ class RuleGenerator
             'uuid' => 'uuid',
         ];
 
-        return $this->quote(Arr::get($customs, $this->column->getName()));
+        return $this->quote(Arr::get($customs, $this->column));
     }
 
     private function byColumnType()
     {
         static $map = [
-            Type::BIGINT => 'integer',
             Type::INTEGER => 'integer',
-            Type::SMALLINT => 'integer',
             Type::BOOLEAN => 'boolean',
             Type::DATETIME => 'date',
-            Type::DATETIME_IMMUTABLE => 'date',
-            Type::DATETIMETZ => 'date',
-            Type::DATETIMETZ_IMMUTABLE => 'date',
             Type::DATE => 'date_format:Y-m-d',
-            Type::DATE_IMMUTABLE => 'date_format:Y-m-d',
             Type::TIME => 'date_format:H:i:s',
-            Type::TIME_IMMUTABLE => 'date_format:H:i:s',
-            Type::FLOAT => 'numeric',
-            Type::GUID => 'uuid',
         ];
 
-        return $this->quote(Arr::get($map, $this->column->getType()->getName()));
+        return $this->quote(Arr::get($map, $this->table->type($this->column)));
     }
 
     private function decimalType()
     {
-        if ($this->column->getType()->getName() === Type::DECIMAL) {
+        if ($this->table->type($this->column) === Type::DECIMAL) {
             $this->implodable = false;
 
             return $this->quote('regex:/^(?:\d+\.?|\d*\.\d+)$/');
@@ -160,16 +153,7 @@ class RuleGenerator
 
     private function enumRules()
     {
-        if (! $this->column->getType()->getName() === Type::STRING) {
-            return;
-        }
-
-        $table = $this->table();
-        if (! $table) {
-            return;
-        }
-
-        if (($valid = $table->getEnumValid($this->column->getName())) === null) {
+        if (($valid = $this->table->getEnumValid($this->column)) === null) {
             return;
         }
 
@@ -182,32 +166,16 @@ class RuleGenerator
         return $this->quote('in:' . implode(',', $valid));
     }
 
-    private function table()
-    {
-        try {
-            return app(TableInformation::class, ['name' => $this->tablename]);
-        } catch (DatabaseException $e) {
-            return;
-        }
-    }
-
     private function foreignKeys()
     {
-        /**
-         * @var DatabaseInformation
-         */
-        $db = app(DatabaseInformation::class);
-
-        $references = $db->foreignKeysReferences($this->tablename, $this->column->getName());
-
-        if ($references === null) {
+        if (($references = $this->table->reference($this->column)) === null) {
             return;
         }
 
         [$foreignTable, $foreignColumn] = $references;
 
         $rule =
-            $foreignColumn === $this->column->getName()
+            $foreignColumn === $this->column
             ? "exists:$foreignTable"
             : "exists:$foreignTable,$foreignColumn";
 
@@ -216,12 +184,7 @@ class RuleGenerator
 
     private function uniqueRules()
     {
-        /**
-         * @var DatabaseInformation
-         */
-        $db = app(DatabaseInformation::class);
-
-        if (! $db->unique($this->tablename, $this->column->getName())) {
+        if (! $this->table->unique($this->column)) {
             return;
         }
 
@@ -229,19 +192,16 @@ class RuleGenerator
 
         $this->needsModel = true;
 
-        return "Rule::unique('$this->tablename')->ignore(\$model)";
+        $tablename = $this->table->name();
+
+        return "Rule::unique('$tablename')->ignore(\$model)";
     }
 
     private function ignoreColumn()
     {
-        return $this->column->getAutoincrement() || $this->isTimestamp();
-    }
+        $toIgnore = [$this->table->primaryKey(), 'created_at', 'updated_at', 'deleted_at'];
 
-    private function isTimestamp(): bool
-    {
-        return
-            in_array($this->column->getName(), ['created_at', 'updated_at', 'deleted_at']) &&
-            Str::startsWith($this->column->getType()->getName(), 'datetime');
+        return in_array($this->column, $toIgnore);
     }
 
     public function needsModel()

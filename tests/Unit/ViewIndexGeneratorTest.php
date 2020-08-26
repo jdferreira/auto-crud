@@ -374,6 +374,7 @@ class ViewIndexGeneratorTest extends TestCase
                     <th>ID</th>
                     <th>Name</th>
                     <th>Comment</th>
+                    <th>Metadata</th>
                 </tr>
 
                 @foreach (\$paymentMethods as \$paymentMethod)
@@ -381,6 +382,7 @@ class ViewIndexGeneratorTest extends TestCase
                         <td>{{ \$paymentMethod->id }}</td>
                         <td>{{ \$paymentMethod->name }}</td>
                         <td>{{ \$paymentMethod->comment }}</td>
+                        <td>{{ \$paymentMethod->metadata }}</td>
                     </tr>
                 @endforeach
             </table>

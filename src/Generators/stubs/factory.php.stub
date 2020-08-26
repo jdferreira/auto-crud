@@ -2,6 +2,7 @@
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
 use {{ modelNamespace }}\{{ modelClass }};
+{{ otherUses }}
 use Faker\Generator as Faker;
 
 $factory->define({{ modelClass }}::class, function (Faker $faker) {

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ModelGenerator;
 
 class ModelGeneratorTest extends TestCase
@@ -85,7 +86,7 @@ class ModelGeneratorTest extends TestCase
     /** @test */
     public function it_handles_soft_deletes()
     {
-        $this->assertTrue($this->db->table('products')->softDeletes());
+        $this->assertTrue((new TableInformation('products'))->softDeletes());
 
         $code = $this->generator('products')->generate();
 
@@ -98,7 +99,7 @@ class ModelGeneratorTest extends TestCase
     {
         $this->assertEquals(
             'product_id',
-            $this->db->table('products')->primaryKey()
+            (new TableInformation('products'))->primaryKey()
         );
 
         $code = $this->generator('products')->generate();

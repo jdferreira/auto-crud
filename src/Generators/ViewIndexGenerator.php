@@ -2,8 +2,8 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Str;
-use Doctrine\DBAL\Types\Type;
 
 class ViewIndexGenerator extends BaseGenerator
 {
@@ -65,17 +65,8 @@ class ViewIndexGenerator extends BaseGenerator
     protected function visibleColumns()
     {
         return collect($this->table->columns())->filter(function ($column) {
-            if (in_array($column, ['created_at', 'updated_at', 'deleted_at'])) {
-                return false;
-            }
-
-            $type = $this->table->column($column)->getType()->getName();
-
-            if ($type === Type::BINARY || $type === Type::BLOB) {
-                return false;
-            }
-
-            return true;
+            return ! in_array($column, ['created_at', 'updated_at', 'deleted_at'])
+                && $this->table->type($column) !== Type::BINARY;
         });
     }
 
@@ -94,7 +85,7 @@ class ViewIndexGenerator extends BaseGenerator
             // the name of the row, not the actual column value; additionally,
             // the name is wrapped into an HTML link to the show view of that
             // model.
-            if (($references = $this->db->foreignKeysReferences($table, $column)) !== null) {
+            if (($references = $this->table->reference($column)) !== null) {
                 [$foreignTable, $foreignColumn] = $references;
 
                 $label = Str::ucfirst(str_replace(
@@ -115,7 +106,7 @@ class ViewIndexGenerator extends BaseGenerator
                 if ($foreignLabelColumn === null) {
                     $value = '(' . ucwords(str_replace('_', ' ', Str::singular($foreignTable))) . ': ' . "$modelName->$column" . ')';
                 } else {
-                    $type = $this->db->table($foreignTable)->type($foreignColumn)->getName();
+                    $type = $this->db->table($foreignTable)->type($foreignColumn);
                     $required = $this->table->required($column);
                     $raw = "$modelName->$modelMethod->$foreignLabelColumn";
 
@@ -147,7 +138,7 @@ class ViewIndexGenerator extends BaseGenerator
 
     protected function accessor($column)
     {
-        $type = $this->table->column($column)->getType()->getName();
+        $type = $this->table->type($column);
         $required = $this->table->required($column);
         $modelName = '$' . $this->modelSingular();
 
@@ -171,27 +162,17 @@ class ViewIndexGenerator extends BaseGenerator
 
     private function castToType($accessor, $type)
     {
-        if ($type === Type::BOOLEAN) {
-            return "$accessor ? '&#10004;' : ''";
-        } elseif (
-            $type === Type::DATETIME ||
-            $type === Type::DATETIME_IMMUTABLE ||
-            $type === Type::DATETIMETZ ||
-            $type === Type::DATETIMETZ_IMMUTABLE
-        ) {
-            return "${accessor}->format('Y-m-d H:i:s')";
-        } elseif (
-            $type === Type::DATE ||
-            $type === Type::DATE_IMMUTABLE
-        ) {
-            return "${accessor}->format('Y-m-d')";
-        } elseif (
-            $type === Type::TIME ||
-            $type === Type::TIME_IMMUTABLE
-        ) {
-            return "${accessor}->format('H:i:s')";
-        } else {
-            return $accessor;
+        switch ($type) {
+            case Type::BOOLEAN:
+                return "$accessor ? '&#10004;' : ''";
+            case Type::DATETIME:
+                return "${accessor}->format('Y-m-d H:i:s')";
+            case Type::DATE:
+                return "${accessor}->format('Y-m-d')";
+            case Type::TIME:
+                return "${accessor}->format('H:i:s')";
+            default:
+                return $accessor;
         }
     }
 }

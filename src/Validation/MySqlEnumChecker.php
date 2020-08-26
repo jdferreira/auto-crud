@@ -40,7 +40,7 @@ class MySqlEnumChecker
     private function getEnum()
     {
         $results = DB::select(DB::raw(
-            "SHOW COLUMNS FROM {$this->table} WHERE Field = '{$this->column}'"
+            "SHOW COLUMNS FROM {$this->tablename} WHERE Field = '{$this->column}'"
         ))->first(); // TODO: This is probably wrong! DB::select returns an array, not a collection
 
         return $results === null ? null : $results->Type;

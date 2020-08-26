@@ -4,11 +4,7 @@ namespace Tests\Unit;
 
 use Exception;
 use Tests\TestCase;
-use Ferreira\AutoCrud\EnumType;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\StringType;
-use Doctrine\DBAL\Types\DateTimeType;
-use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Database\TableInformation;
 
 class TableInformationTest extends TestCase
@@ -67,42 +63,56 @@ class TableInformationTest extends TestCase
     }
 
     /** @test */
-    public function it_retrieves_the_details_of_a_specifc_column()
-    {
-        $table = new TableInformation('users');
-
-        $this->assertInstanceOf(Column::class, $table->column('name'));
-
-        $this->assertNull($table->column('non_existing_column'));
-    }
-
-    /** @test */
     public function it_knows_whether_a_column_is_required_or_optional()
     {
         $table = new TableInformation('users');
+        $this->assertFalse($table->hasDefault('name'));
+        $this->assertTrue($table->hasDefault('subscribed'));
 
-        $this->assertTrue($table->required('name'));
-        $this->assertFalse($table->required('email'));
-        $this->assertNull($table->required('non_existing_column'));
+        $table = new TableInformation('products');
+        $this->assertTrue($table->hasDefault('start_at'));
     }
 
     /** @test */
-    public function it_represents_column_types_with_doctrine_types()
+    public function it_knows_the_default_value_of_a_column()
+    {
+        // Note: This probably works only in SQLite, and other drivers must be
+        // tested as well.
+
+        $table = new TableInformation('users');
+        $this->assertEquals('0', $table->default('subscribed'));
+
+        $table = new TableInformation('products');
+        $this->assertEquals('CURRENT_TIMESTAMP', $table->default('start_at'));
+    }
+
+    /** @test */
+    public function it_returns_column_types_as_strings()
     {
         $table = new TableInformation('users');
+        $this->assertEquals(Type::STRING, $table->type('name'));
+        $this->assertEquals(Type::DATETIME, $table->type('created_at'));
 
-        $this->assertInstanceOf(StringType::class, $table->type('name'));
-        $this->assertInstanceOf(DateTimeType::class, $table->type('created_at'));
         $this->assertNull($table->type('non_existing_column'));
+
+        // Note that the following does not work correctly on SQLite, as the
+        // types in there are simplified (JSON columns are actually text
+        // columns). For this reason, the tests are not executed at the moment.
+        // I first need to find a way to test things in specific database
+        // drivers.
+        if (false) {
+            $table = new TableInformation('payment_methods');
+            $this->assertEquals(Type::UNRECOGNIZED, $table->type('uuid'));
+        }
     }
 
     /** @test */
     public function it_constructs_virtual_enum_types_for_enum_columns()
     {
-        $type = (new TableInformation('products'))->type('type');
+        $table = new TableInformation('products');
 
-        $this->assertInstanceOf(EnumType::class, $type);
-        $this->assertSetsEqual(['food', 'stationery', 'other'], $type->validValues());
+        $this->assertEquals(Type::ENUM, $table->type('type'));
+        $this->assertSetsEqual(['food', 'stationery', 'other'], $table->getEnumValid('type'));
     }
 
     /** @test */
@@ -128,18 +138,40 @@ class TableInformationTest extends TestCase
     }
 
     /** @test */
-    public function it_retrieved_the_foreign_keys_of_a_table()
+    public function it_retrieves_whether_a_column_references_one_in_another_table()
     {
-        $foreign = (new TableInformation('products'))->foreignKeys();
+        $this->assertEquals(
+            (new TableInformation('products'))->reference('owner_id'),
+            ['users', 'id']
+        );
 
-        $this->assertCount(1, $foreign);
+        $this->assertEquals(
+            (new TableInformation('avatars'))->reference('user_id'),
+            ['users', 'id']
+        );
 
-        $foreignKey = $foreign[0];
+        $this->assertNull(
+            (new TableInformation('users'))->reference('name')
+        );
+    }
 
-        $this->assertInstanceOf(ForeignKeyConstraint::class, $foreignKey);
-        $this->assertEquals(['owner_id'], $foreignKey->getColumns());
-        $this->assertEquals('users', $foreignKey->getForeignTableName());
-        $this->assertEquals(['id'], $foreignKey->getForeignColumns());
+    /** @test */
+    public function it_retrieves_all_references()
+    {
+        $this->assertEquals(
+            [
+                'user_id' => ['users', 'id'],
+            ],
+            (new TableInformation('avatars'))->allReferences()
+        );
+
+        $this->assertEquals(
+            [
+                'role_id' => ['roles', 'id'],
+                'user_id' => ['users', 'id'],
+            ],
+            (new TableInformation('role_user'))->allReferences()
+        );
     }
 
     /** @test */
@@ -183,5 +215,12 @@ class TableInformationTest extends TestCase
             ['food', 'stationery', 'other'],
             (new TableInformation('products'))->getEnumValid('type')
         );
+    }
+
+    /** @test */
+    public function it_knows_whether_columns_have_unique_indices()
+    {
+        $this->assertFalse((new TableInformation('users'))->unique('name'));
+        $this->assertTrue((new TableInformation('users'))->unique('email'));
     }
 }

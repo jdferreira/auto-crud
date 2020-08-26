@@ -60,8 +60,8 @@ class RequestGenerator extends BaseGenerator
 
         foreach ($this->table->columns() as $name) {
             $rule = app(RuleGenerator::class, [
-                'tablename' => $this->table->name(),
-                'column' => $this->table->column($name),
+                'table' => $this->table,
+                'column' => $name,
             ]);
 
             $validation = $rule->generate();

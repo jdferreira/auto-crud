@@ -94,12 +94,9 @@ class SeederInjector
         }
 
         foreach ($this->db->pivots() as $pivot) {
-            [$fk1, $fk2] = $this->db->table($pivot)->foreignKeys();
+            [$fk1, $fk2] = array_values($this->db->table($pivot)->allReferences());
 
-            if (
-                in_array($fk1->getForeignTableName(), $this->tables) &&
-                in_array($fk2->getForeignTableName(), $this->tables)
-            ) {
+            if (in_array($fk1[0], $this->tables) && in_array($fk2[0], $this->tables)) {
                 $result [] = Str::studly(Str::singular($pivot)) . 'Seeder';
             }
         }

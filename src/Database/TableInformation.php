@@ -2,13 +2,11 @@
 
 namespace Ferreira\AutoCrud\Database;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
-use Doctrine\DBAL\Types\Type;
-use Ferreira\AutoCrud\EnumType;
 use Doctrine\DBAL\Schema\Column;
 use Illuminate\Database\Connection;
-use Doctrine\DBAL\Types\DateTimeType;
-use Doctrine\DBAL\Types\DateTimeTzType;
+use Doctrine\DBAL\Types\Type as DoctrineType;
 use Ferreira\AutoCrud\Validation\MySqlEnumChecker;
 use Ferreira\AutoCrud\Validation\SQLiteEnumChecker;
 use Ferreira\AutoCrud\Validation\PostgresEnumChecker;
@@ -36,14 +34,24 @@ class TableInformation
     private $primaryKey;
 
     /**
-     * @var \Doctrine\DBAL\Schema\ForeignKeyConstraint[]
+     * @var string[][]
      */
-    private $foreignKeys;
+    private $references;
 
     /**
      * @var string|null
      */
     private $labelColumn;
+
+    /**
+     * @var string[][]
+     */
+    private $uniqueColumns;
+
+    /**
+     * @var array
+     */
+    private $defaults;
 
     /**
      * Create an instance of this class.
@@ -62,8 +70,10 @@ class TableInformation
 
         $this->columns = $this->computeColumns($doctrine);
         $this->primaryKey = $this->computePrimaryKey($doctrine);
-        $this->foreignKeys = $this->computeForeignKeys($doctrine);
+        $this->references = $this->computeReferences($doctrine);
+        $this->uniqueColumns = $this->computeUniqueColumns($doctrine);
         $this->labelColumn = $this->computeLabelColumn();
+        $this->defaults = $this->computeDefaults();
     }
 
     private function computeColumns($doctrine): array
@@ -90,22 +100,58 @@ class TableInformation
         }
     }
 
-    private function computeForeignKeys($doctrine)
+    private function computeReferences($doctrine)
     {
-        return $doctrine->listTableForeignKeys($this->name);
+        $result = [];
+
+        foreach ($doctrine->listTableForeignKeys($this->name) as $key) {
+            $localColumns = $key->getLocalColumns();
+
+            if (count($localColumns) === 1) {
+                $result[$localColumns[0]] = [$key->getForeignTableName(), $key->getForeignColumns()[0]];
+            }
+        }
+
+        return $result;
+    }
+
+    private function computeUniqueColumns($doctrine)
+    {
+        $result = [];
+
+        foreach ($doctrine->listTableIndexes($this->name) as $index) {
+            if ($index->isUnique() || $index->isPrimary()) {
+                $result[] = Arr::sort($index->getColumns());
+            }
+        }
+
+        return $result;
     }
 
     private function computeLabelColumn()
     {
         $stringColumns = collect($this->columns)->filter(function (Column $column) {
             return
-                $column->getType()->getName() === Type::STRING && // String type
+                $column->getType()->getName() === DoctrineType::STRING && // String type
                 $this->getEnumValid($column->getName()) === null; // Non-enum
         })->map(function (Column $column) {
             return $column->getName();
         })->values();
 
         return $stringColumns->contains('name') ? 'name' : $stringColumns->first();
+    }
+
+    private function computeDefaults()
+    {
+        $result = [];
+
+        foreach ($this->columns as $name => $column) {
+            if (($default = $column->getDefault()) !== null) {
+                $result[$name] = $default;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -139,18 +185,6 @@ class TableInformation
     }
 
     /**
-     * Get a doctrine's Column instance for the provided column name.
-     *
-     * @param  string  @column
-     *
-     * @return null|Column
-     */
-    public function column($column): ?Column
-    {
-        return Arr::get($this->columns, $column);
-    }
-
-    /**
      * Determine whether the provided column is required.
      * A required column is one that is not nullable.
      *
@@ -160,25 +194,82 @@ class TableInformation
      */
     public function required($column): ?bool
     {
-        $column = $this->column($column);
+        return Arr::has($this->columns, $column)
+            ? Arr::get($this->columns, $column)->getNotnull()
+            : null;
+    }
 
-        return $column === null ? null : $column->getNotnull();
+    /**
+     * Determines whether the provided column is unique. A unique column is one
+     * for which there is a UNIQUE index on only that column. Multiple columns
+     * can be given (in the form of an array), in which case the method
+     * determines whether there is a UNIQUE index spanning exactly those
+     * columns, regardless of order.
+     *
+     * @param  string|string[]  $column
+     *
+     * @return null|bool
+     */
+    public function unique($column): ?bool
+    {
+        $column = Arr::wrap($column);
+
+        return in_array($column, $this->uniqueColumns);
     }
 
     /**
      * Get the Doctrine's string representation of the column's type.
      *
      * @param  string  $column
-     * @return null|Type
+     * @return null|string
      */
-    public function type(string $column): ?Type
+    public function type(string $column): ?string
     {
         if (! $this->has($column)) {
             return null;
         } elseif ($valid = $this->getEnumValid($column)) {
-            return EnumType::generateDynamicEnumType($this->name, $column, $valid);
-        } else {
-            return $this->column($column)->getType();
+            return Type::ENUM;
+        }
+
+        switch ($type = $this->columns[$column]->getType()->getName()) {
+            case DoctrineType::BIGINT:
+            case DoctrineType::INTEGER:
+            case DoctrineType::SMALLINT:
+                return Type::INTEGER;
+
+            case DoctrineType::BOOLEAN:
+                return Type::BOOLEAN;
+
+            case DoctrineType::DATETIME:
+            case DoctrineType::DATETIME_IMMUTABLE:
+            case DoctrineType::DATETIMETZ:
+            case DoctrineType::DATETIMETZ_IMMUTABLE:
+                return Type::DATETIME;
+
+            case DoctrineType::DATE:
+            case DoctrineType::DATE_IMMUTABLE:
+                return Type::DATE;
+
+            case DoctrineType::TIME:
+            case DoctrineType::TIME_IMMUTABLE:
+                return Type::TIME;
+
+            case DoctrineType::DECIMAL:
+            case DoctrineType::FLOAT:
+                return Type::DECIMAL;
+
+            case DoctrineType::STRING:
+                return Type::STRING;
+
+            case DoctrineType::TEXT:
+                return Type::TEXT;
+
+            case DoctrineType::BINARY:
+            case DoctrineType::BLOB:
+                return Type::BINARY;
+
+            default:
+                return Type::UNRECOGNIZED;
         }
     }
 
@@ -201,19 +292,19 @@ class TableInformation
      */
     public function softDeletes(): bool
     {
-        $type = $this->type('deleted_at');
-
-        return $type instanceof DateTimeType || $type instanceof DateTimeTzType;
+        return $this->type('deleted_at') === Type::DATETIME;
     }
 
     /**
-     * Return the foreign keys of this table.
+     * Determines whether a column references another column in another table
+     * (potentially the same!), and returns the pair [$table, $column]
+     * describing this reference.
      *
-     * @return \Doctrine\DBAL\Schema\ForeignKeyConstraint[]
+     * @param string $column
      */
-    public function foreignKeys(): array
+    public function reference(string $column)
     {
-        return $this->foreignKeys;
+        return Arr::get($this->references, $column, null);
     }
 
     /**
@@ -226,9 +317,19 @@ class TableInformation
     public function isPivot(): bool
     {
         return
-            count($this->foreignKeys()) === 2 &&
+            count($this->references) === 2 &&
             count(array_diff($this->columns(), ['id', 'created_at', 'updated_at'])) === 2;
         // TODO: What about soft deletes?
+    }
+
+    /**
+     * Returns all references of a table.
+     *
+     * @return array
+     */
+    public function allReferences(): array
+    {
+        return $this->references;
     }
 
     /**
@@ -254,10 +355,13 @@ class TableInformation
      *
      * @param string $column
      *
-     * @return array|null
+     * @return null|string[]
      */
     public function getEnumValid(string $column): ?array
     {
+        // TODO: This should run exactly once for all enum columns and the
+        // result stored somewhere in this class; future calls should instead
+        // query the internal data structure
         switch (app(Connection::class)->getDriverName()) {
             case 'mysql':
                 return (new MySqlEnumChecker($this->name, $column))->valid();
@@ -271,5 +375,29 @@ class TableInformation
             default:
                 return null;
         }
+    }
+
+    /**
+     * Determines whether a function contains a default value.
+     *
+     * @param string $column
+     *
+     * @return bool
+     */
+    public function hasDefault(string $column)
+    {
+        return Arr::has($this->defaults, $column);
+    }
+
+    /**
+     * Returns the default value of a function.
+     *
+     * @param string $column
+     *
+     * @return mixed
+     */
+    public function default(string $column)
+    {
+        return Arr::get($this->defaults, $column);
     }
 }

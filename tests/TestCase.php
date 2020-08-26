@@ -3,10 +3,13 @@
 namespace Tests;
 
 use Exception;
+use Ferreira\AutoCrud\Type;
+use Illuminate\Support\Arr;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\Constraint\LogicalNot;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 use PHPUnit\Framework\Constraint\Exception as ExceptionConstraint;
@@ -216,5 +219,68 @@ abstract class TestCase extends BaseTestCase
     protected function assertArrayHasSubset(array $subset, array $array)
     {
         static::assertThat($array, new ArrayHasSubset($subset));
+    }
+
+    /**
+     * Creates a mocked TableInformation object that answers questions about a
+     * column in a certain way.
+     *
+     * @param string $tablename - The name of the table that will be mocked. If
+     *   null, this will be a unique ASCII name generated on the fly
+     * @param array $options - The options that define how the mocked
+     *   TableInformation object answers question. Keys are names of columns,
+     *   and values are properties of those columns. Possible properties are:
+     *   - primaryKey: Whether the column is the primary key of the table.
+     *     Defaults to false.
+     *   - type: The type of the column (see the constant values in
+     *     `\Ferreira\AutoCrud\Type`). Defaults to `Type::String`.
+     *   - required: a boolean indicating whether the column is required.
+     *     Defaults to false.
+     *   - unique: a boolean indicating whether the column is marked as unique.
+     *     Defaults to false.
+     *   - enum: an array of strings containing the valid values for the column.
+     *     Using this key automatically changes the type to `Type::ENUM`.
+     *   - reference: a pair [$table, $column] specifying which foreign column
+     *     this column references. Defaults to `null`.
+     *   - hasDefault: whether the column has a default value. Defaults to
+     *     false.
+     */
+    protected function mockTable(string $tablename, array $columns = [])
+    {
+        return $this->mock(TableInformation::class, function ($mock) use ($tablename, $columns) {
+            $primaryKey = null;
+
+            foreach ($columns as $column => $properties) {
+                if (Arr::get($properties, 'autoincrement', false)) {
+                    $primaryKey = $column;
+                }
+
+                if (($choices = Arr::get($properties, 'enum', null)) !== null) {
+                    $properties['type'] = Type::ENUM;
+                }
+
+                $mock->shouldReceive('type')->with($column)->andReturn(
+                    Arr::get($properties, 'type', Type::STRING)
+                );
+                $mock->shouldReceive('required')->with($column)->andReturn(
+                    Arr::get($properties, 'required', true)
+                );
+                $mock->shouldReceive('unique')->with($column)->andReturn(
+                    Arr::get($properties, 'unique', false)
+                );
+                $mock->shouldReceive('getEnumValid')->with($column)->andReturn(
+                    $choices
+                );
+                $mock->shouldReceive('reference')->with($column)->andReturn(
+                    Arr::get($properties, 'reference', null)
+                );
+                $mock->shouldReceive('hasDefault')->with($column)->andReturn(
+                    Arr::get($properties, 'hasDefault', false)
+                );
+            }
+
+            $mock->shouldReceive('name')->andReturn($tablename);
+            $mock->shouldReceive('primaryKey')->andReturn($primaryKey);
+        });
     }
 }

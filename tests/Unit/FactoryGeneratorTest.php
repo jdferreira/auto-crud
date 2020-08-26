@@ -50,6 +50,16 @@ class FactoryGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_detects_referenced_models_qualified_name()
+    {
+        $code = $this->generator('products')->generate();
+        $this->assertContains('use App\User;', $code);
+
+        $code = $this->generator('products')->setModelDirectory('Models')->generate();
+        $this->assertContains('use App\Models\User;', $code);
+    }
+
+    /** @test */
     public function it_defines_a_factory()
     {
         $code = $this->generator('products')->generate();
@@ -64,6 +74,7 @@ class FactoryGeneratorTest extends TestCase
         $this->app->bind(ColumnFaker::class, function () {
             return $this->mock(ColumnFaker::class, function ($mock) {
                 $mock->shouldReceive('fake')->once();
+                $mock->shouldReceive('referencedTable')->atMost()->times(1);
             });
         });
 
@@ -112,7 +123,7 @@ class FactoryGeneratorTest extends TestCase
                 'owner_id' => function () {
                     return factory(User::class)->create()->id;
                 },
-                'type' => \$faker->optional(0.9)->sentence,
+                'type' => \$faker->optional(0.9)->randomElement(['food', 'stationery', 'other']),
                 'value' => \$faker->numerify('###.##'),
                 'start_at' => \$faker->dateTimeBetween('-10 years', 'now'),
                 'deleted_at' => \$faker->optional(0.9)->dateTimeBetween('-10 years', 'now'),

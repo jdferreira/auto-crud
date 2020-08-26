@@ -27,10 +27,13 @@ class PivotSeeder
             throw new PivotSeederException('Table ' . $table->name() . ' is not a pivot.');
         }
 
-        [$fk1, $fk2] = $table->foreignKeys();
+        $references = $table->allReferences();
+        $localPivotColumns = array_keys($references);
+        $fk1 = $references[$localPivotColumns[0]];
+        $fk2 = $references[$localPivotColumns[1]];
 
-        $ids1 = $this->ids($fk1->getForeignTableName());
-        $ids2 = $this->ids($fk2->getForeignTableName());
+        $ids1 = $this->ids($fk1[0]);
+        $ids2 = $this->ids($fk2[0]);
 
         $pairs = [];
 
@@ -45,8 +48,8 @@ class PivotSeeder
 
         foreach ($pairs as &$pair) {
             $pair = [
-                $fk1->getLocalColumns()[0] => $pair[0],
-                $fk2->getLocalColumns()[0] => $pair[1],
+                $localPivotColumns[0] => $pair[0],
+                $localPivotColumns[1] => $pair[1],
             ];
         }
 

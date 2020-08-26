@@ -3,91 +3,29 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Support\Arr;
-use Doctrine\DBAL\Types\Type;
-use Ferreira\AutoCrud\EnumType;
-use Doctrine\DBAL\Schema\Column;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Generators\ColumnFaker;
-use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class ColumnFakerTest extends TestCase
 {
-    private function mockColumn(array $options = [])
-    {
-        $mockedType = $this->mock(Type::class, function ($mock) {
-            $mock->shouldReceive('getName')->andReturn('unrecognized_column_type_name');
-        });
-
-        $options = [
-            'type' => Arr::get($options, 'type', $mockedType),
-            'name' => Arr::get($options, 'name', 'random_column_name'),
-            'autoincrement' => Arr::get($options, 'autoincrement', false),
-            'required' => Arr::get($options, 'required', true),
-        ];
-
-        if (is_string($options['type'])) {
-            $options['type'] = Type::getType($options['type']);
-        }
-
-        return $this->mock(Column::class, function ($mock) use ($options) {
-            $mock->shouldReceive('getAutoincrement')->andReturn($options['autoincrement']);
-            $mock->shouldReceive('getName')->andReturn($options['name']);
-            $mock->shouldReceive('getType')->andReturn($options['type']);
-            $mock->shouldReceive('getNotnull')->andReturn($options['required']);
-        });
-    }
-
-    private function assertFakesRegularDatabaseType(string $type, string $fake)
-    {
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn(['type' => $type])
-        );
-
-        $this->assertEquals("\$faker->$fake", $faker->fake());
-    }
-
-    private function assertFakerPropertyIsUsed(string $columnName, string $fakerProperty)
-    {
-        $this->assertNotNull(\Faker\Factory::create()->getFormatter($fakerProperty));
-
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn(['name' => $columnName])
-        );
-
-        $this->assertEquals("\$faker->$fakerProperty", $faker->fake());
-    }
-
-    public function makeColumnsUnique()
-    {
-        $this->mock(DatabaseInformation::class, function ($mock) {
-            $mock->shouldReceive('unique')->andReturn(true);
-            $mock->shouldReceive('foreignKeysReferences')->andReturn(null);
-        });
-    }
-
     /** @test */
-    public function it_accepts_a_tablename_and_column()
+    public function it_accepts_a_table_information_and_a_column_name_as_arguments()
     {
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn()
-        );
+        $table = $this->mockTable('tablename');
 
-        $this->assertInstanceOf(
-            ColumnFaker::class,
-            $faker
-        );
+        $faker = new ColumnFaker($table, 'column');
+
+        $this->assertInstanceOf(ColumnFaker::class, $faker);
     }
 
     /** @test */
     public function it_ignores_autoincrement_columns()
     {
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn(['autoincrement' => true])
-        );
+        $table = $this->mockTable('tablename', [
+            'id' => ['autoincrement' => true],
+        ]);
+
+        $faker = new ColumnFaker($table, 'id');
 
         $this->assertEquals('', $faker->fake());
     }
@@ -95,76 +33,82 @@ class ColumnFakerTest extends TestCase
     /** @test */
     public function it_ignores_timestamp_columns()
     {
-        foreach (['created_at', 'updated_at'] as $name) {
-            $faker = new ColumnFaker(
-                'tablename',
-                $this->mockColumn(['name' => $name, 'type' => Type::DATETIME])
-            );
+        $table = $this->mockTable('tablename');
+
+        foreach (['created_at', 'updated_at'] as $column) {
+            $faker = new ColumnFaker($table, $column);
 
             $this->assertEquals('', $faker->fake());
         }
     }
 
     /** @test */
-    public function it_fakes_regular_database_types()
+    public function it_fakes_soft_delete_times()
+    {
+        $table = $this->mockTable('tablename', [
+            'deleted_at' => ['type' => Type::DATETIME, 'required' => false],
+        ]);
+
+        $faker = new ColumnFaker($table, 'deleted_at');
+
+        $this->assertEquals('$faker->optional(0.9)->dateTimeBetween(\'-10 years\', \'now\')', $faker->fake());
+    }
+
+    /** @test */
+    public function it_fakes_based_on_database_type()
     {
         $fakes = [
-            // Integers
-            Type::BIGINT => 'numberBetween(10000, 100000)',
             Type::INTEGER => 'numberBetween(0, 10000)',
-            Type::SMALLINT => 'numberBetween(0, 1000)',
-
-            // Boolean
             Type::BOOLEAN => 'boolean',
-
-            // Date, time and related
-            Type::DATETIME => 'dateTimeBetween(\'-10 years\', \'now\')',
-            Type::DATETIME_IMMUTABLE => 'dateTimeBetween(\'-10 years\', \'now\')',
-            Type::DATETIMETZ => 'dateTimeBetween(\'-10 years\', \'now\', new DateTimeZone(\'UTC\'))',
-            Type::DATETIMETZ_IMMUTABLE => 'dateTimeBetween(\'-10 years\', \'now\', new DateTimeZone(\'UTC\'))',
-
+            Type::DATETIME => "dateTimeBetween('-10 years', 'now')",
             Type::DATE => 'date',
-            Type::DATE_IMMUTABLE => 'date',
-
             Type::TIME => 'time',
-            Type::TIME_IMMUTABLE => 'time',
-
-            // Floats
-            Type::FLOAT => 'randomFloat',
-            Type::DECIMAL => 'numerify(\'###.##\')',
-
-            // Text
+            Type::DECIMAL => "numerify('###.##')",
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
-
-            // Other
-            Type::GUID => 'uuid',
-
-            // Raw data
             Type::BINARY => 'passthrough(random_bytes(1024))',
-            Type::BLOB => 'passthrough(random_bytes(1024))',
-
-            // TODO: This test is missing the following database type, which I am not sure how to handle.
-            //   - Type::TARRAY
-            //   - Type::SIMPLE_ARRAY
-            //   - Type::JSON_ARRAY
-            //   - Type::JSON
-            //   - Type::DATEINTERVAL
-            //   - Type::OBJECT
+            // Type::ENUM uses a different mechanism
         ];
 
         foreach ($fakes as $type => $fake) {
-            $this->assertFakesRegularDatabaseType($type, $fake);
+            $this->assertFakesType($type, $fake);
         }
+    }
+
+    private function assertFakesType(string $type, string $fake)
+    {
+        $table = $this->mockTable('tablename', [
+            'column' => ['type' => $type],
+        ]);
+
+        $faker = new ColumnFaker($table, 'column');
+
+        $this->assertEquals("\$faker->$fake", $faker->fake());
+    }
+
+    /** @test */
+    public function it_fakes_enum_types()
+    {
+        $table = $this->mockTable('tablename', [
+            'color' => ['enum' => ['red', 'green', 'blue']],
+        ]);
+
+        $faker = new ColumnFaker($table, 'color');
+
+        $this->assertEquals(
+            '$faker->randomElement([\'red\', \'green\', \'blue\'])',
+            $faker->fake()
+        );
     }
 
     /** @test */
     public function it_defaults_to_the_string_null()
     {
-        // Mock a column with a type that is not recognized, by mocking its type as well
-        $column = $this->mockColumn([]);
+        $table = $this->mockTable('tablename', [
+            'column' => ['type' => Type::UNRECOGNIZED],
+        ]);
 
-        $faker = new ColumnFaker('tablename', $column);
+        $faker = new ColumnFaker($table, 'column');
 
         $this->assertEquals('null', $faker->fake());
     }
@@ -185,29 +129,57 @@ class ColumnFakerTest extends TestCase
         $this->assertFakerPropertyIsUsed('digit', 'randomDigit');
     }
 
+    private function assertFakerPropertyIsUsed(string $column, string $fakerProperty)
+    {
+        $this->assertNotNull(\Faker\Factory::create()->getFormatter($fakerProperty));
+
+        $table = $this->mockTable('tablename', [
+            $column => ['name' => $column],
+        ]);
+
+        $faker = new ColumnFaker($table, $column);
+
+        $this->assertEquals("\$faker->$fakerProperty", $faker->fake());
+    }
+
     /** @test */
     public function it_fakes_nulls_on_nullable_columns_sometimes()
     {
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn(['required' => false, 'name' => 'email'])
-        );
+        $table = $this->mockTable('tablename', [
+            'column' => ['required' => false],
+        ]);
+
+        $faker = new ColumnFaker($table, 'column');
 
         $this->assertEquals(
-            '$faker->optional(0.9)->email',
+            '$faker->optional(0.9)->sentence',
             $faker->fake()
         );
     }
 
     /** @test */
+    public function it_mixes_optional_columns_with_other_fakers()
+    {
+        $table = $this->mockTable('tablename', [
+            'email' => ['required' => false],
+            'column' => ['required' => false, 'type' => Type::DECIMAL],
+        ]);
+
+        $faker = new ColumnFaker($table, 'email');
+        $this->assertEquals('$faker->optional(0.9)->email', $faker->fake());
+
+        $faker = new ColumnFaker($table, 'column');
+        $this->assertEquals('$faker->optional(0.9)->numerify(\'###.##\')', $faker->fake());
+    }
+
+    /** @test */
     public function it_fakes_unique_values_on_columns_with_unique_indices()
     {
-        $this->makeColumnsUnique();
+        $table = $this->mockTable('tablename', [
+            'email' => ['unique' => true],
+        ]);
 
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn(['name' => 'email'])
-        );
+        $faker = new ColumnFaker($table, 'email');
 
         $this->assertEquals(
             '$faker->unique()->email',
@@ -218,12 +190,11 @@ class ColumnFakerTest extends TestCase
     /** @test */
     public function it_fakes_unique_nullable_columns()
     {
-        $this->makeColumnsUnique();
+        $table = $this->mockTable('tablename', [
+            'email' => ['unique' => true, 'required' => false],
+        ]);
 
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn(['required' => false, 'name' => 'email'])
-        );
+        $faker = new ColumnFaker($table, 'email');
 
         $this->assertEquals(
             '$faker->randomFloat() <= 0.9 ? $faker->unique()->email : null',
@@ -232,20 +203,13 @@ class ColumnFakerTest extends TestCase
     }
 
     /** @test */
-    public function it_creates_a_model_for_foreign_keys()
+    public function it_creates_a_new_model_for_foreign_keys()
     {
-        $this->mock(DatabaseInformation::class, function ($mock) {
-            $mock
-                ->shouldReceive('foreignKeysReferences')
-                ->with('products', 'owner_id')
-                ->andReturn(['users', 'id']);
-            $mock->shouldReceive('unique')->andReturn(false);
-        });
+        $table = $this->mockTable('tablename', [
+            'user_id' => ['reference' => ['users', 'id']],
+        ]);
 
-        $faker = new ColumnFaker(
-            'products',
-            $this->mockColumn(['name' => 'owner_id'])
-        );
+        $faker = new ColumnFaker($table, 'user_id');
 
         $this->assertEquals(
             implode("\n", [
@@ -258,126 +222,24 @@ class ColumnFakerTest extends TestCase
     }
 
     /** @test */
-    public function it_fakes_enum_types()
+    public function it_knows_that_the_column_references_another_table_after_faking()
     {
-        $faker = new ColumnFaker(
-            'tablename',
-            $this->mockColumn([
-                'type' => EnumType::generateDynamicEnumType('tablename', 'enum_column', ['one', 'two']),
-            ])
-        );
+        $table = $this->mockTable('users', [
+            'name' => [],
+            'avatar_id' => ['reference' => ['avatars', 'id']],
+            'parent' => ['required' => false, 'reference' => ['users', 'id']],
+        ]);
 
-        $this->assertEquals(
-            '$faker->randomElement([\'one\', \'two\'])',
-            $faker->fake()
-        );
+        $name = new ColumnFaker($table, 'name');
+        $name->fake();
+        $this->assertNull($name->referencedTable());
+
+        $avatar = new ColumnFaker($table, 'avatar_id');
+        $avatar->fake();
+        $this->assertEquals('avatars', $avatar->referencedTable());
+
+        $parent = new ColumnFaker($table, 'parent');
+        $parent->fake();
+        $this->assertEquals('users', $parent->referencedTable());
     }
-
-    /*
-
-    /** @test * /
-    public function it_can_register_column_faker_closures()
-    {
-        $faker = new ColumnFaker();
-
-        $faker->register(function (Column $column) {
-            return 'fake';
-        });
-
-        $this->assertEquals(
-            'fake',
-            $faker->fake($this->mock(Column::class))
-        );
-    }
-
-    /** @test * /
-    public function precedence_of_registered_closures_is_last_one_first()
-    {
-        $faker = new ColumnFaker();
-
-        $faker->register(function (Column $column) {
-            return 'first';
-        });
-
-        $faker->register(function (Column $column) {
-            return 'second';
-        });
-
-        $this->assertEquals(
-            'second',
-            $faker->fake($this->mock(Column::class))
-        );
-    }
-
-    /** @test * /
-    public function registered_closures_can_return_null_on_unrecognized_columns()
-    {
-        $faker = new ColumnFaker();
-
-        $column = $this->mock(Column::class, function ($mock) {
-            $mock->shouldReceive('getName')->andReturn('first');
-        });
-
-        $faker->register(function (Column $column) {
-            if ($column->getName() === 'first') {
-                return 'first';
-            }
-        });
-
-        $faker->register(function (Column $column) {
-            if ($column->getName() === 'second') {
-                return 'second';
-            }
-        });
-
-        $this->assertEquals('first', $faker->fake($column));
-    }
-
-    /** @test * /
-    public function it_defaults_to_regular_fake_when_column_misses_all_registered_fakers()
-    {
-        $faker = new ColumnFaker();
-
-        $faker->register(function (Column $column) {
-            if ($column->getName() === 'name') {
-                return '$faker->name';
-            }
-        });
-
-        $faker->register(function (Column $column) {
-            if ($column->getType() === Type::getType(Type::INTEGER)) {
-                return '$faker->randomDigit';
-            }
-        });
-
-        $this->assertEquals(
-            '$faker->sentence',
-            $faker->fake(new Column('description', Type::getType(Type::STRING)))
-        );
-    }
-
-    /** @test * /
-    public function when_closure_returns_false_the_column_does_not_have_a_faker()
-    {
-        $local = '';
-
-        $this->faker->register(function (Column $column) use (&$local) {
-            $local = 'should not run';
-        });
-
-        $faker->register(function (Column $column) {
-            if ($column->getName() === 'id') {
-                return ColumnFaker::IGNORE;
-            }
-        });
-
-        $column = $this->mock(Column::class, function ($mock) {
-            $mock->shouldReceive('getName')->andReturn('id');
-        });
-
-        $this->assertEquals(false, $faker->fake($column));
-        $this->assertEquals('', $local);
-    }
-
-    */
 }

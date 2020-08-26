@@ -6,6 +6,9 @@ use Illuminate\Support\Str;
 
 class FactoryGenerator extends BaseGenerator
 {
+    /** @var string[] */
+    private $referencedTables = [];
+
     /**
      * Return the filename containing the stub this generator is based on.
      *
@@ -39,6 +42,7 @@ class FactoryGenerator extends BaseGenerator
             'modelNamespace' => $this->modelNamespace(),
             'modelClass' => $this->modelClass(),
             'fakes' => $this->fakes(),
+            'otherUses' => $this->otherUses(),
         ];
     }
 
@@ -62,11 +66,18 @@ class FactoryGenerator extends BaseGenerator
 
         foreach ($this->table->columns() as $name) {
             $faker = app(ColumnFaker::class, [
-                'tablename' => $this->table->name(),
-                'column' => $this->table->column($name),
+                'table' => $this->table,
+                'column' => $name,
             ]);
 
-            $fake = $faker->fake($this->table->column($name));
+            $fake = $faker->fake();
+
+            /** @var ColumnFaker $faker */
+            if (($referencedTable = $faker->referencedTable()) !== null) {
+                if (! in_array($referencedTable, $this->referencedTables)) {
+                    $this->referencedTables[] = $referencedTable;
+                }
+            }
 
             if ($fake === '') {
                 continue;
@@ -90,5 +101,28 @@ class FactoryGenerator extends BaseGenerator
         $lines[count($lines) - 1] .= ',';
 
         return $lines;
+    }
+
+    private function otherUses()
+    {
+        $result = [];
+
+        foreach ($this->referencedTables as $table) {
+            $namespace = $this->namespace();
+            $class = Str::singular(Str::ucfirst(Str::camel($table)));
+
+            $result[] = "use $namespace\\$class;";
+        }
+
+        return $result;
+    }
+
+    private function namespace()
+    {
+        if ($this->dir === '') {
+            return 'App';
+        } else {
+            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
+        }
     }
 }
