@@ -365,13 +365,17 @@ class TableInformation
         switch (app(Connection::class)->getDriverName()) {
             case 'mysql':
                 return (new MySqlEnumChecker($this->name, $column))->valid();
+
             case 'sqlite':
                 return (new SQLiteEnumChecker($this->name, $column))->valid();
+
             case 'pgsql':
                 return (new PostgresEnumChecker($this->name, $column))->valid();
+
             case 'sqlsrv':
                 // TODO: We need to implement SqlServerEnumChecker
                 return (new SqlServerEnumChecker($this->name, $column))->valid();
+
             default:
                 return null;
         }

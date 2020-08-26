@@ -111,6 +111,7 @@ class ViewIndexGenerator extends BaseGenerator
                     $raw = "$modelName->$modelMethod->$foreignLabelColumn";
 
                     $value = $this->castToType($raw, $type);
+
                     if (! $required) {
                         $value = "$modelName->$column ? $value : ''";
                     }
@@ -165,12 +166,16 @@ class ViewIndexGenerator extends BaseGenerator
         switch ($type) {
             case Type::BOOLEAN:
                 return "$accessor ? '&#10004;' : ''";
+
             case Type::DATETIME:
                 return "${accessor}->format('Y-m-d H:i:s')";
+
             case Type::DATE:
                 return "${accessor}->format('Y-m-d')";
+
             case Type::TIME:
                 return "${accessor}->format('H:i:s')";
+
             default:
                 return $accessor;
         }

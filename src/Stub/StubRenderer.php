@@ -62,6 +62,7 @@ class StubRenderer
                 }
 
                 $first = true;
+
                 foreach ($replacement as &$line) {
                     $line = rtrim($line, "\r");
 
@@ -82,6 +83,7 @@ class StubRenderer
                     }
 
                     $idx = count($parts) - 1;
+
                     if ($part->getAmountToRemoveBefore() > 0) {
                         $parts[$idx] = substr($parts[$idx], 0, -$part->getAmountToRemoveBefore());
                     }

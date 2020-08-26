@@ -200,6 +200,7 @@ class SQLiteEnumChecker
         if (is_string($chars)) {
             $original = $chars;
             $chars = [];
+
             for ($i = 0; $i < strlen($original); $i++) {
                 $chars[] = $original[$i];
             }

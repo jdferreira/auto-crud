@@ -69,6 +69,7 @@ if (count($fixed) > 0) {
     echo PHP_EOL . PHP_EOL;
 
     $counter = 1;
+
     foreach ($fixed as $filename) {
         echo '  ' . $counter . ') ' . $filename . PHP_EOL;
         $counter++;

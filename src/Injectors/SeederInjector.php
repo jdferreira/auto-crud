@@ -70,7 +70,7 @@ class SeederInjector
         $lines = [];
 
         foreach ($this->getSeederClasses() as $class) {
-            $lines [] = "        \$this->call($class::class);";
+            $lines[] = "        \$this->call($class::class);";
         }
 
         return implode("\n", $lines);
@@ -90,14 +90,14 @@ class SeederInjector
         $result = [];
 
         foreach ($this->tables as $table) {
-            $result [] = Str::studly(Str::singular($table)) . 'Seeder';
+            $result[] = Str::studly(Str::singular($table)) . 'Seeder';
         }
 
         foreach ($this->db->pivots() as $pivot) {
             [$fk1, $fk2] = array_values($this->db->table($pivot)->allReferences());
 
             if (in_array($fk1[0], $this->tables) && in_array($fk2[0], $this->tables)) {
-                $result [] = Str::studly(Str::singular($pivot)) . 'Seeder';
+                $result[] = Str::studly(Str::singular($pivot)) . 'Seeder';
             }
         }
 
