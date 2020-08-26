@@ -1,0 +1,11 @@
+@extends('layouts.app')
+
+@section('content')
+<h1>{{ modelSingularCapitalized }}</h1>
+
+<table>
+    {{ values }}
+</table>
+
+{{ buttons }}
+@endsection

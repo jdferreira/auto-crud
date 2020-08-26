@@ -64,7 +64,12 @@ class AutoCrudCommandTest extends TestCase
     private function assertFilesWereGenerated()
     {
         $tablenames = [
-            'users', 'avatars', 'products', 'roles', 'sales',
+            'users',
+            'avatars',
+            'products',
+            'roles',
+            'sales',
+            'payment_methods',
         ];
 
         foreach ($tablenames as $tablename) {
@@ -81,7 +86,7 @@ class AutoCrudCommandTest extends TestCase
 
             $this->assertFileExists(base_path("tests/Feature/${model}ManagementTest.php"));
 
-            foreach (['index', 'show', 'create', 'edit', '_form'] as $view) {
+            foreach (['index', 'show', 'create', 'edit'] as $view) {
                 $this->assertFileExists(resource_path("views/$singular/$view.blade.php"));
             }
 
@@ -117,6 +122,8 @@ class AutoCrudCommandTest extends TestCase
         $this->assertOptionsPassedToInner('autocrud:seeder', ['--dir' => 'Models'], ['dir' => 'Models']);
         $this->assertOptionsPassedToInner('autocrud:request', ['--dir' => 'Models'], ['dir' => 'Models']);
         $this->assertOptionsPassedToInner('autocrud:route', ['--skip-api' => true], ['skip-api' => true]);
+        $this->assertOptionsPassedToInner('autocrud:view', ['--dir' => 'Models'], ['dir' => 'Models']);
+        $this->assertOptionsPassedToInner('autocrud:view', ['--skip-api' => true], []);
 
         $this->markTestIncomplete(
             'Keep adding equivalent assertions for the other commands!'

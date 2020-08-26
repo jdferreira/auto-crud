@@ -5,6 +5,7 @@ namespace Ferreira\AutoCrud\Commands;
 use Illuminate\Console\Command;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 use Ferreira\AutoCrud\Generators\ViewEditGenerator;
+use Ferreira\AutoCrud\Generators\ViewShowGenerator;
 use Ferreira\AutoCrud\Generators\ViewIndexGenerator;
 use Ferreira\AutoCrud\Generators\ViewCreateGenerator;
 
@@ -43,6 +44,7 @@ class ViewCommand extends Command
             ViewIndexGenerator::class,
             ViewCreateGenerator::class,
             ViewEditGenerator::class,
+            ViewShowGenerator::class,
         ];
 
         foreach ($generators as $generator) {
