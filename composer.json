@@ -18,7 +18,8 @@
         "matt-allan/laravel-code-style": "^0.3.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^3.8"
+        "orchestra/testbench": "^3.8",
+        "phpstan/phpstan": "^0.12.39"
     },
     "minimum-stability": "stable",
     "autoload": {

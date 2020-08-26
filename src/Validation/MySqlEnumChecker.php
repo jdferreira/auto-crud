@@ -41,9 +41,9 @@ class MySqlEnumChecker
     {
         $results = DB::select(DB::raw(
             "SHOW COLUMNS FROM {$this->tablename} WHERE Field = '{$this->column}'"
-        ))->first(); // TODO: This is probably wrong! DB::select returns an array, not a collection
+        )); // TODO: This is probably wrong! DB::select returns an array, not a collection
 
-        return $results === null ? null : $results->Type;
+        return count($results) === 0 ? null : $results[0]->Type;
     }
 
     private function extractValid($definition)

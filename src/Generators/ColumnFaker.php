@@ -21,7 +21,7 @@ class ColumnFaker
     private $column;
 
     /**
-     * @var string
+     * @var null|string
      */
     private $referencedTable;
 
