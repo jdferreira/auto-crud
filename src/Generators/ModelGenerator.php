@@ -52,6 +52,7 @@ class ModelGenerator extends BaseGenerator
             'customPrimaryKey' => $this->primaryKey(),
             'casts' => $this->casts(),
             'relationships' => $this->relationships(),
+            'path' => $this->path(),
         ];
     }
 
@@ -223,7 +224,7 @@ class ModelGenerator extends BaseGenerator
             ? str_replace('_', ' ', Str::singular($relation->table))
             : str_replace('_', ' ', Str::plural($relation->table));
 
-        $self = str_replace('_', ' ', $relation->foreignTable);
+        $self = str_replace('_', ' ', Str::singular($relation->foreignTable));
 
         return [
             '/**',
@@ -255,7 +256,7 @@ class ModelGenerator extends BaseGenerator
 
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
 
-        $self = str_replace('_', ' ', Str::plural($relation->table));
+        $self = str_replace('_', ' ', Str::singular($relation->table));
 
         if (substr($relation->column, -3) === '_id') {
             $other = str_replace('_', ' ', Str::singular(substr($relation->column, 0, -3)));
@@ -325,6 +326,25 @@ class ModelGenerator extends BaseGenerator
             "public function $modelMethod()",
             '{',
             "    return \$this->$eloquentMethod($args);",
+            '}',
+        ];
+    }
+
+    public function path()
+    {
+        $tablename = $this->table->name();
+
+        $id = $this->table->primaryKey();
+
+        $model = str_replace('_', ' ', Str::singular($tablename));
+
+        return [
+            '/**',
+            " * Returns the URL path fragment used in routes to identify this $model.",
+            ' */',
+            'public function path()',
+            '{',
+            "    return '/$tablename/' . \$this->$id;",
             '}',
         ];
     }

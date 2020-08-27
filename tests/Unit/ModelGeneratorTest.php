@@ -217,4 +217,24 @@ class ModelGeneratorTest extends TestCase
             }
         ', $roles);
     }
+
+    /** @test */
+    public function it_generates_a_path_method()
+    {
+        $code = $this->generator('users')->generate();
+        $this->assertCodeContains('
+            public function path()
+            {
+                return \'/users/\' . $this->id;
+            }
+        ', $code);
+
+        $code = $this->generator('products')->generate();
+        $this->assertCodeContains('
+            public function path()
+            {
+                return \'/products/\' . $this->product_id;
+            }
+        ', $code);
+    }
 }
