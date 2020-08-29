@@ -116,7 +116,9 @@ class RuleGenerator
 
     private function required()
     {
-        return $this->table->required($this->column) && ! $this->table->hasDefault($this->column);
+        return $this->table->required($this->column)
+            && ! $this->table->hasDefault($this->column)
+            && $this->table->type($this->column) !== Type::BOOLEAN;
     }
 
     private function byColumnName()
@@ -133,7 +135,7 @@ class RuleGenerator
     {
         static $map = [
             Type::INTEGER => 'integer',
-            Type::BOOLEAN => 'boolean',
+            Type::BOOLEAN => 'regex:/on/',
             Type::DATETIME => 'date',
             Type::DATE => 'date_format:Y-m-d',
             Type::TIME => 'date_format:H:i:s',

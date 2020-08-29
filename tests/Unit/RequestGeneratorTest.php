@@ -91,7 +91,7 @@ class RequestGeneratorTest extends TestCase
                     'email:rfc',
                     Rule::unique('users')->ignore(\$model),
                 ],
-                'subscribed' => 'nullable|boolean',
+                'subscribed' => 'nullable|regex:/on/',
                 'birthday' => 'required|date_format:Y-m-d',
                 'wake_up' => 'nullable|date_format:H:i:s',
             ];

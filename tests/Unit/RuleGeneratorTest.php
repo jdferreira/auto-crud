@@ -93,7 +93,7 @@ class RuleGeneratorTest extends TestCase
     {
         $validation = [
             Type::INTEGER => 'integer',
-            Type::BOOLEAN => 'boolean',
+            Type::BOOLEAN => 'regex:/on/',
             Type::DATETIME => 'date',
             Type::DATE => 'date_format:Y-m-d',
             Type::TIME => 'date_format:H:i:s',
@@ -112,6 +112,21 @@ class RuleGeneratorTest extends TestCase
 
             $this->assertContains("'$value'", $rule->makeRules());
         }
+    }
+
+    /** @test */
+    public function it_always_generates_nullable_for_boolean_column()
+    {
+        $table = $this->mockTable('tablename', [
+            'nullable' => ['type' => Type::BOOLEAN, 'required' => false],
+            'required' => ['type' => Type::BOOLEAN, 'required' => true],
+        ]);
+
+        $rule = new RuleGenerator($table, 'nullable');
+        $this->assertContains("'nullable'", $rule->makeRules());
+
+        $rule = new RuleGenerator($table, 'required');
+        $this->assertContains("'nullable'", $rule->makeRules());
     }
 
     /** @test */
