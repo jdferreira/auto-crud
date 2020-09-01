@@ -74,7 +74,8 @@ class AutoCrudCommandTest extends TestCase
 
         foreach ($tablenames as $tablename) {
             $singular = Str::singular($tablename);
-            $model = Str::ucfirst($singular);
+            $model = Str::ucfirst(Str::camel($singular));
+            $modelPlural = Str::plural($model);
 
             $this->assertFileExists(app_path("${model}.php"));
 
@@ -82,16 +83,24 @@ class AutoCrudCommandTest extends TestCase
 
             $this->assertFileExists(database_path("factories/${model}Factory.php"));
 
-            $this->assertFileExists(app_path("Requests/${model}Request.php"));
+            $this->assertFileExists(app_path("Http/Requests/${model}Request.php"));
 
-            $this->assertFileExists(base_path("tests/Feature/${model}ManagementTest.php"));
+            $this->assertFileExists(base_path("tests/Feature/{$modelPlural}CrudTest.php"));
 
             foreach (['index', 'show', 'create', 'edit'] as $view) {
-                $this->assertFileExists(resource_path("views/$singular/$view.blade.php"));
+                $this->assertFileExists(resource_path("views/$tablename/$view.blade.php"));
             }
 
-            $this->assertRouteHas("Route::resource('/$tablename, '${model}Controller')");
+            $this->assertRouteHas("Route::resource('/$tablename', '${model}Controller');");
         }
+    }
+
+    private function assertRouteHas($code)
+    {
+        $this->assertCodeContains(
+            $code,
+            $this->files->get(base_path('routes/web.php'))
+        );
     }
 
     /** @test */
@@ -104,12 +113,6 @@ class AutoCrudCommandTest extends TestCase
         $this->assertCommandIsCalled('autocrud:request');
         $this->assertCommandIsCalled('autocrud:route');
         $this->assertCommandIsCalled('autocrud:view');
-
-        $this->markTestIncomplete(
-            'Keep moving the lines below this to above it ' .
-                'and when the time comes, remove this line altogether!'
-        );
-
         $this->assertCommandIsCalled('autocrud:test');
     }
 
@@ -124,19 +127,12 @@ class AutoCrudCommandTest extends TestCase
         $this->assertOptionsPassedToInner('autocrud:route', ['--skip-api' => true], ['skip-api' => true]);
         $this->assertOptionsPassedToInner('autocrud:view', ['--dir' => 'Models'], ['dir' => 'Models']);
         $this->assertOptionsPassedToInner('autocrud:view', ['--skip-api' => true], []);
-
-        $this->markTestIncomplete(
-            'Keep adding equivalent assertions for the other commands!'
-        );
+        $this->assertOptionsPassedToInner('autocrud:test', ['--dir' => 'Models'], ['dir' => 'Models']);
     }
 
     /** @test */
     public function it_can_make_crud_files()
     {
-        $this->markTestIncomplete(
-            'The full set of features needed to pass this test have not been implemented yet.'
-        );
-
         $this->artisan('autocrud:make');
 
         $this->assertFilesWereGenerated();

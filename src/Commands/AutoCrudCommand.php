@@ -43,6 +43,7 @@ class AutoCrudCommand extends Command
         $this->inner('autocrud:request');
         $this->inner('autocrud:route');
         $this->inner('autocrud:view');
+        $this->inner('autocrud:test');
     }
 
     private function valid()

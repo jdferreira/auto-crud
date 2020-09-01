@@ -1,0 +1,196 @@
+<?php
+
+namespace Tests\stubs;
+
+use {{ modelNamespace }}\{{ modelClass }};
+use Tests\TestCase;
+use Illuminate\Support\Str;
+use Ferreira\AutoCrud\AssertsHTML;
+use Ferreira\AutoCrud\AssertsField;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class {{ modelClassPlural }}CrudTest extends TestCase
+{
+    use RefreshDatabase,
+        AssertsHTML,
+        AssertsField;
+
+    /** @test */
+    public function regular_crud_routes_exist_for_{{ tablename }}()
+    {
+        factory({{ modelClass }}::class)->create();
+        $this->assertNotNull({{ modelClass }}::find(1));
+
+        $expectedRoutes = [
+            ['GET', '/{{ tablename }}'],
+            ['GET', '/{{ tablename }}/create'],
+            ['GET', '/{{ tablename }}/1'],
+            ['GET', '/{{ tablename }}/1/edit'],
+            ['POST', '/{{ tablename }}'],
+            ['PUT', '/{{ tablename }}/1'],
+            ['DELETE', '/{{ tablename }}/1'],
+        ];
+
+        foreach ($expectedRoutes as [$method, $path]) {
+            $method = Str::lower($method);
+
+            $this->$method($path)->assertOk();
+        }
+
+        $this->assertNull({{ modelClass }}::find(2));
+
+        $expectedFailingRoutes = [
+            ['GET', '/{{ tablename }}/2'],
+            ['GET', '/{{ tablename }}/2/edit'],
+            ['PUT', '/{{ tablename }}/2'],
+            ['DELETE', '/{{ tablename }}/2'],
+        ];
+
+        foreach ($expectedFailingRoutes as [$method, $path]) {
+            $method = Str::lower($method);
+
+            $this->{$method}($path)->assertNotFound();
+        }
+    }
+
+    /** @test */
+    public function it_shows_existing_{{ tablename }}_in_the_index()
+    {
+        ${{ modelVariablePlural }} = factory({{ modelClass }}::class, 2)->states('full_model')->create();
+
+        foreach (${{ modelVariablePlural }} as ${{ modelVariableSingular }}) {
+            $this->get('/{{ tablename }}')
+                {{ assertSeeColumnValuesOnIndexOrShow }};
+        }
+    }
+
+    /** @test */
+    public function it_shows_the_values_of_{{ tablenameSingularWithArticle }}_in_the_show_view()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+
+        $this->get(${{ modelVariableSingular }}->path())
+            {{ assertSeeColumnValuesOnIndexOrShow }};
+    }
+
+    /** @test */
+    public function it_asks_for_all_columns_on_the_{{ tablenameSingular }}_create_form()
+    {
+        $document = $this->getDOMDocument(
+            $this->get('/{{ tablename }}/create')
+        );
+
+        {{ assertHTMLOnForm }}
+    }
+
+    /** @test */
+    public function it_asks_for_all_columns_on_the_edit_form_of_{{ tablenameSingularWithArticle }}()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+
+        $document = $this->getDOMDocument(
+            $this->get(${{ modelVariableSingular }}->path() . '/edit')
+        );
+
+        {{ assertHTMLOnForm }}
+    }
+
+    /** @test */
+    public function it_starts_the_edit_form_with_the_{{ tablenameSingular }}_current_values()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+
+        $document = $this->getDOMDocument(
+            $this->get(${{ modelVariableSingular }}->path() . '/edit')
+        );
+
+        {{ assertEditFormHasValues }}
+    }
+
+    /** @test */
+    public function it_keeps_old_values_on_unsuccessful_{{ tablenameSingular }}_update()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+
+        $response = $this->put(${{ modelVariableSingular }}->path(), [
+            '{{ oneRequiredField }}' => null,
+        ]);
+
+        $response->assertSessionHasInput('{{ oneRequiredField }}', null);
+    }
+
+    /** @test */
+    public function it_marks_required_labels_on_{{ tablename }}_create_and_edit_forms()
+    {
+        $document = $this->getDOMDocument($this->get('/{{ tablename }}/create'));
+
+        {{ assertRequiredFields }}
+
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+
+        $document = $this->getDOMDocument($this->get(${{ modelVariableSingular }}->path() . '/edit'));
+
+        {{ assertRequiredFields }}
+    }
+
+    /** @test */
+    public function it_validates_field_values_when_creating_{{ tablenameSingularWithArticle }}()
+    {
+        $data = factory({{ modelClass }}::class)->raw();
+
+        $this->beginAssertFields('POST', '/{{ tablename }}', $data)->assertFields();
+    }
+
+    /** @test */
+    public function it_creates_{{ tablename }}_when_asked_to()
+    {
+        $this->assertNull({{ modelClass }}::find(1));
+
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->raw();
+
+        $this->post('/{{ tablename }}', ${{ modelVariableSingular }});
+
+        $this->assertNotNull($created = {{ modelClass }}::find(1));
+
+        {{ assertRawEqualsCreated }}
+    }
+
+    /** @test */
+    public function it_validates_field_values_when_updating_{{ tablenameSingularWithArticle }}()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+
+        $data = ${{ modelVariableSingular }}->toArray();
+
+        $this->beginAssertFields('PUT', ${{ modelVariableSingular }}->path(), $data)->assertFields();
+    }
+
+    /** @test */
+    public function it_updates_{{ tablename }}_when_asked_to()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+
+        $new = factory({{ modelClass }}::class)->raw();
+
+        $this->put(${{ modelVariableSingular }}->path(), $new);
+
+        $fresh = ${{ modelVariableSingular }}->fresh();
+
+        {{ assertNewEqualsFresh }}
+    }
+
+    /** @test */
+    public function it_deletes_{{ tablename }}_when_asked_to()
+    {
+        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+
+        $this->delete(${{ modelVariableSingular }}->path());
+
+        $this->assertNull({{ modelClass }}::find(${{ modelVariableSingular }}->id));
+    }
+
+    public function assertFields()
+    {
+        {{ assertFields }}
+    }
+}

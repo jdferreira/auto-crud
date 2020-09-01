@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud;
 
+use Ferreira\AutoCrud\Commands\TestCommand;
 use Ferreira\AutoCrud\Commands\ViewCommand;
 use Ferreira\AutoCrud\Commands\ModelCommand;
 use Ferreira\AutoCrud\Commands\RouteCommand;
@@ -28,6 +29,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->commands(RequestCommand::class);
         $this->commands(RouteCommand::class);
         $this->commands(ViewCommand::class);
+        $this->commands(TestCommand::class);
 
         $this->app->singleton(DatabaseInformation::class);
     }
