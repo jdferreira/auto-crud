@@ -48,6 +48,11 @@ class AccessorBuilder
         if (($references = $this->table->reference($this->column)) !== null) {
             [$foreignTable, $foreignColumn] = $references;
 
+            // TODO: I just realized: when a table references another, the
+            // foreign column is always the primary key! This is not enforced,
+            // but some parts of the code assume that. This must be document and
+            // enforced at the TableInformation level.
+
             $label = Str::ucfirst(str_replace(
                 '_',
                 ' ',
@@ -64,9 +69,9 @@ class AccessorBuilder
             $modelName = '$' . $this->modelSingular();
 
             if ($foreignLabelColumn === null) {
-                $accessor = '(' . ucwords(str_replace('_', ' ', Str::singular($foreignTable))) . ': ' . "$modelName->{$this->column}" . ')';
+                $accessor = '(' . ucwords(str_replace('_', ' ', Str::singular($foreignTable))) . ': ' . "{{ $modelName->{$this->column} }}" . ')';
             } else {
-                $type = $this->db->table($foreignTable)->type($foreignColumn);
+                $type = $this->db->table($foreignTable)->type($foreignLabelColumn);
                 $required = $this->table->required($this->column);
                 $raw = "$modelName->$modelMethod->$foreignLabelColumn";
 
@@ -75,6 +80,8 @@ class AccessorBuilder
                 if (! $required) {
                     $accessor = "$modelName->{$this->column} ? $accessor : ''";
                 }
+
+                $accessor = "{{ $accessor }}";
             }
 
             $accessor = '<a href="' . static::route($foreignTable, "$modelName->{$this->column}") . '">' . $accessor . '</a>';
@@ -87,6 +94,36 @@ class AccessorBuilder
 
         $this->label = $label;
         $this->accessor = $accessor;
+    }
+
+    public function buildSimpleAccessor()
+    {
+        if (($references = $this->table->reference($this->column)) !== null) {
+            [$foreignTable, $foreignColumn] = $references;
+
+            $modelMethod = substr($this->column, -3) === '_id'
+                ? Str::camel(Str::singular(substr($this->column, 0, -3)))
+                : Str::camel(Str::singular($foreignTable));
+            $foreignLabelColumn = $this->db->table($foreignTable)->labelColumn();
+
+            $modelName = '$' . $this->modelSingular();
+
+            if ($foreignLabelColumn === null) {
+                $accessor = "$modelName->{$this->column}";
+            } else {
+                $type = $this->db->table($foreignTable)->type($foreignLabelColumn);
+                $raw = "$modelName->$modelMethod->$foreignLabelColumn";
+
+                $accessor = $this->castToType($raw, $type);
+            }
+        } else {
+            $type = $this->table->type($this->column);
+            $modelName = '$' . $this->modelSingular();
+
+            $accessor = $this->castToType("$modelName->{$this->column}", $type);
+        }
+
+        return $accessor;
     }
 
     private function modelSingular()
@@ -132,6 +169,9 @@ class AccessorBuilder
 
             case Type::TIME:
                 return "${accessor}->format('H:i:s')";
+
+            case Type::TEXT:
+                return "\Illuminate\Support\Str::limit(${accessor}, 30)";
 
             default:
                 return $accessor;

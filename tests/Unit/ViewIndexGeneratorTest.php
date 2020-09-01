@@ -162,7 +162,7 @@ class ViewIndexGeneratorTest extends TestCase
 
         $code = $this->generator('sales')->generate();
 
-        $this->assertContains('(Product: $sale->product_id)', $code);
+        $this->assertContains('(Product: {{ $sale->product_id }})', $code);
     }
 
     /** @test */
@@ -237,7 +237,7 @@ class ViewIndexGeneratorTest extends TestCase
                 @foreach (\$avatars as \$avatar)
                     <tr>
                         <td>{{ \$avatar->id }}</td>
-                        <td><a href=\"{{ route('users.show', ['users' => \$avatar->user_id]) }}\">\$avatar->user->name</a></td>
+                        <td><a href=\"{{ route('users.show', ['users' => \$avatar->user_id]) }}\">{{ \$avatar->user->name }}</a></td>
                         <td>{{ \$avatar->file }}</td>
                     </tr>
                 @endforeach
@@ -273,7 +273,7 @@ class ViewIndexGeneratorTest extends TestCase
                 @foreach (\$products as \$product)
                     <tr>
                         <td>{{ \$product->product_id }}</td>
-                        <td><a href=\"{{ route('users.show', ['users' => \$product->owner_id]) }}\">\$product->owner->name</a></td>
+                        <td><a href=\"{{ route('users.show', ['users' => \$product->owner_id]) }}\">{{ \$product->owner->name }}</a></td>
                         <td>{{ \$product->type ?: '' }}</td>
                         <td>{{ \$product->value }}</td>
                         <td>{{ \$product->start_at->format('Y-m-d H:i:s') }}</td>
@@ -344,7 +344,7 @@ class ViewIndexGeneratorTest extends TestCase
                 @foreach (\$sales as \$sale)
                     <tr>
                         <td>{{ \$sale->id }}</td>
-                        <td><a href=\"{{ route('products.show', ['products' => \$sale->product_id]) }}\">(Product: \$sale->product_id)</a></td>
+                        <td><a href=\"{{ route('products.show', ['products' => \$sale->product_id]) }}\">(Product: {{ \$sale->product_id }})</a></td>
                         <td>{{ \$sale->amount }}</td>
                         <td>{{ \$sale->date->format('Y-m-d') }}</td>
                     </tr>
@@ -381,8 +381,8 @@ class ViewIndexGeneratorTest extends TestCase
                     <tr>
                         <td>{{ \$paymentMethod->id }}</td>
                         <td>{{ \$paymentMethod->name }}</td>
-                        <td>{{ \$paymentMethod->comment }}</td>
-                        <td>{{ \$paymentMethod->metadata }}</td>
+                        <td>{{ \Illuminate\Support\Str::limit(\$paymentMethod->comment, 30) }}</td>
+                        <td>{{ \Illuminate\Support\Str::limit(\$paymentMethod->metadata, 30) }}</td>
                     </tr>
                 @endforeach
             </table>
