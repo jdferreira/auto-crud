@@ -39,7 +39,7 @@ $rules = [
         'spacing' => 'one'
     ],
     'declare_equal_normalize' => true,
-    'elseif' => false,
+    'elseif' => true,
     'encoding' => true,
     'full_opening_tag' => true,
     'fully_qualified_strict_types' => true, // added by Shift

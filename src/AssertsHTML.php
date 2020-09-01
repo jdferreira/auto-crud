@@ -40,16 +40,12 @@ trait AssertsHTML
 
         if ($value === null) {
             $this->assertGreaterThan(0, $nodelist->count());
-        } else {
-            if (is_int($value)) {
-                $this->assertEquals($value, $nodelist->count());
-            } else {
-                if (is_callable($value)) {
-                    $this->assertGreaterThan(0, $nodelist->count());
+        } elseif (is_int($value)) {
+            $this->assertEquals($value, $nodelist->count());
+        } elseif (is_callable($value)) {
+            $this->assertGreaterThan(0, $nodelist->count());
 
-                    collect($nodelist)->each($value);
-                }
-            }
+            collect($nodelist)->each($value);
         }
     }
 
