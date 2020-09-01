@@ -99,7 +99,7 @@ class RouteInjector
 
         foreach ($this->tables as $table) {
             $controller = Str::studly(Str::singular($table)) . 'Controller';
-            $lines[] = "Route::resource('$table', '$controller');";
+            $lines[] = "Route::resource('/$table', '$controller');";
         }
 
         return $lines;
@@ -111,7 +111,7 @@ class RouteInjector
 
         foreach ($this->tables as $table) {
             $controller = Str::studly(Str::singular($table)) . 'Controller';
-            $lines[] = "Route::apiResource('$table', '$controller');";
+            $lines[] = "Route::apiResource('/$table', '$controller');";
         }
 
         return $lines;

@@ -66,8 +66,8 @@ class RouteInjectorTest extends TestCase
 
         $code = $this->files->get(base_path('routes/web.php'));
 
-        $this->assertContains("Route::resource('users', 'UserController');", $code);
-        $this->assertContains("Route::resource('roles', 'RoleController');", $code);
+        $this->assertContains("Route::resource('/users', 'UserController');", $code);
+        $this->assertContains("Route::resource('/roles', 'RoleController');", $code);
     }
 
     /** @test */
@@ -77,12 +77,12 @@ class RouteInjectorTest extends TestCase
 
         $code = $this->files->get(base_path('routes/web.php'));
 
-        $this->assertContains("Route::resource('users', 'UserController');", $code);
-        $this->assertContains("Route::resource('roles', 'RoleController');", $code);
+        $this->assertContains("Route::resource('/users', 'UserController');", $code);
+        $this->assertContains("Route::resource('/roles', 'RoleController');", $code);
 
         $code = $this->files->get(base_path('routes/api.php'));
 
-        $this->assertContains("Route::apiResource('users', 'UserController');", $code);
-        $this->assertContains("Route::apiResource('roles', 'RoleController');", $code);
+        $this->assertContains("Route::apiResource('/users', 'UserController');", $code);
+        $this->assertContains("Route::apiResource('/roles', 'RoleController');", $code);
     }
 }
