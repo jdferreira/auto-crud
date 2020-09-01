@@ -25,10 +25,16 @@ class ColumnFaker
      */
     private $referencedTable;
 
-    public function __construct(TableInformation $table, string $column)
+    /**
+     * @var bool
+     */
+    private $forceRequired;
+
+    public function __construct(TableInformation $table, string $column, bool $forceRequired = false)
     {
         $this->table = $table;
         $this->column = $column;
+        $this->forceRequired = $forceRequired;
         $this->referencedTable = null;
     }
 
@@ -68,16 +74,12 @@ class ColumnFaker
             return $fake;
         }
 
-        if (is_array($fake)) {
-            dd($fake);
-        }
-
         if (Str::startsWith($fake, 'function')) {
             return $fake;
         }
 
         $unique = $this->table->unique($this->column);
-        $nullable = ! $this->table->required($this->column);
+        $nullable = ! $this->table->required($this->column) && ! $this->forceRequired;
 
         if ($unique && $nullable) {
             // If the column is both unique and nullable, we want to apply both

@@ -43,6 +43,7 @@ class FactoryGenerator extends BaseGenerator
             'modelClass' => $this->modelClass(),
             'fakes' => $this->fakes(),
             'otherUses' => $this->otherUses(),
+            'fullModel' => $this->fullModel(),
         ];
     }
 
@@ -124,5 +125,35 @@ class FactoryGenerator extends BaseGenerator
         } else {
             return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
         }
+    }
+
+    public function fullModel()
+    {
+        $result = [];
+
+        foreach ($this->collectNullable() as $column) {
+            $faker = app(ColumnFaker::class, [
+                'table' => $this->table,
+                'column' => $column,
+                'forceRequired' => true,
+            ]);
+
+            $fake = $faker->fake();
+
+            if ($fake === '') {
+                continue;
+            }
+
+            $result = array_merge($result, $this->extendFake($fake, $column));
+        }
+
+        return $result;
+    }
+
+    private function collectNullable()
+    {
+        return collect($this->table->columns())->filter(function ($column) {
+            return ! $this->table->required($column);
+        })->all();
     }
 }

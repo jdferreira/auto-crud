@@ -159,4 +159,26 @@ class FactoryGeneratorTest extends TestCase
             ];
         ", $code);
     }
+
+    /** @test */
+    public function it_creates_a_full_model_state_for_models_with_nullable_columns()
+    {
+        $code = $this->generator('users')->generate();
+        $this->assertCodeContains("
+            \$factory->state(User::class, 'full_model', function (Faker \$faker) {
+                return [
+                    'email' => \$faker->unique()->email,
+                    'wake_up' => \$faker->time,
+                ];
+            });
+        ", $code);
+
+        $code = $this->generator('sales')->generate();
+        $this->assertCodeContains("
+            \$factory->state(Sale::class, 'full_model', function (Faker \$faker) {
+                return [
+                ];
+            });
+        ", $code);
+    }
 }

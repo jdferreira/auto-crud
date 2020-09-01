@@ -10,3 +10,9 @@ $factory->define({{ modelClass }}::class, function (Faker $faker) {
         {{ fakes }}
     ];
 });
+
+$factory->state({{ modelClass }}::class, 'full_model', function (Faker $faker) {
+    return [
+        {{ fullModel }}
+    ];
+});
