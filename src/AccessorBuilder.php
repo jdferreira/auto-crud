@@ -64,7 +64,7 @@ class AccessorBuilder
             $modelName = '$' . $this->modelSingular();
 
             if ($foreignLabelColumn === null) {
-                $accessor = '(' . ucwords(str_replace('_', ' ', Str::singular($foreignTable))) . ': ' . "$modelName->$this->column" . ')';
+                $accessor = '(' . ucwords(str_replace('_', ' ', Str::singular($foreignTable))) . ': ' . "$modelName->{$this->column}" . ')';
             } else {
                 $type = $this->db->table($foreignTable)->type($foreignColumn);
                 $required = $this->table->required($this->column);
@@ -73,11 +73,11 @@ class AccessorBuilder
                 $accessor = $this->castToType($raw, $type);
 
                 if (! $required) {
-                    $accessor = "$modelName->$this->column ? $accessor : ''";
+                    $accessor = "$modelName->{$this->column} ? $accessor : ''";
                 }
             }
 
-            $accessor = '<a href="' . static::route($foreignTable, "$modelName->$this->column") . '">' . $accessor . '</a>';
+            $accessor = '<a href="' . static::route($foreignTable, "$modelName->{$this->column}") . '">' . $accessor . '</a>';
         } else {
             $label = Str::ucfirst(str_replace('_', ' ', $this->column));
             $label = preg_replace('/\bId\b/', 'ID', $label);
@@ -100,7 +100,7 @@ class AccessorBuilder
         $required = $this->table->required($this->column);
         $modelName = '$' . $this->modelSingular();
 
-        return $this->processAccessor("$modelName->$this->column", $type, $required);
+        return $this->processAccessor("$modelName->{$this->column}", $type, $required);
     }
 
     private static function processAccessor($raw, $type, $required)
