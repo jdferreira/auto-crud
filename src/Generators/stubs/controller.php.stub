@@ -9,17 +9,17 @@ class {{ modelClass }}Controller extends Controller
 {
     public function index()
     {
-        return view('{{ modelPlural }}.index', ['{{ modelPlural }}' => {{ modelClass }}::paginate()]);
+        return view('{{ tablename }}.index', ['{{ modelPlural }}' => {{ modelClass }}::paginate()]);
     }
 
     public function show({{ modelClass }} ${{ modelSingular }})
     {
-        return view('{{ modelPlural }}.show', compact('{{ modelSingular }}'));
+        return view('{{ tablename }}.show', compact('{{ modelSingular }}'));
     }
 
     public function create()
     {
-        return view('{{ modelPlural }}.create');
+        return view('{{ tablename }}.create');
     }
 
     public function store({{ modelClass }}Request $request)
@@ -31,7 +31,7 @@ class {{ modelClass }}Controller extends Controller
 
     public function edit({{ modelClass }} ${{ modelSingular }})
     {
-        return view('{{ modelPlural }}.edit', compact('{{ modelSingular }}'));
+        return view('{{ tablename }}.edit', compact('{{ modelSingular }}'));
     }
 
     public function update({{ modelClass }} ${{ modelSingular }}, {{ modelClass }}Request $request)
@@ -45,6 +45,6 @@ class {{ modelClass }}Controller extends Controller
     {
         ${{ modelSingular }}->delete();
 
-        return redirect(route('{{ modelPlural }}.index'));
+        return redirect(route('{{ tablename }}.index'));
     }
 }

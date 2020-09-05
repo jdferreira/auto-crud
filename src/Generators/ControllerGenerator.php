@@ -29,6 +29,7 @@ class ControllerGenerator extends BaseGenerator
     protected function replacements(): array
     {
         return [
+            'tablename' => $this->table->name(),
             'modelNamespace' => $this->modelNamespace(),
             'modelClass' => $this->modelClass(),
             'modelSingular' => $this->modelSingular(),

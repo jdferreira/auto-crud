@@ -248,4 +248,17 @@ class ControllerGeneratorTest extends TestCase
             }
         ", $avatars);
     }
+
+    /** @test */
+    public function it_uses_correct_view_names()
+    {
+        $code = $this->generator('payment_methods')->generate();
+
+        $this->assertCodeContains('
+            public function index()
+            {
+                return view(\'payment_methods.index\', [\'paymentMethods\' => PaymentMethod::paginate()]);
+            }
+        ', $code);
+    }
 }
