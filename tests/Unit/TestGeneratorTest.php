@@ -103,7 +103,7 @@ class TestGeneratorTest extends TestCase
         $cmd = 'php -l';
         $specs = [
             0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
+            1 => ['pipe', 'w'], // TODO: This line can probably be removed
             2 => ['pipe', 'w'],
         ];
 

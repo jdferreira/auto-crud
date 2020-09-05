@@ -244,6 +244,8 @@ abstract class TestCase extends BaseTestCase
      *     this column references. Defaults to `null`.
      *   - hasDefault: whether the column has a default value. Defaults to
      *     false.
+     *
+     * @return TableInformation
      */
     protected function mockTable(string $tablename, array $columns = [])
     {
