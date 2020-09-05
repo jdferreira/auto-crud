@@ -23,8 +23,6 @@ class ArrayHasSubset extends Constraint
 
     public function __construct(array $subset)
     {
-        parent::__construct();
-
         $this->checkAssociative($subset);
 
         $this->subset = $subset;

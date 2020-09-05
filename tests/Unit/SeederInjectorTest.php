@@ -37,14 +37,14 @@ class SeederInjectorTest extends TestCase
             $this->files->get(__DIR__ . '/inputs/seeder.php')
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Make sure this line exists',
             $this->files->get(database_path('seeds/DatabaseSeeder.php'))
         );
 
         $this->injector(['users'])->inject();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Make sure this line exists',
             $this->files->get(database_path('seeds/DatabaseSeeder.php'))
         );
@@ -57,8 +57,8 @@ class SeederInjectorTest extends TestCase
 
         $seeder = $this->files->get(database_path('seeds/DatabaseSeeder.php'));
 
-        $this->assertContains('$this->call(UserSeeder::class);', $seeder);
-        $this->assertContains('$this->call(RoleSeeder::class);', $seeder);
+        $this->assertStringContainsString('$this->call(UserSeeder::class);', $seeder);
+        $this->assertStringContainsString('$this->call(RoleSeeder::class);', $seeder);
     }
 
     /** @test */
@@ -68,7 +68,7 @@ class SeederInjectorTest extends TestCase
 
         $seeder = $this->files->get(database_path('seeds/DatabaseSeeder.php'));
 
-        $this->assertContains('$this->call(RoleUserSeeder::class);', $seeder);
+        $this->assertStringContainsString('$this->call(RoleUserSeeder::class);', $seeder);
     }
 
     /** @test */

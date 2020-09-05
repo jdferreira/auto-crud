@@ -28,6 +28,6 @@ class LayoutViewGeneratorTest extends TestCase
     {
         $code = $this->app->make(LayoutViewGenerator::class)->generate();
 
-        $this->assertContains("@yield('content')", $code);
+        $this->assertStringContainsString("@yield('content')", $code);
     }
 }

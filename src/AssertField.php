@@ -4,7 +4,7 @@ namespace Ferreira\AutoCrud;
 
 use Tests\TestCase;
 use Illuminate\Support\Str;
-use Illuminate\Foundation\Testing\TestResponse;
+use Illuminate\Testing\TestResponse;
 
 class AssertField
 {

@@ -41,7 +41,7 @@ class ViewShowGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<h1>User</h1>', $code);
+        $this->assertStringContainsString('<h1>User</h1>', $code);
     }
 
     /** @test */
@@ -49,11 +49,11 @@ class ViewShowGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<th>Name</th>', $code);
-        $this->assertContains('<th>Email</th>', $code);
-        $this->assertContains('<th>Subscribed</th>', $code);
-        $this->assertContains('<th>Birthday</th>', $code);
-        $this->assertContains('<th>Wake up</th>', $code);
+        $this->assertStringContainsString('<th>Name</th>', $code);
+        $this->assertStringContainsString('<th>Email</th>', $code);
+        $this->assertStringContainsString('<th>Subscribed</th>', $code);
+        $this->assertStringContainsString('<th>Birthday</th>', $code);
+        $this->assertStringContainsString('<th>Wake up</th>', $code);
     }
 
     /** @test */
@@ -65,11 +65,11 @@ class ViewShowGeneratorTest extends TestCase
 
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<td>{{ $user->name }}</td>', $code);
-        $this->assertContains("<td>{{ \$user->email ?: '' }}</td>", $code);
-        $this->assertContains("<td>{{ \$user->subscribed ? '&#10004;' : '' }}</td>", $code);
-        $this->assertContains("<td>{{ \$user->birthday->format('Y-m-d') }}</td>", $code);
-        $this->assertContains("<td>{{ \$user->wake_up ? \$user->wake_up->format('H:i:s') : '' }}</td>", $code);
+        $this->assertStringContainsString('<td>{{ $user->name }}</td>', $code);
+        $this->assertStringContainsString("<td>{{ \$user->email ?: '' }}</td>", $code);
+        $this->assertStringContainsString("<td>{{ \$user->subscribed ? '&#10004;' : '' }}</td>", $code);
+        $this->assertStringContainsString("<td>{{ \$user->birthday->format('Y-m-d') }}</td>", $code);
+        $this->assertStringContainsString("<td>{{ \$user->wake_up ? \$user->wake_up->format('H:i:s') : '' }}</td>", $code);
     }
 
     /** @test */
@@ -77,8 +77,8 @@ class ViewShowGeneratorTest extends TestCase
     {
         $code = $this->generator('avatars')->generate();
 
-        $this->assertContains('<th>Data</th>', $code);
-        $this->assertContains('<td>{{ $avatar->data }}</td>', $code);
+        $this->assertStringContainsString('<th>Data</th>', $code);
+        $this->assertStringContainsString('<td>{{ $avatar->data }}</td>', $code);
     }
 
     /** @test */

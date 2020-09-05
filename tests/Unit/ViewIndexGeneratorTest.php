@@ -41,7 +41,7 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '@foreach ($users as $user)',
             $code
         );
@@ -52,7 +52,7 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<h1>Users</h1>', $code);
+        $this->assertStringContainsString('<h1>Users</h1>', $code);
     }
 
     /** @test */
@@ -60,7 +60,7 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<th>ID</th>', $code);
+        $this->assertStringContainsString('<th>ID</th>', $code);
     }
 
     /** @test */
@@ -68,11 +68,11 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<th>Name</th>', $code);
-        $this->assertContains('<th>Email</th>', $code);
-        $this->assertContains('<th>Subscribed</th>', $code);
-        $this->assertContains('<th>Birthday</th>', $code);
-        $this->assertContains('<th>Wake up</th>', $code);
+        $this->assertStringContainsString('<th>Name</th>', $code);
+        $this->assertStringContainsString('<th>Email</th>', $code);
+        $this->assertStringContainsString('<th>Subscribed</th>', $code);
+        $this->assertStringContainsString('<th>Birthday</th>', $code);
+        $this->assertStringContainsString('<th>Wake up</th>', $code);
     }
 
     /** @test */
@@ -80,12 +80,12 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('$user->id', $code);
-        $this->assertContains('$user->name', $code);
-        $this->assertContains('$user->email', $code);
-        $this->assertContains('$user->subscribed', $code);
-        $this->assertContains('$user->birthday', $code);
-        $this->assertContains('$user->wake_up', $code);
+        $this->assertStringContainsString('$user->id', $code);
+        $this->assertStringContainsString('$user->name', $code);
+        $this->assertStringContainsString('$user->email', $code);
+        $this->assertStringContainsString('$user->subscribed', $code);
+        $this->assertStringContainsString('$user->birthday', $code);
+        $this->assertStringContainsString('$user->wake_up', $code);
     }
 
     /** @test */
@@ -93,11 +93,11 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('products')->generate();
 
-        $this->assertNotContains('$product->deleted_at', $code);
+        $this->assertStringNotContainsString('$product->deleted_at', $code);
 
         $code = $this->generator('payment_methods')->generate();
 
-        $this->assertNotContains('$paymentMethod->deletion_time', $code);
+        $this->assertStringNotContainsString('$paymentMethod->deletion_time', $code);
     }
 
     /** @test */
@@ -105,8 +105,8 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertNotContains('$user->created_at', $code);
-        $this->assertNotContains('$user->updated_at', $code);
+        $this->assertStringNotContainsString('$user->created_at', $code);
+        $this->assertStringNotContainsString('$user->updated_at', $code);
     }
 
     /** @test */
@@ -114,13 +114,13 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('$user->subscribed ? \'&#10004;\' : \'\'', $code);
-        $this->assertContains('$user->birthday->format(\'Y-m-d\')', $code);
-        $this->assertContains('$user->wake_up->format(\'H:i:s\')', $code);
+        $this->assertStringContainsString('$user->subscribed ? \'&#10004;\' : \'\'', $code);
+        $this->assertStringContainsString('$user->birthday->format(\'Y-m-d\')', $code);
+        $this->assertStringContainsString('$user->wake_up->format(\'H:i:s\')', $code);
 
         $code = $this->generator('products')->generate();
 
-        $this->assertContains('$product->start_at->format(\'Y-m-d H:i:s\')', $code);
+        $this->assertStringContainsString('$product->start_at->format(\'Y-m-d H:i:s\')', $code);
     }
 
     /** @test */
@@ -128,12 +128,12 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('$user->email ?: \'\'', $code);
-        $this->assertContains('$user->wake_up ? $user->wake_up->format(\'H:i:s\') : \'\'', $code);
+        $this->assertStringContainsString('$user->email ?: \'\'', $code);
+        $this->assertStringContainsString('$user->wake_up ? $user->wake_up->format(\'H:i:s\') : \'\'', $code);
 
         $code = $this->generator('products')->generate();
 
-        $this->assertContains('$product->type ?: \'\'', $code);
+        $this->assertStringContainsString('$product->type ?: \'\'', $code);
     }
 
     /** @test */
@@ -141,8 +141,8 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('avatars')->generate();
 
-        $this->assertNotContains('<th>Data</th>', $code);
-        $this->assertNotContains('$avatar->data', $code);
+        $this->assertStringNotContainsString('<th>Data</th>', $code);
+        $this->assertStringNotContainsString('$avatar->data', $code);
     }
 
     /** @test */
@@ -150,7 +150,7 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('{{ $users->links() }}', $code);
+        $this->assertStringContainsString('{{ $users->links() }}', $code);
     }
 
     /** @test */
@@ -158,11 +158,11 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('avatars')->generate();
 
-        $this->assertContains('$avatar->user->name', $code);
+        $this->assertStringContainsString('$avatar->user->name', $code);
 
         $code = $this->generator('sales')->generate();
 
-        $this->assertContains('(Product: {{ $sale->product_id }})', $code);
+        $this->assertStringContainsString('(Product: {{ $sale->product_id }})', $code);
     }
 
     /** @test */
@@ -170,7 +170,7 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('sales')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<a href="{{ route(\'products.show\', [\'products\' => $sale->product_id]) }}">',
             $code
         );

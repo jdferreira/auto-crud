@@ -42,7 +42,7 @@ class ControllerGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->setModelDirectory('Models')->save();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use App\Models\User;',
             $this->files->get(app_path('Http/Controllers/UserController.php'))
         );
@@ -53,7 +53,7 @@ class ControllerGeneratorTest extends TestCase
     {
         $code = $this->generator('products')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'class ProductController extends Controller',
             $code
         );
@@ -64,7 +64,7 @@ class ControllerGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use App\Http\Requests\UserRequest;',
             $code
         );
@@ -86,7 +86,7 @@ class ControllerGeneratorTest extends TestCase
         ];
 
         foreach ($views as $method) {
-            $this->assertContains("public function $method(", $code);
+            $this->assertStringContainsString("public function $method(", $code);
         }
     }
 

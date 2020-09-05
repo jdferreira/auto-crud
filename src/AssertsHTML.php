@@ -4,7 +4,7 @@ namespace Ferreira\AutoCrud;
 
 use DOMXPath;
 use DOMDocument;
-use Illuminate\Foundation\Testing\TestResponse;
+use Illuminate\Testing\TestResponse;
 
 trait AssertsHTML
 {

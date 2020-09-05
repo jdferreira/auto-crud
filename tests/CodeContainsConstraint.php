@@ -34,8 +34,6 @@ class CodeContainsConstraint extends Constraint
 
     public function __construct(string $excerpt)
     {
-        parent::__construct();
-
         $this->lines = $this->processExcerpt($excerpt);
         $this->regex = $this->toRegex();
     }

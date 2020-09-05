@@ -7,7 +7,7 @@ use DOMDocument;
 use Tests\TestCase;
 use Illuminate\Http\Response;
 use Ferreira\AutoCrud\AssertsHTML;
-use Illuminate\Foundation\Testing\TestResponse;
+use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\ExpectationFailedException;
 
 class AssertsHTMLTest extends TestCase

@@ -38,8 +38,6 @@ class SetsEqualConstraint extends Constraint
      */
     public function __construct(array $expected)
     {
-        parent::__construct();
-
         $this->expected = $expected;
     }
 

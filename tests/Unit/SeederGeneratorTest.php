@@ -40,12 +40,12 @@ class SeederGeneratorTest extends TestCase
     /** @test */
     public function it_detects_model_namespace()
     {
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use App\User;',
             $this->generator('users')->generate()
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use App\Models\User;',
             $this->generator('users')->setModelDirectory('Models')->generate()
         );
@@ -64,17 +64,17 @@ class SeederGeneratorTest extends TestCase
     {
         $code = $this->generator('role_user')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use Ferreira\AutoCrud\PivotSeeder;',
             $code
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             "app(PivotSeeder::class)->seed('role_user');",
             $code
         );
 
-        $this->assertNotContains(
+        $this->assertStringNotContainsString(
             'use App\RoleUser;',
             $code
         );

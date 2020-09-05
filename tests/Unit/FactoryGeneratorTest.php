@@ -43,7 +43,7 @@ class FactoryGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->setModelDirectory('Models')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use App\Models\User;',
             $code
         );
@@ -53,10 +53,10 @@ class FactoryGeneratorTest extends TestCase
     public function it_detects_referenced_models_qualified_name()
     {
         $code = $this->generator('products')->generate();
-        $this->assertContains('use App\User;', $code);
+        $this->assertStringContainsString('use App\User;', $code);
 
         $code = $this->generator('products')->setModelDirectory('Models')->generate();
-        $this->assertContains('use App\Models\User;', $code);
+        $this->assertStringContainsString('use App\Models\User;', $code);
     }
 
     /** @test */
@@ -64,8 +64,8 @@ class FactoryGeneratorTest extends TestCase
     {
         $code = $this->generator('products')->generate();
 
-        $this->assertContains('use Faker\Generator as Faker;', $code);
-        $this->assertContains('$factory->define(Product::class', $code);
+        $this->assertStringContainsString('use Faker\Generator as Faker;', $code);
+        $this->assertStringContainsString('$factory->define(Product::class', $code);
     }
 
     /** @test */
@@ -185,6 +185,6 @@ class FactoryGeneratorTest extends TestCase
     public function it_ignores_deleted_at_columns()
     {
         $code = $this->generator('products')->generate();
-        $this->assertNotContains("'deleted_at' => ", $code);
+        $this->assertStringNotContainsString("'deleted_at' => ", $code);
     }
 }

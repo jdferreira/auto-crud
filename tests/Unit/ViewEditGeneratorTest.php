@@ -41,8 +41,8 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<form method="POST">', $code);
-        $this->assertContains('</form>', $code);
+        $this->assertStringContainsString('<form method="POST">', $code);
+        $this->assertStringContainsString('</form>', $code);
     }
 
     /** @test */
@@ -50,7 +50,7 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<h1>Edit user</h1>', $code);
+        $this->assertStringContainsString('<h1>Edit user</h1>', $code);
     }
 
     /** @test */
@@ -58,11 +58,11 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<label for="name">Name</label>', $code);
-        $this->assertContains('<label for="email">Email</label>', $code);
-        $this->assertContains('<label for="subscribed">Subscribed</label>', $code);
-        $this->assertContains('<label for="birthday">Birthday</label>', $code);
-        $this->assertContains('<label for="wake-up">Wake up</label>', $code);
+        $this->assertStringContainsString('<label for="name">Name</label>', $code);
+        $this->assertStringContainsString('<label for="email">Email</label>', $code);
+        $this->assertStringContainsString('<label for="subscribed">Subscribed</label>', $code);
+        $this->assertStringContainsString('<label for="birthday">Birthday</label>', $code);
+        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
     }
 
     /** @test */
@@ -70,7 +70,7 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<label for="wake-up">Wake up</label>', $code);
+        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
     }
 
     /** @test */
@@ -135,11 +135,11 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('value="{{ old(\'name\') ?? $user->name }}"', $code);
-        $this->assertContains('value="{{ old(\'email\') ?? $user->email }}"', $code);
-        $this->assertContains('value="{{ old(\'subscribed\') ?? $user->subscribed }}"', $code);
-        $this->assertContains('value="{{ old(\'birthday\') ?? $user->birthday }}"', $code);
-        $this->assertContains('value="{{ old(\'wake-up\') ?? $user->wake_up }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'name\') ?? $user->name }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'email\') ?? $user->email }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'subscribed\') ?? $user->subscribed }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'birthday\') ?? $user->birthday }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up }}"', $code);
 
         $code = $this->generator('products')->generate();
         // Note that we split this next assertion in two so that we are not
@@ -147,7 +147,7 @@ class ViewEditGeneratorTest extends TestCase
         $this->assertCodeContains('<select name="type" value="{{ old(\'type\') ?? $product->type }}">', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertContains('<textarea name="primary">{{ old(\'primary\') ?? $paymentMethod->primary }}</textarea>', $code);
+        $this->assertStringContainsString('<textarea name="primary">{{ old(\'primary\') ?? $paymentMethod->primary }}</textarea>', $code);
     }
 
     /** @test */
@@ -155,6 +155,6 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<button type="submit">Submit</button>', $code);
+        $this->assertStringContainsString('<button type="submit">Submit</button>', $code);
     }
 }

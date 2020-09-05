@@ -47,7 +47,7 @@ class RequestGeneratorTest extends TestCase
 
         $code = $this->generator('users')->setModelDirectory('Models')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'use App\Models\User;',
             $code
         );
@@ -58,7 +58,7 @@ class RequestGeneratorTest extends TestCase
     {
         $code = $this->generator('products')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'class ProductRequest extends FormRequest',
             $code
         );

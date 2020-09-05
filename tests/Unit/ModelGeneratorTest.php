@@ -43,7 +43,7 @@ class ModelGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('namespace App;', $code);
+        $this->assertStringContainsString('namespace App;', $code);
     }
 
     /** @test */
@@ -53,7 +53,7 @@ class ModelGeneratorTest extends TestCase
 
         $this->assertFileExists(app_path('Models/User.php'));
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'namespace App\Models;',
             $this->files->get(app_path('Models/User.php'))
         );
@@ -66,7 +66,7 @@ class ModelGeneratorTest extends TestCase
 
         $this->assertFileExists(app_path('Models/Authentication/User.php'));
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'namespace App\Models\Authentication;',
             $this->files->get(app_path('Models/Authentication/User.php'))
         );
@@ -77,7 +77,7 @@ class ModelGeneratorTest extends TestCase
     {
         $code = $this->generator('products')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'class Product extends Model',
             $code
         );
@@ -90,8 +90,8 @@ class ModelGeneratorTest extends TestCase
 
         $code = $this->generator('products')->generate();
 
-        $this->assertContains('use Illuminate\Database\Eloquent\SoftDeletes;', $code);
-        $this->assertContains('use SoftDeletes;', $code);
+        $this->assertStringContainsString('use Illuminate\Database\Eloquent\SoftDeletes;', $code);
+        $this->assertStringContainsString('use SoftDeletes;', $code);
     }
 
     /** @test */
@@ -104,7 +104,7 @@ class ModelGeneratorTest extends TestCase
 
         $code = $this->generator('products')->generate();
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'protected $primaryKey = \'product_id\';',
             $code
         );
@@ -121,7 +121,7 @@ class ModelGeneratorTest extends TestCase
             ];
         ", $this->generator('users')->generate());
 
-        $this->assertNotContains('protected $casts', $this->generator('avatars')->generate());
+        $this->assertStringNotContainsString('protected $casts', $this->generator('avatars')->generate());
 
         $this->assertCodeContains("
             protected \$casts = [
@@ -130,7 +130,7 @@ class ModelGeneratorTest extends TestCase
             ];
         ", $this->generator('products')->generate());
 
-        $this->assertNotContains('protected $casts', $this->generator('roles')->generate());
+        $this->assertStringNotContainsString('protected $casts', $this->generator('roles')->generate());
 
         $this->assertCodeContains("
             protected \$casts = [

@@ -41,18 +41,18 @@ class ViewCreateGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<form method="POST">', $code);
-        $this->assertContains('</form>', $code);
+        $this->assertStringContainsString('<form method="POST">', $code);
+        $this->assertStringContainsString('</form>', $code);
     }
 
     /** @test */
     public function it_is_titled_based_on_the_model_name()
     {
         $code = $this->generator('users')->generate();
-        $this->assertContains('<h1>New user</h1>', $code);
+        $this->assertStringContainsString('<h1>New user</h1>', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertContains('<h1>New payment method</h1>', $code);
+        $this->assertStringContainsString('<h1>New payment method</h1>', $code);
     }
 
     /** @test */
@@ -60,11 +60,11 @@ class ViewCreateGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<label for="name">Name</label>', $code);
-        $this->assertContains('<label for="email">Email</label>', $code);
-        $this->assertContains('<label for="subscribed">Subscribed</label>', $code);
-        $this->assertContains('<label for="birthday">Birthday</label>', $code);
-        $this->assertContains('<label for="wake-up">Wake up</label>', $code);
+        $this->assertStringContainsString('<label for="name">Name</label>', $code);
+        $this->assertStringContainsString('<label for="email">Email</label>', $code);
+        $this->assertStringContainsString('<label for="subscribed">Subscribed</label>', $code);
+        $this->assertStringContainsString('<label for="birthday">Birthday</label>', $code);
+        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
     }
 
     /** @test */
@@ -72,7 +72,7 @@ class ViewCreateGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('<label for="wake-up">Wake up</label>', $code);
+        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
     }
 
     /** @test */
@@ -87,15 +87,15 @@ class ViewCreateGeneratorTest extends TestCase
         //   add one in the future! TODO: Add this.
 
         $code = $this->generator('users')->generate();
-        $this->assertContains('<input name="name" type="text">', $code);
-        $this->assertContains('<input name="email" type="email">', $code);
-        $this->assertContains('<input name="subscribed" type="checkbox">', $code);
-        $this->assertContains('<input name="birthday" type="date">', $code);
-        $this->assertContains('<input name="wake-up" type="time">', $code);
+        $this->assertStringContainsString('<input name="name" type="text">', $code);
+        $this->assertStringContainsString('<input name="email" type="email">', $code);
+        $this->assertStringContainsString('<input name="subscribed" type="checkbox">', $code);
+        $this->assertStringContainsString('<input name="birthday" type="date">', $code);
+        $this->assertStringContainsString('<input name="wake-up" type="time">', $code);
 
         $code = $this->generator('avatars')->generate();
-        $this->assertContains('<input name="user-id" type="text">', $code);
-        $this->assertContains('<input name="data" type="file">', $code);
+        $this->assertStringContainsString('<input name="user-id" type="text">', $code);
+        $this->assertStringContainsString('<input name="data" type="file">', $code);
 
         $code = $this->generator('products')->generate();
         $this->assertCodeContains('
@@ -107,27 +107,27 @@ class ViewCreateGeneratorTest extends TestCase
         ', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertContains('<textarea name="primary"></textarea>', $code);
+        $this->assertStringContainsString('<textarea name="primary"></textarea>', $code);
     }
 
     /** @test */
     public function it_renders_numeric_fields_as_inputs_of_type_text()
     {
         $code = $this->generator('avatars')->generate();
-        $this->assertContains('<input name="user-id" type="text">', $code);
+        $this->assertStringContainsString('<input name="user-id" type="text">', $code);
     }
 
     /** @test */
     public function it_renders_text_fields_named_email_as_inputs_of_type_email()
     {
         $code = $this->generator('users')->generate();
-        $this->assertContains('<input name="email" type="email">', $code);
+        $this->assertStringContainsString('<input name="email" type="email">', $code);
     }
 
     /** @test */
     public function it_renders_submit_button()
     {
         $code = $this->generator('users')->generate();
-        $this->assertContains('<button type="submit">Submit</button>', $code);
+        $this->assertStringContainsString('<button type="submit">Submit</button>', $code);
     }
 }

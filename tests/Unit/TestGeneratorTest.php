@@ -37,10 +37,10 @@ class TestGeneratorTest extends TestCase
     public function it_detects_referenced_models_qualified_name()
     {
         $code = $this->generator('users')->generate();
-        $this->assertContains('use App\User;', $code);
+        $this->assertStringContainsString('use App\User;', $code);
 
         $code = $this->generator('users')->setModelDirectory('Models')->generate();
-        $this->assertContains('use App\Models\User;', $code);
+        $this->assertStringContainsString('use App\Models\User;', $code);
     }
 
     /** @test */
@@ -48,8 +48,8 @@ class TestGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertContains('use Tests\TestCase;', $code);
-        $this->assertContains('class UsersCrudTest extends TestCase', $code);
+        $this->assertStringContainsString('use Tests\TestCase;', $code);
+        $this->assertStringContainsString('class UsersCrudTest extends TestCase', $code);
     }
 
     /** @test */

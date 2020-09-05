@@ -12,14 +12,13 @@
     "type": "library",
     "require": {
         "php": "^7.1",
-        "phpunit/phpunit": "^7.1",
-        "laravel/framework": "^5.6",
+        "phpunit/phpunit": "^8.4",
+        "laravel/framework": "^7.24",
         "doctrine/dbal": "^2.9",
-        "friendsofphp/php-cs-fixer": "^2.16",
-        "matt-allan/laravel-code-style": "^0.3.0"
+        "friendsofphp/php-cs-fixer": "^2.16"
     },
     "require-dev": {
-        "orchestra/testbench": "^3.8",
+        "orchestra/testbench": "^5.0",
         "phpstan/phpstan": "^0.12.39"
     },
     "minimum-stability": "stable",
