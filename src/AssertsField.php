@@ -22,16 +22,16 @@ trait AssertsField
      * that will be provided to the route (and overwritten by specific calls to
      * `AssertField::accepts` and `AssertField::rejects`).
      *
-     * @param string $path
      * @param string $method
+     * @param string $path
      * @param string[] $defaultValues
      *
      * @return $this
      */
-    public function beginAssertFields(string $path, string $method, array $defaultValues)
+    public function beginAssertFields(string $method, string $path, array $defaultValues)
     {
-        $this->assertFieldRoutePath = $path;
         $this->assertFieldRouteMethod = $method;
+        $this->assertFieldRoutePath = $path;
         $this->defaultValues = $defaultValues;
 
         return $this;

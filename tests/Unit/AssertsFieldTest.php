@@ -23,7 +23,7 @@ class AssertsFieldTest extends TestCase
             $this->assertField('field');
         });
 
-        $this->beginAssertFields('/some-route', 'POST', []);
+        $this->beginAssertFields('POST', '/some-route', []);
         $this->assertField('some-field');
     }
 
@@ -38,7 +38,7 @@ class AssertsFieldTest extends TestCase
             ]);
         });
 
-        $this->beginAssertFields('/some-route', 'POST', [
+        $this->beginAssertFields('POST', '/some-route', [
             'field1' => '123',
             'field2' => null,
             'field3' => null,
