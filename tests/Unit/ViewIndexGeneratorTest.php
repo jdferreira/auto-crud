@@ -373,7 +373,7 @@ class ViewIndexGeneratorTest extends TestCase
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Comment</th>
+                    <th>Primary</th>
                     <th>Metadata</th>
                 </tr>
 
@@ -381,7 +381,7 @@ class ViewIndexGeneratorTest extends TestCase
                     <tr>
                         <td>{{ \$paymentMethod->id }}</td>
                         <td>{{ \$paymentMethod->name }}</td>
-                        <td>{{ \Illuminate\Support\Str::limit(\$paymentMethod->comment, 30) }}</td>
+                        <td>{{ \Illuminate\Support\Str::limit(\$paymentMethod->primary, 30) }}</td>
                         <td>{{ \Illuminate\Support\Str::limit(\$paymentMethod->metadata, 30) }}</td>
                     </tr>
                 @endforeach

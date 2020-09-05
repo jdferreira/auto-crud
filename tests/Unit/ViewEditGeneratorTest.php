@@ -111,7 +111,7 @@ class ViewEditGeneratorTest extends TestCase
         ', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertRegExp('/<textarea name="comment">.*?<\/textarea>/', $code);
+        $this->assertRegExp('/<textarea name="primary">.*?<\/textarea>/', $code);
     }
 
     /** @test */
@@ -147,7 +147,7 @@ class ViewEditGeneratorTest extends TestCase
         $this->assertCodeContains('<select name="type" value="{{ old(\'type\') ?? $product->type }}">', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertContains('<textarea name="comment">{{ old(\'comment\') ?? $paymentMethod->comment }}</textarea>', $code);
+        $this->assertContains('<textarea name="primary">{{ old(\'primary\') ?? $paymentMethod->primary }}</textarea>', $code);
     }
 
     /** @test */

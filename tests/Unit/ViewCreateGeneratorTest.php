@@ -107,7 +107,7 @@ class ViewCreateGeneratorTest extends TestCase
         ', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertContains('<textarea name="comment"></textarea>', $code);
+        $this->assertContains('<textarea name="primary"></textarea>', $code);
     }
 
     /** @test */

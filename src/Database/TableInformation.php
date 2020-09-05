@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud\Database;
 
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Doctrine\DBAL\Schema\Column;
 use Illuminate\Database\Connection;
 use Doctrine\DBAL\Types\Type as DoctrineType;
@@ -78,7 +79,30 @@ class TableInformation
 
     private function computeColumns($doctrine): array
     {
-        return $doctrine->listTableColumns($this->name);
+        $columns = $doctrine->listTableColumns($this->name);
+
+        $this->unescapeColumnNames($columns);
+
+        return $columns;
+    }
+
+    private function unescapeColumnNames(&$columns)
+    {
+        $names = array_keys($columns);
+
+        foreach ($names as $name) {
+            $firstChar = Str::substr($name, 0, 1);
+
+            if (in_array($firstChar, ['"', '`']) && Str::substr($name, -1, 1) === $firstChar) {
+                $unescaped = Str::substr($name, 1, Str::length($name) - 2);
+            } else {
+                $unescaped = $name;
+            }
+
+            // We need to replace all keys, even if the name is not escaped, to
+            // preserve order
+            $columns[$unescaped] = Arr::pull($columns, $name);
+        }
     }
 
     private function computePrimaryKey($doctrine)

@@ -120,5 +120,19 @@ class AccessorBuilderTest extends TestCase
         $this->assertEquals('{{ \Illuminate\Support\Str::limit($player->notes, 30) }}', (new AccessorBuilder($table, 'notes'))->accessor);
     }
 
+    /** @test */
+    public function it_treats_sql_keywords_as_general_words()
+    {
+        $table = $this->mockTable('players', [
+            'primary' => [],
+        ]);
+
+        $builder = new AccessorBuilder($table, 'primary');
+
+        $this->assertEquals('Primary', $builder->label);
+        $this->assertEquals('{{ $player->primary }}', $builder->accessor);
+        $this->assertEquals('$player->primary', $builder->buildSimpleAccessor());
+    }
+
     // TODO: I need many more tests here! See ViewIndexGeneratorTest for ideas!
 }

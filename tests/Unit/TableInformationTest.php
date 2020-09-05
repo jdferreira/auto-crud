@@ -63,6 +63,14 @@ class TableInformationTest extends TestCase
     }
 
     /** @test */
+    public function it_unescapes_escaped_column_names()
+    {
+        $table = new TableInformation('payment_methods');
+
+        $this->assertContains('primary', $table->columns());
+    }
+
+    /** @test */
     public function it_knows_whether_a_column_is_required_or_optional()
     {
         $table = new TableInformation('users');
