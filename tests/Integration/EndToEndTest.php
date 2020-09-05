@@ -9,24 +9,61 @@ use Illuminate\Support\Facades\Artisan;
 
 class EndToEndTest extends TestCase
 {
+    /** @var \Illuminate\Foundation\Application */
+    protected $app;
+
     const RUNNING = __DIR__ . DIRECTORY_SEPARATOR . '.running.phpunit';
 
     /** @var bool */
     protected $rerun;
 
-    private function mkdir(): string
+    public function setUp(): void
     {
-        $dir = sys_get_temp_dir();
+        parent::setUp();
 
-        while (true) {
-            $basename = md5(mt_rand());
+        $this->rerun = $this->files->exists(static::RUNNING);
+    }
 
-            if (mkdir($path = $dir . DIRECTORY_SEPARATOR . $basename, 0755)) {
-                break;
+    public function tearDown(): void
+    {
+        // If the test succeeded, clean all the repository of the changes that
+        // were made; otherwise, keep the migrations as they are, and clean
+        // everything else, allowing quickly rerunning the failing test.
+
+        if ($this->getStatus() === 0) {
+            if ($this->rerun) {
+                $this->files->delete(static::RUNNING);
             }
-        }
 
-        return $path;
+            shell_exec('git clean -fd');
+            shell_exec('git checkout -f');
+        } else {
+            $this->files->put(static::RUNNING, '');
+
+            // Let the developer look at the generated files
+            fwrite(STDOUT, 'Press ENTER when you are done inspecting the generated files' . PHP_EOL);
+            fgets(STDIN);
+
+            // Remove all but the migrations
+            shell_exec('git add database/migrations');
+            shell_exec('git clean -fd');
+            shell_exec('git checkout -- $(git status --porcelain | \grep -P "^ M" | cut -c4-)');
+        }
+    }
+
+    /**
+     * @test
+     * @group end-to-end
+     */
+    public function it_generates_a_working_application()
+    {
+        $this->setupEmptyLaravelProject();
+
+        $this->generateAndRunMigrations();
+
+        $this->runAutocrud();
+
+        $this->assertPhpunitSucceeds();
     }
 
     private function initializeEmptyLaravelProject()
@@ -99,64 +136,14 @@ class EndToEndTest extends TestCase
         $process = proc_open('vendor/bin/phpunit --colors=never', $specs, $pipes);
 
         if (is_resource($process)) {
-            // stream_copy_to_stream($pipes[2], STDERR);
+            // Close inner pipes before calling closing the process to avoid
+            // deadlock
+
             fclose($pipes[1]);
             fclose($pipes[2]);
-
-            // It is important that you close any pipes before calling
-            // proc_close in order to avoid a deadlock
             $phpunitStatus = proc_close($process);
         }
 
         $this->assertEquals(0, $phpunitStatus);
-    }
-
-    /**
-     * @test
-     * @group end-to-end
-     */
-    public function it_generates_a_working_application()
-    {
-        $this->setupEmptyLaravelProject();
-
-        $this->generateAndRunMigrations();
-
-        $this->runAutocrud();
-
-        $this->assertPhpunitSucceeds();
-    }
-
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->rerun = $this->files->exists(static::RUNNING);
-    }
-
-    public function tearDown(): void
-    {
-        // If the test succeeded, clean all the repository of the changes that
-        // were made; otherwise, keep the migrations as they are, and clean
-        // everything else, allowing quickly rerunning the failing test.
-
-        if ($this->getStatus() === 0) {
-            if ($this->rerun) {
-                $this->files->delete(static::RUNNING);
-            }
-
-            shell_exec('git clean -fd');
-            shell_exec('git checkout -f');
-        } else {
-            $this->files->put(static::RUNNING, '');
-
-            // Let the developer look at the generated files
-            fwrite(STDOUT, 'Press ENTER when you are done inspecting the generated files' . PHP_EOL);
-            fgets(STDIN);
-
-            // Remove all but the migrations
-            shell_exec('git add database/migrations');
-            shell_exec('git clean -fd');
-            shell_exec('git checkout -- $(git status --porcelain | \grep -P "^ M" | cut -c4-)');
-        }
     }
 }
