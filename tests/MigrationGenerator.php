@@ -82,8 +82,14 @@ class MigrationGenerator
         while (count($namesUsed) < $totalColumns) {
             // 5% probability of this being a foreign key column
             if ($this->pivot || (count($this->existing) > 0 && Helper::rand() <= 0.05)) {
-                // Randomly select a previously existing table
-                [$foreignTable, $foreignId, $foreignType] = Arr::random($this->existing);
+                // Randomly select a previously existing table. Notice that we
+                // do not want repeating references, so we remove the selected
+                // element from the local copy of the array specifying the
+                // existing tables
+                [$foreignTable, $foreignId, $foreignType] = Arr::pull(
+                    $this->existing,
+                    Arr::random(array_keys($this->existing))
+                );
 
                 // 90% of the time, this column is named as expected from
                 // laravel convention; 5% of the time, it's a `<random>_id`;
@@ -219,7 +225,10 @@ class MigrationGenerator
             $name = Helper::sqlName();
         }
 
-        $this->specs = [$this->tablename, $name, $column];
+        // Only non-pivot tables can be used as reference to other tables
+        if (! $this->pivot) {
+            $this->specs = [$this->tablename, $name, $column];
+        }
 
         $schema = array_merge(
             [
