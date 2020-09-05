@@ -5,7 +5,7 @@
 exec('git stash save --keep-index --include-untracked');
 
 // Run phpunit before committing and make sure all tests pass
-exec('script --return --quiet -c "phpunit" /dev/null', $output, $code);
+exec('script --return --quiet -c "phpunit --exclude-group end-to-end" /dev/null', $output, $code);
 
 if ($code !== 0) {
     echo "\033[31m"; // Red text

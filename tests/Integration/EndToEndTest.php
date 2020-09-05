@@ -4,19 +4,15 @@ namespace Tests\Integration;
 
 use Exception;
 use Tests\TestCase;
-use Illuminate\Support\Str;
 use Tests\MigrationSetGenerator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 
 class EndToEndTest extends TestCase
 {
-    private function hasGit(): bool
-    {
-        exec('command -v git', $output, $exitStatus);
+    const RUNNING = __DIR__ . DIRECTORY_SEPARATOR . '.running.phpunit';
 
-        return $exitStatus === 0;
-    }
+    /** @var bool */
+    protected $rerun;
 
     private function mkdir(): string
     {
@@ -37,17 +33,15 @@ class EndToEndTest extends TestCase
     {
         shell_exec('composer create-project --prefer-dist laravel/laravel .');
 
-        if ($this->hasGit()) {
-            shell_exec('git init');
-            shell_exec('git add .');
-            shell_exec('git commit -m "Empty laravel app"');
+        shell_exec('git init');
+        shell_exec('git add .');
+        shell_exec('git commit -m "Empty laravel app"');
 
-            // // TODO: Change composer to load "Ferreira\\Autocrud\\" from "../src/"
-            // // TODO: Change phpunit to use an memory SQLite database
-            // // TODO: And then commit these changes
-            // shell_exec('git add .');
-            // shell_exec('git commit -m "Prepare for autocrud"');
-        }
+        // // TODO: Change composer to load "Ferreira\\Autocrud\\" from "../src/"
+        // // TODO: Change phpunit to use an memory SQLite database
+        // // TODO: And then commit these changes
+        // shell_exec('git add .');
+        // shell_exec('git commit -m "Prepare for autocrud"');
     }
 
     private function setupEmptyLaravelProject()
@@ -78,9 +72,11 @@ class EndToEndTest extends TestCase
             'migrations',
         ]);
 
-        $this->files->cleanDirectory($dir);
+        if (! $this->rerun) {
+            $this->files->cleanDirectory($dir);
 
-        (new MigrationSetGenerator($dir))->save();
+            (new MigrationSetGenerator($dir))->save();
+        }
 
         Artisan::call('migrate', [
             '--path' => $dir,
@@ -93,7 +89,32 @@ class EndToEndTest extends TestCase
         Artisan::call('autocrud:make');
     }
 
-    /** @test */
+    private function assertPhpunitSucceeds()
+    {
+        $specs = [
+            1 => ['file', 'phpunit.stdout.txt', 'w'],
+            2 => ['file', 'phpunit.stderr.txt', 'w'],
+        ];
+
+        $process = proc_open('vendor/bin/phpunit --colors=never', $specs, $pipes);
+
+        if (is_resource($process)) {
+            // stream_copy_to_stream($pipes[2], STDERR);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+
+            // It is important that you close any pipes before calling
+            // proc_close in order to avoid a deadlock
+            $phpunitStatus = proc_close($process);
+        }
+
+        $this->assertEquals(0, $phpunitStatus);
+    }
+
+    /**
+     * @test
+     * @group end-to-end
+     */
     public function it_generates_a_working_application()
     {
         $this->setupEmptyLaravelProject();
@@ -102,14 +123,40 @@ class EndToEndTest extends TestCase
 
         $this->runAutocrud();
 
-        // $this->assertPhpunitSucceeds();
+        $this->assertPhpunitSucceeds();
+    }
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->rerun = $this->files->exists(static::RUNNING);
     }
 
     public function tearDown(): void
     {
-        if ($this->hasGit()) {
-            // shell_exec('git clean -fd');
-            // shell_exec('git checkout -f');
+        // If the test succeeded, clean all the repository of the changes that
+        // were made; otherwise, keep the migrations as they are, and clean
+        // everything else, allowing quickly rerunning the failing test.
+
+        if ($this->getStatus() === 0) {
+            if ($this->rerun) {
+                $this->files->delete(static::RUNNING);
+            }
+
+            shell_exec('git clean -fd');
+            shell_exec('git checkout -f');
+        } else {
+            $this->files->put(static::RUNNING, '');
+
+            // Let the developer look at the generated files
+            fwrite(STDOUT, 'Press ENTER when you are done inspecting the generated files' . PHP_EOL);
+            fgets(STDIN);
+
+            // Remove all but the migrations
+            shell_exec('git add database/migrations');
+            shell_exec('git clean -fd');
+            shell_exec('git checkout -- $(git status --porcelain | \grep -P "^ M" | cut -c4-)');
         }
     }
 }
