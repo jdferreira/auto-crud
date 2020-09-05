@@ -126,7 +126,6 @@ class FactoryGeneratorTest extends TestCase
                 'type' => \$faker->optional(0.9)->randomElement(['food', 'stationery', 'other']),
                 'value' => \$faker->numerify('###.##'),
                 'start_at' => \$faker->dateTimeBetween('-10 years', 'now'),
-                'deleted_at' => \$faker->optional(0.9)->dateTimeBetween('-10 years', 'now'),
             ];
         ", $code);
     }
@@ -180,5 +179,12 @@ class FactoryGeneratorTest extends TestCase
                 ];
             });
         ", $code);
+    }
+
+    /** @test */
+    public function it_ignores_deleted_at_columns()
+    {
+        $code = $this->generator('products')->generate();
+        $this->assertNotContains("'deleted_at' => ", $code);
     }
 }

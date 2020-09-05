@@ -66,6 +66,10 @@ class FactoryGenerator extends BaseGenerator
         $result = [];
 
         foreach ($this->table->columns() as $name) {
+            if ($name === 'deleted_at') {
+                continue;
+            }
+
             $faker = app(ColumnFaker::class, [
                 'table' => $this->table,
                 'column' => $name,
@@ -132,6 +136,10 @@ class FactoryGenerator extends BaseGenerator
         $result = [];
 
         foreach ($this->collectNullable() as $column) {
+            if ($column === 'deleted_at') {
+                continue;
+            }
+
             $faker = app(ColumnFaker::class, [
                 'table' => $this->table,
                 'column' => $column,
