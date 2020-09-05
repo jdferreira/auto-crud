@@ -7,9 +7,13 @@
         <testsuite name="Feature">
             <directory>./tests/Feature</directory>
         </testsuite>
+        <testsuite name="Integration">
+            <directory>./tests/Integration</directory>
+        </testsuite>
     </testsuites>
     <php>
         <env name="DB_CONNECTION" value="testing"/>
         <env name="DB_FOREIGN_KEYS" value="true"/>
+        <env name="EMPTY_LARAVEL_PROJECT" value="empty-laravel"/>
     </php>
 </phpunit>

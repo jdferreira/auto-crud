@@ -1,0 +1,20 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class Create{{ tablenameStudly }}Table extends Migration
+{
+    public function up()
+    {
+        Schema::create('{{ tablename }}', function (Blueprint $table) {
+            {{ schema }}
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('{{ tablename }}');
+    }
+}

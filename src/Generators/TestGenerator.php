@@ -373,7 +373,10 @@ class TestGenerator extends BaseGenerator
                 '-12.34',
             ];
         } elseif ($this->table->type($column) === Type::BINARY) {
-            // TODO: What here?!
+            return [
+                'BINARY',
+                'BINARY_DATA',
+            ];
         } elseif ($this->table->type($column) === Type::ENUM) {
             return $this->table->getEnumValid($column);
         }
