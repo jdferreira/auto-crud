@@ -7,6 +7,7 @@ use Ferreira\AutoCrud\Database\DatabaseInformation;
 use Ferreira\AutoCrud\Generators\ViewEditGenerator;
 use Ferreira\AutoCrud\Generators\ViewShowGenerator;
 use Ferreira\AutoCrud\Generators\ViewIndexGenerator;
+use Ferreira\AutoCrud\Generators\LayoutViewGenerator;
 use Ferreira\AutoCrud\Generators\ViewCreateGenerator;
 
 class ViewCommand extends Command
@@ -39,6 +40,8 @@ class ViewCommand extends Command
         $tablenames = count($requested) > 0
             ? $requested
             : $this->laravel->make(DatabaseInformation::class)->tablenames(false);
+
+        $this->laravel->make(LayoutViewGenerator::class)->save();
 
         $generators = [
             ViewIndexGenerator::class,
