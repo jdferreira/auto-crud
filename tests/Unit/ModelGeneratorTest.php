@@ -117,7 +117,7 @@ class ModelGeneratorTest extends TestCase
             protected \$casts = [
                 'subscribed' => 'boolean',
                 'birthday' => 'date',
-                'wake_up' => 'time',
+                'wake_up' => 'datetime',
             ];
         ", $this->generator('users')->generate());
 

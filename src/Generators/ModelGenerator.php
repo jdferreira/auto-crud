@@ -116,7 +116,9 @@ class ModelGenerator extends BaseGenerator
             Type::BOOLEAN => 'boolean',
             Type::DATETIME => 'datetime',
             Type::DATE => 'date',
-            Type::TIME => 'time',
+            // For the next line, laravel does not have a 'time' cast; so cast
+            // to datetime and format appropriately when needed
+            Type::TIME => 'datetime',
             Type::DECIMAL => 'decimal:2',
         ];
 
