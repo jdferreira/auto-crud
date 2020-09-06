@@ -95,4 +95,19 @@ class ViewShowGeneratorTest extends TestCase
             </form>
         ', $code);
     }
+
+    /** @test */
+    public function it_renders_action_route_names_with_the_tablename()
+    {
+        $code = $this->generator('payment_methods')->generate();
+
+        $this->assertCodeContains('
+            <a href="{{ route(\'payment_methods.edit\', [\'payment_method\' => $paymentMethod]) }}">Edit</a>
+            <form action="{{ route(\'payment_methods.destroy\', [\'payment_method\' => $paymentMethod]) }}" method="POST">
+                @method(\'DELETE\')
+                @csrf
+                <button type="submit">Delete</button>
+            </form>
+        ', $code);
+    }
 }

@@ -67,12 +67,13 @@ class ViewShowGenerator extends BaseGenerator
 
     private function buttons()
     {
-        $singular = Str::camel(Str::singular($this->table->name()));
-        $plural = Str::plural($singular);
+        $tablename = $this->table->name();
+        $routeParam = Str::singular($tablename);
+        $model = Str::camel(Str::singular($tablename));
 
         return [
-            "<a href=\"{{ route('$plural.edit', ['$singular' => \$$singular]) }}\">Edit</a>",
-            "<form action=\"{{ route('$plural.destroy', ['$singular' => \$$singular]) }}\" method=\"POST\">",
+            "<a href=\"{{ route('$tablename.edit', ['$routeParam' => \$$model]) }}\">Edit</a>",
+            "<form action=\"{{ route('$tablename.destroy', ['$routeParam' => \$$model]) }}\" method=\"POST\">",
             '    @method(\'DELETE\')',
             '    @csrf',
             '    <button type="submit">Delete</button>',
