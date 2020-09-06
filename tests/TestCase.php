@@ -235,7 +235,7 @@ abstract class TestCase extends BaseTestCase
      *   - type: The type of the column (see the constant values in
      *     `\Ferreira\AutoCrud\Type`). Defaults to `Type::String`.
      *   - required: a boolean indicating whether the column is required.
-     *     Defaults to false.
+     *     Defaults to true.
      *   - unique: a boolean indicating whether the column is marked as unique.
      *     Defaults to false.
      *   - enum: an array of strings containing the valid values for the column.

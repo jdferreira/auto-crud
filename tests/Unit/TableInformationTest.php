@@ -231,4 +231,6 @@ class TableInformationTest extends TestCase
         $this->assertFalse((new TableInformation('users'))->unique('name'));
         $this->assertTrue((new TableInformation('users'))->unique('email'));
     }
+
+    // TODO: Test that boolean columns with default values are never nullable
 }

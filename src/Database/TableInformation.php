@@ -158,6 +158,7 @@ class TableInformation
             return
                 $column->getType()->getName() === DoctrineType::STRING && // String type
                 $this->getEnumValid($column->getName()) === null; // Non-enum
+                // TODO: The previous should use our own Type class, not Doctrine's type
         })->map(function (Column $column) {
             return $column->getName();
         })->values();
