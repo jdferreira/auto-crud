@@ -77,10 +77,10 @@ class ViewIndexGenerator extends BaseGenerator
         $values = [];
 
         foreach ($this->visibleColumns() as $column) {
-            $builder = new AccessorBuilder($this->table, $column);
+            $builder = new AccessorBuilder($this->table);
 
-            $labels[] = "<th>$builder->label</th>";
-            $values[] = "<td>$builder->accessor</td>";
+            $labels[] = '<th>' . $builder->label($column) . '</th>';
+            $values[] = '<td>' . $builder->viewAccessor($column) . '</td>';
         }
 
         return [$labels, $values];

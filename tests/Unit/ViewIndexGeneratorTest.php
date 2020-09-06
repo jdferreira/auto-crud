@@ -114,7 +114,7 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertStringContainsString('$user->subscribed ? \'&#10004;\' : \'\'', $code);
+        $this->assertStringContainsString('$user->subscribed ? \'&#10004;\' : \'&#10008;\'', $code);
         $this->assertStringContainsString('$user->birthday->format(\'Y-m-d\')', $code);
         $this->assertStringContainsString('$user->wake_up->format(\'H:i:s\')', $code);
 
@@ -128,12 +128,12 @@ class ViewIndexGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertStringContainsString('$user->email ?: \'\'', $code);
-        $this->assertStringContainsString('$user->wake_up ? $user->wake_up->format(\'H:i:s\') : \'\'', $code);
+        $this->assertStringContainsString('{{ $user->email }}', $code);
+        $this->assertStringContainsString('{{ $user->wake_up === null ? $user->wake_up->format(\'H:i:s\') : null }}', $code);
 
         $code = $this->generator('products')->generate();
 
-        $this->assertStringContainsString('$product->type ?: \'\'', $code);
+        $this->assertStringContainsString('{{ $product->type }}', $code);
     }
 
     /** @test */
@@ -162,7 +162,7 @@ class ViewIndexGeneratorTest extends TestCase
 
         $code = $this->generator('sales')->generate();
 
-        $this->assertStringContainsString('(Product: {{ $sale->product_id }})', $code);
+        $this->assertStringContainsString('Product #{{ $sale->product_id }}', $code);
     }
 
     /** @test */
@@ -171,7 +171,7 @@ class ViewIndexGeneratorTest extends TestCase
         $code = $this->generator('sales')->generate();
 
         $this->assertStringContainsString(
-            '<a href="{{ route(\'products.show\', [\'products\' => $sale->product_id]) }}">',
+            '<a href="{{ route(\'products.show\', [\'product\' => $sale->product_id]) }}">',
             $code
         );
     }
@@ -201,10 +201,10 @@ class ViewIndexGeneratorTest extends TestCase
                     <tr>
                         <td>{{ \$user->id }}</td>
                         <td>{{ \$user->name }}</td>
-                        <td>{{ \$user->email ?: '' }}</td>
-                        <td>{{ \$user->subscribed ? '&#10004;' : '' }}</td>
+                        <td>{{ \$user->email }}</td>
+                        <td>{{ \$user->subscribed ? '&#10004;' : '&#10008;' }}</td>
                         <td>{{ \$user->birthday->format('Y-m-d') }}</td>
-                        <td>{{ \$user->wake_up ? \$user->wake_up->format('H:i:s') : '' }}</td>
+                        <td>{{ \$user->wake_up === null ? \$user->wake_up->format('H:i:s') : null }}</td>
                     </tr>
                 @endforeach
             </table>
@@ -237,7 +237,7 @@ class ViewIndexGeneratorTest extends TestCase
                 @foreach (\$avatars as \$avatar)
                     <tr>
                         <td>{{ \$avatar->id }}</td>
-                        <td><a href=\"{{ route('users.show', ['users' => \$avatar->user_id]) }}\">{{ \$avatar->user->name }}</a></td>
+                        <td><a href=\"{{ route('users.show', ['user' => \$avatar->user_id]) }}\">{{ \$avatar->user->name }}</a></td>
                         <td>{{ \$avatar->file }}</td>
                     </tr>
                 @endforeach
@@ -263,7 +263,7 @@ class ViewIndexGeneratorTest extends TestCase
 
             <table>
                 <tr>
-                    <th>Product id</th>
+                    <th>Product ID</th>
                     <th>Owner</th>
                     <th>Type</th>
                     <th>Value</th>
@@ -273,8 +273,8 @@ class ViewIndexGeneratorTest extends TestCase
                 @foreach (\$products as \$product)
                     <tr>
                         <td>{{ \$product->product_id }}</td>
-                        <td><a href=\"{{ route('users.show', ['users' => \$product->owner_id]) }}\">{{ \$product->owner->name }}</a></td>
-                        <td>{{ \$product->type ?: '' }}</td>
+                        <td><a href=\"{{ route('users.show', ['user' => \$product->owner_id]) }}\">{{ \$product->owner->name }}</a></td>
+                        <td>{{ \$product->type }}</td>
                         <td>{{ \$product->value }}</td>
                         <td>{{ \$product->start_at->format('Y-m-d H:i:s') }}</td>
                     </tr>
@@ -344,7 +344,7 @@ class ViewIndexGeneratorTest extends TestCase
                 @foreach (\$sales as \$sale)
                     <tr>
                         <td>{{ \$sale->id }}</td>
-                        <td><a href=\"{{ route('products.show', ['products' => \$sale->product_id]) }}\">(Product: {{ \$sale->product_id }})</a></td>
+                        <td><a href=\"{{ route('products.show', ['product' => \$sale->product_id]) }}\">Product #{{ \$sale->product_id }}</a></td>
                         <td>{{ \$sale->amount }}</td>
                         <td>{{ \$sale->date->format('Y-m-d') }}</td>
                     </tr>

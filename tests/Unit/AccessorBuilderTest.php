@@ -15,73 +15,95 @@ class AccessorBuilderTest extends TestCase
     {
         $builder = new AccessorBuilder($this->mockTable('tablename', [
             'column' => [],
-        ]), 'column');
+        ]));
 
-        $this->assertNotNull($builder->label);
-        $this->assertNotNull($builder->accessor);
+        $this->assertNotNull($builder->label('column'));
+        $this->assertNotNull($builder->simpleAccessor('column'));
+        $this->assertNotNull($builder->viewAccessor('column'));
     }
 
     /** @test */
-    public function it_capitalizes_column_names()
+    public function it_capitalizes_labels()
     {
-        $table = $this->mockTable('tablename', [
+        $builder = new AccessorBuilder($this->mockTable('tablename', [
             'name' => [],
             'wants_email' => [],
-        ]);
+        ]));
 
-        $this->assertEquals('Name', (new AccessorBuilder($table, 'name'))->label);
-        $this->assertEquals('Wants email', (new AccessorBuilder($table, 'wants_email'))->label);
+        $this->assertEquals('Name', $builder->label('name'));
+        $this->assertEquals('Wants email', $builder->label('wants_email'));
     }
 
     /** @test */
-    public function it_builds_accessors_usable_in_views()
+    public function it_builds_simple_accessors()
     {
-        $table = $this->mockTable('players', [
+        $builder = new AccessorBuilder($this->mockTable('players', [
             'name' => [],
-        ]);
+        ]));
 
-        $builder = new AccessorBuilder($table, 'name');
-
-        $this->assertEquals('{{ $player->name }}', $builder->accessor);
+        $this->assertEquals('$player->name', $builder->simpleAccessor('name'));
     }
 
     /** @test */
-    public function it_crosses_relationships()
+    public function it_uses_the_label_column_of_the_foreign_table_on_simple_accessors_that_refer_to_other_tables()
     {
-        // This is a tricky test. We must mock the label column of the referred
-        // table (in this case we say it is the `name` column), as well as it's
-        // type (let's say it is string to facilitate the test). This test will
-        // also ensure that the returned accessor is an HTML link to the `show`
-        // route of the referred table. It also makes sure that the primary key
-        // of the foreign table is correctly used in the `route` function.
-
         $table = $this->mockTable('players', [
             'team_id' => [
-                'reference' => ['team', 'team_id'],
+                'reference' => ['teams', 'id'],
             ],
         ]);
 
+        // Let's mock the DatabaseInformation class, so that we can test the
+        // case where the column `team_id` refers to the column `id` on the
+        // table `teams`. Note that the label column is always a string, as per
+        // the definition in `TableInformation::computeLabelColumn`.
+
         $this->app->bind(DatabaseInformation::class, function () {
             return $this->mock(DatabaseInformation::class, function ($mock) {
-                $mock->shouldReceive('table')->with('team')->andReturn(
+                $mock->shouldReceive('table')->with('teams')->andReturn(
                     $this->mock(TableInformation::class, function ($mock) {
                         $mock->shouldReceive('labelColumn')->with()->andReturn('name');
-                        $mock->shouldReceive('type')->with('name')->andReturn(Type::STRING);
                     })
                 );
             });
         });
 
-        $builder = new AccessorBuilder($table, 'team_id');
+        $builder = new AccessorBuilder($table);
 
-        $this->assertEquals(
-            '<a href="{{ route(\'team.show\', [\'team\' => $player->team_id]) }}">{{ $player->team->name }}</a>',
-            $builder->accessor
-        );
+        $this->assertEquals('$player->team->name', $builder->simpleAccessor('team_id'));
     }
 
     /** @test */
-    public function it_builds_simple_accessors()
+    public function it_detects_foreign_tables_without_a_label_column()
+    {
+        $table = $this->mockTable('players', [
+            'shirt_id' => [
+                'reference' => ['shirts', 'id'],
+            ],
+        ]);
+
+        // Let's mock the DatabaseInformation class, so that we can test the
+        // case where the column `team_id` refers to the column `id` on the
+        // table `teams`. Note that the label column is always a string, as per
+        // the definition in `TableInformation::computeLabelColumn`.
+
+        $this->app->bind(DatabaseInformation::class, function () {
+            return $this->mock(DatabaseInformation::class, function ($mock) {
+                $mock->shouldReceive('table')->with('shirts')->andReturn(
+                    $this->mock(TableInformation::class, function ($mock) {
+                        $mock->shouldReceive('labelColumn')->with()->andReturn(null);
+                    })
+                );
+            });
+        });
+
+        $builder = new AccessorBuilder($table);
+
+        $this->assertEquals('$player->shirt_id', $builder->simpleAccessor('shirt_id'));
+    }
+
+    /** @test */
+    public function it_can_chain_simple_accessor_onto_existing_code()
     {
         $table = $this->mockTable('players', [
             'name' => [],
@@ -104,35 +126,217 @@ class AccessorBuilderTest extends TestCase
             });
         });
 
-        $this->assertEquals('$player->name', (new AccessorBuilder($table, 'name'))->buildSimpleAccessor());
-        $this->assertEquals('$player->team->name', (new AccessorBuilder($table, 'team_id'))->buildSimpleAccessor());
+        $builder = new AccessorBuilder($table);
+
+        $this->assertEquals(
+            'factory(Player::class)->create()->name',
+            $builder->simpleAccessor('name', 'factory(Player::class)->create()')
+        );
+
+        $this->assertEquals(
+            'factory(Player::class)->create()->team->name',
+            $builder->simpleAccessor('team_id', 'factory(Player::class)->create()')
+        );
     }
 
     /** @test */
-    public function it_chops_text_columns_to_30_characters()
+    public function it_builds_accessors_usable_in_views()
     {
-        $table = $this->mockTable('players', [
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'name' => [],
+        ]));
+
+        $this->assertEquals('{{ $player->name }}', $builder->viewAccessor('name'));
+    }
+
+    /** @test */
+    public function it_formats_accessors_in_views()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'date' => ['type' => Type::DATE],
+            'time' => ['type' => Type::TIME],
+            'when' => ['type' => Type::DATETIME],
+        ]));
+
+        $this->assertEquals("{{ \$player->date->format('Y-m-d') }}", $builder->viewAccessor('date'));
+        $this->assertEquals("{{ \$player->time->format('H:i:s') }}", $builder->viewAccessor('time'));
+        $this->assertEquals("{{ \$player->when->format('Y-m-d H:i:s') }}", $builder->viewAccessor('when'));
+    }
+
+    /** @test */
+    public function it_formats_boolean_values()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'is_good' => ['type' => Type::BOOLEAN],
+        ]));
+
+        $this->assertEquals("{{ \$player->is_good ? '&#10004;' : '&#10008;' }}", $builder->viewAccessor('is_good'));
+    }
+
+    /** @test */
+    public function it_formats_nullable_boolean_values()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'is_good' => [
+                'type' => Type::BOOLEAN,
+                'required' => false,
+            ],
+        ]));
+
+        $this->assertEquals(
+            "{{ \$player->is_good === null ? (\$player->is_good ? '&#10004;' : '&#10008;') : null }}",
+            $builder->viewAccessor('is_good')
+        );
+    }
+
+    /** @test */
+    public function it_formats_only_when_the_value_is_not_null()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'date' => [
+                'type' => Type::DATE,
+                'required' => false,
+            ],
+            'motto' => [
+                'required' => false,
+            ],
+        ]));
+
+        $this->assertEquals(
+            "{{ \$player->date === null ? \$player->date->format('Y-m-d') : null }}",
+            $builder->viewAccessor('date')
+        );
+
+        $this->assertEquals(
+            '{{ $player->motto }}',
+            $builder->viewAccessor('motto')
+        );
+    }
+
+    /** @test */
+    public function it_chops_text_columns_to_30_characters_in_views()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
             'notes' => [
                 'type' => Type::TEXT,
             ],
+        ]));
+
+        $this->assertEquals(
+            '{{ \Illuminate\Support\Str::limit($player->notes, 30) }}',
+            $builder->viewAccessor('notes')
+        );
+    }
+
+    /** @test */
+    public function it_builds_view_accessors_that_cross_relationships_as_links()
+    {
+        $table = $this->mockTable('players', [
+            'team_id' => [
+                'reference' => ['teams', 'id'],
+            ],
         ]);
 
-        $this->assertEquals('{{ \Illuminate\Support\Str::limit($player->notes, 30) }}', (new AccessorBuilder($table, 'notes'))->accessor);
+        $this->app->bind(DatabaseInformation::class, function () {
+            return $this->mock(DatabaseInformation::class, function ($mock) {
+                $mock->shouldReceive('table')->with('teams')->andReturn(
+                    $this->mock(TableInformation::class, function ($mock) {
+                        $mock->shouldReceive('labelColumn')->with()->andReturn('name');
+                    })
+                );
+            });
+        });
+
+        $builder = new AccessorBuilder($table);
+
+        $this->assertEquals(
+            '<a href="{{ route(\'teams.show\', [\'team\' => $player->team_id]) }}">{{ $player->team->name }}</a>',
+            $builder->viewAccessor('team_id')
+        );
+    }
+
+    /** @test */
+    public function it_builds_view_accessors_that_cross_relationships_even_when_the_foreign_table_does_not_have_a_label_column()
+    {
+        $table = $this->mockTable('players', [
+            'team_id' => [
+                'reference' => ['teams', 'id'],
+            ],
+        ]);
+
+        $this->app->bind(DatabaseInformation::class, function () {
+            return $this->mock(DatabaseInformation::class, function ($mock) {
+                $mock->shouldReceive('table')->with('teams')->andReturn(
+                    $this->mock(TableInformation::class, function ($mock) {
+                        $mock->shouldReceive('labelColumn')->with()->andReturn(null);
+                    })
+                );
+            });
+        });
+
+        $builder = new AccessorBuilder($table);
+
+        $this->assertEquals(
+            '<a href="{{ route(\'teams.show\', [\'team\' => $player->team_id]) }}">Team #{{ $player->team_id }}</a>',
+            $builder->viewAccessor('team_id')
+        );
     }
 
     /** @test */
     public function it_treats_sql_keywords_as_general_words()
     {
-        $table = $this->mockTable('players', [
+        $builder = new AccessorBuilder($this->mockTable('players', [
             'primary' => [],
-        ]);
+        ]));
 
-        $builder = new AccessorBuilder($table, 'primary');
-
-        $this->assertEquals('Primary', $builder->label);
-        $this->assertEquals('{{ $player->primary }}', $builder->accessor);
-        $this->assertEquals('$player->primary', $builder->buildSimpleAccessor());
+        $this->assertEquals('Primary', $builder->label('primary'));
+        $this->assertEquals('$player->primary', $builder->simpleAccessor('primary'));
+        $this->assertEquals('{{ $player->primary }}', $builder->viewAccessor('primary'));
     }
 
-    // TODO: I need many more tests here! See ViewIndexGeneratorTest for ideas!
+    /** @test */
+    public function it_does_not_cast_simple_accessors()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'birthday' => [
+                'type' => Type::DATE,
+            ],
+        ]));
+
+        $this->assertEquals(
+            '$player->birthday',
+            $builder->simpleAccessor('birthday')
+        );
+    }
+
+    /** @test */
+    public function it_casts_view_accessors_according_to_column_type()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'birthday' => [
+                'type' => Type::DATE,
+            ],
+        ]));
+
+        $this->assertEquals(
+            "{{ \$player->birthday->format('Y-m-d') }}",
+            $builder->viewAccessor('birthday')
+        );
+    }
+
+    /** @test */
+    public function it_can_format_simple_accessors()
+    {
+        $builder = new AccessorBuilder($this->mockTable('players', [
+            'date' => ['type' => Type::DATE],
+            'time' => ['type' => Type::TIME],
+            'when' => ['type' => Type::DATETIME],
+            'is_good' => ['type' => Type::BOOLEAN],
+        ]));
+
+        $this->assertEquals("\$player->date->format('Y-m-d')", $builder->simpleAccessorFormatted('date'));
+        $this->assertEquals("\$player->time->format('H:i:s')", $builder->simpleAccessorFormatted('time'));
+        $this->assertEquals("\$player->when->format('Y-m-d H:i:s')", $builder->simpleAccessorFormatted('when'));
+        $this->assertEquals("\$player->is_good ? '&#10004;' : '&#10008;'", $builder->simpleAccessorFormatted('is_good'));
+    }
 }

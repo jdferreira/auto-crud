@@ -14,116 +14,32 @@ class AccessorBuilder
     private $table;
 
     /**
-     * @var string
-     */
-    private $column;
-
-    /**
      * @var DatabaseInformation
      */
     private $db;
 
-    /**
-     * @var string
-     */
-    public $label;
-
-    /**
-     * @var string
-     */
-    public $accessor;
-
-    public function __construct(TableInformation $table, string $column)
+    public function __construct(TableInformation $table)
     {
         $this->table = $table;
-        $this->column = $column;
 
         $this->db = app(DatabaseInformation::class);
-
-        $this->build();
     }
 
-    private function build()
+    public function label(string $column): string
     {
-        if (($references = $this->table->reference($this->column)) !== null) {
-            [$foreignTable, $foreignColumn] = $references;
-
-            // TODO: I just realized: when a table references another, the
-            // foreign column is always the primary key! This is not enforced,
-            // but some parts of the code assume that. This must be document and
-            // enforced at the TableInformation level.
-
-            $label = Str::ucfirst(str_replace(
+        if ($this->refersTo($column) !== null) {
+            return Str::ucfirst(str_replace(
                 '_',
                 ' ',
-                Str::endsWith($this->column, '_id')
-                    ? Str::replaceLast('_id', '', $this->column)
-                    : $this->column
+                Str::endsWith($column, '_id') ? Str::replaceLast('_id', '', $column) : $column
             ));
-
-            $modelMethod = substr($this->column, -3) === '_id'
-                ? Str::camel(Str::singular(substr($this->column, 0, -3)))
-                : Str::camel(Str::singular($foreignTable));
-            $foreignLabelColumn = $this->db->table($foreignTable)->labelColumn();
-
-            $modelName = '$' . $this->modelSingular();
-
-            if ($foreignLabelColumn === null) {
-                $accessor = '(' . ucwords(str_replace('_', ' ', Str::singular($foreignTable))) . ': ' . "{{ $modelName->{$this->column} }}" . ')';
-            } else {
-                $type = $this->db->table($foreignTable)->type($foreignLabelColumn);
-                $required = $this->table->required($this->column);
-                $raw = "$modelName->$modelMethod->$foreignLabelColumn";
-
-                $accessor = $this->castToType($raw, $type);
-
-                if (! $required) {
-                    $accessor = "$modelName->{$this->column} ? $accessor : ''";
-                }
-
-                $accessor = "{{ $accessor }}";
-            }
-
-            $accessor = '<a href="' . static::route($foreignTable, "$modelName->{$this->column}") . '">' . $accessor . '</a>';
         } else {
-            $label = Str::ucfirst(str_replace('_', ' ', $this->column));
-            $label = preg_replace('/\bId\b/', 'ID', $label);
-
-            $accessor = '{{ ' . $this->accessor($this->column) . ' }}';
+            return preg_replace(
+                '/\b[iI]d$/',
+                'ID',
+                Str::ucfirst(str_replace('_', ' ', $column))
+            );
         }
-
-        $this->label = $label;
-        $this->accessor = $accessor;
-    }
-
-    public function buildSimpleAccessor()
-    {
-        if (($references = $this->table->reference($this->column)) !== null) {
-            [$foreignTable, $foreignColumn] = $references;
-
-            $modelMethod = substr($this->column, -3) === '_id'
-                ? Str::camel(Str::singular(substr($this->column, 0, -3)))
-                : Str::camel(Str::singular($foreignTable));
-            $foreignLabelColumn = $this->db->table($foreignTable)->labelColumn();
-
-            $modelName = '$' . $this->modelSingular();
-
-            if ($foreignLabelColumn === null) {
-                $accessor = "$modelName->{$this->column}";
-            } else {
-                $type = $this->db->table($foreignTable)->type($foreignLabelColumn);
-                $raw = "$modelName->$modelMethod->$foreignLabelColumn";
-
-                $accessor = $this->castToType($raw, $type);
-            }
-        } else {
-            $type = $this->table->type($this->column);
-            $modelName = '$' . $this->modelSingular();
-
-            $accessor = $this->castToType("$modelName->{$this->column}", $type);
-        }
-
-        return $accessor;
     }
 
     private function modelSingular()
@@ -131,35 +47,132 @@ class AccessorBuilder
         return Str::camel(Str::singular($this->table->name()));
     }
 
-    private function accessor()
+    /**
+     * Returns the table that the given column refers to. If the column does not
+     * have a foreign key, return false.
+     *
+     * @param string $column
+     *
+     * @return null|string
+     */
+    private function refersTo(string $column)
     {
-        $type = $this->table->type($this->column);
-        $required = $this->table->required($this->column);
-        $modelName = '$' . $this->modelSingular();
-
-        return $this->processAccessor("$modelName->{$this->column}", $type, $required);
+        if (($references = $this->table->reference($column)) !== null) {
+            return $references[0];
+        } else {
+            return null;
+        }
     }
 
-    private static function processAccessor($raw, $type, $required)
+    /**
+     * Returns code that accesses (retrieves) the value of a column in a model.
+     * If no model is given, the generated code generates the model as well, by
+     * writing a PHP variable whose name is based on the table name.
+     *
+     * If the column refers to another table, the accessor retrieves the label
+     * associated with the row on *that* table, rather than the raw identifier
+     * of the model.
+     *
+     * Note that no conversion is done on the accessor (the generated code for
+     * date columns access the Carbon instance, not a formatted string that is
+     * derived from it etc.). If you want a string accessor consider using the
+     * `viewAccessor`, which returns the code to be inserted in blade views.
+     *
+     * @param string $column
+     * @param string $model
+     *
+     * @return string
+     */
+    public function simpleAccessor(string $column, string $model = null): string
     {
-        $result = static::castToType($raw, $type);
+        $model = $model ?? '$' . $this->modelSingular();
 
-        if (! $required) {
-            if ($result === $raw) {
-                $result = "$raw ?: ''";
-            } else {
-                $result = "$raw ? $result : ''";
+        if (($foreignTable = $this->refersTo($column)) !== null) {
+            $foreignLabelColumn = $this->db->table($foreignTable)->labelColumn();
+
+            if ($foreignLabelColumn !== null) {
+                $relation = Str::camel(Str::singular(
+                    Str::endsWith($column, '_id')
+                        ? substr($column, 0, -3)
+                        : $foreignTable
+                ));
+
+                return "$model->$relation->$foreignLabelColumn";
             }
         }
 
-        return $result;
+        return "$model->$column";
     }
 
-    private static function castToType($accessor, $type)
+    public function simpleAccessorFormatted(string $column)
+    {
+        $accessor = $this->simpleAccessor($column);
+
+        return static::formatAccessor($accessor, $this->table->type($column));
+    }
+
+    /**
+     * Returns code that accesses (retrieves) the value of a column in a model
+     * in such a way that it can be directly injected in a blade view in order
+     * to write, in the view, the value of that column.
+     *
+     * If the column refers to another table, the accessor retrieves the label
+     * associated with the row on *that* table, rather than the raw identifier
+     * of the model.
+     *
+     * The values that are not strings are converted into strings meaning that
+     * Carbon instances are formatted (columns whose type is datetime, date or
+     * time are dealt appropriately etc.).
+     *
+     * Nullable columns also have special treatment because they can either be
+     * `null`, in which case no string should be included in the view, or they
+     * can contain a value, in which case the value must be dealt with respect
+     * to the rules above.
+     *
+     * @param string $column
+     *
+     * @return string
+     */
+    public function viewAccessor(string $column): string
+    {
+        $simple = $this->simpleAccessor($column);
+
+        if (($foreignTable = $this->refersTo($column)) !== null) {
+            $foreignModel = Str::camel(Str::singular($foreignTable));
+
+            $idAccessor = '$' . $this->modelSingular() . "->$column";
+
+            $route = "{{ route('$foreignTable.show', ['$foreignModel' => $idAccessor]) }}";
+
+            if ($this->db->table($foreignTable)->labelColumn() !== null) {
+                return '<a href="' . $route . '">{{ ' . $simple . ' }}</a>';
+            } else {
+                $foreignLabel = Str::ucfirst(
+                    str_replace('_', ' ', Str::singular($foreignTable))
+                );
+
+                return '<a href="' . $route . '">' . $foreignLabel . ' #{{ ' . $simple . ' }}</a>';
+            }
+        } else {
+            $formatted = static::formatAccessor($simple, $this->table->type($column));
+
+            if (! $this->table->required($column) && $formatted !== $simple) {
+                if ($this->table->type($column) === Type::BOOLEAN) {
+                    $formatted = "($formatted)";
+                }
+
+                $formatted = "$simple === null ? $formatted : null";
+            }
+
+            return "{{ $formatted }}";
+        }
+    }
+
+    private static function formatAccessor($accessor, $type)
     {
         switch ($type) {
             case Type::BOOLEAN:
-                return "$accessor ? '&#10004;' : ''";
+                return "$accessor ? '&#10004;' : '&#10008;'";
 
             case Type::DATETIME:
                 return "${accessor}->format('Y-m-d H:i:s')";
@@ -176,10 +189,5 @@ class AccessorBuilder
             default:
                 return $accessor;
         }
-    }
-
-    private static function route(string $model, string $idAccessor): string
-    {
-        return "{{ route('$model.show', ['$model' => $idAccessor]) }}";
     }
 }

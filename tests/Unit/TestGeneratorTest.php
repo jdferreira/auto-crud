@@ -144,7 +144,7 @@ class TestGeneratorTest extends TestCase
                         ->assertSeeText($user->id)
                         ->assertSeeText($user->name)
                         ->assertSeeText($user->email)
-                        ->assertSeeText($user->subscribed ? \'&#10004;\' : \'\')
+                        ->assertSeeText($user->subscribed ? \'&#10004;\' : \'&#10008;\')
                         ->assertSeeText($user->birthday->format(\'Y-m-d\'))
                         ->assertSeeText($user->wake_up->format(\'H:i:s\'));
                 }
