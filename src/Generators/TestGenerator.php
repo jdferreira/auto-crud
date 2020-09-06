@@ -117,7 +117,10 @@ class TestGenerator extends BaseGenerator
 
     private function castColumn(string $column)
     {
-        return (new AccessorBuilder($this->table))->simpleAccessorFormatted($column);
+        return app(
+            AccessorBuilder::class,
+            ['table' => $this->table]
+        )->simpleAccessorFormatted($column);
     }
 
     private function assertHTMLOnForm()

@@ -54,7 +54,7 @@ class ViewShowGenerator extends BaseGenerator
         $result = [];
 
         foreach ($this->table->columns() as $column) {
-            $builder = new AccessorBuilder($this->table);
+            $builder = app(AccessorBuilder::class, ['table' => $this->table]);
 
             $label = $builder->label($column);
             $accessor = $builder->viewAccessor($column);
