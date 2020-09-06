@@ -105,7 +105,20 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function attributes(string $column)
     {
-        return 'name="' . str_replace('_', '-', $column) . '"';
+        if ($this->required($column)) {
+            $required = ' required';
+        } else {
+            $required = '';
+        }
+
+        return 'name="' . str_replace('_', '-', $column) . '"' . $required;
+    }
+
+    private function required(string $column)
+    {
+        return $this->table->required($column)
+            && ! $this->table->hasDefault($column)
+            && $this->table->type($column) !== Type::BOOLEAN;
     }
 
     private function input(string $column)
@@ -169,7 +182,9 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function textareaInput(string $column)
     {
-        return '<textarea name="' . str_replace('_', '-', $column) . '"></textarea>';
+        $attrs = $this->attributes($column);
+
+        return "<textarea $attrs></textarea>";
     }
 
     public function buttons()

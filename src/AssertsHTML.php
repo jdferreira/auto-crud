@@ -79,6 +79,12 @@ trait AssertsHTML
      */
     public function getXPath(string $tag, string $name, $value = null, bool $required = null): string
     {
+        // TODO: This might be more useful if we accept any attributes, instead
+        // of hardcoding the `name`, `value` and `required`. For example, what
+        // about `type`? If we do it, the tests at
+        // ViewCreateGeneratorTest::it_renders_input_fields_according_to_field_type
+        // could use this method!
+
         $conditions = [];
 
         $name = htmlentities($name, ENT_QUOTES);

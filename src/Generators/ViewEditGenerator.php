@@ -30,19 +30,23 @@ class ViewEditGenerator extends ViewCreateGenerator
 
     protected function attributes(string $column)
     {
-        [$name, $value] = $this->nameAndValue($column);
+        $attrs = parent::attributes($column);
 
-        return "name=\"$name\" value=\"$value\"";
+        $value = $this->value($column);
+
+        return "$attrs value=\"$value\"";
     }
 
     protected function textareaInput(string $column)
     {
-        [$name, $value] = $this->nameAndValue($column);
+        $attrs = parent::attributes($column);
 
-        return "<textarea name=\"$name\">$value</textarea>";
+        $value = $this->value($column);
+
+        return "<textarea $attrs>$value</textarea>";
     }
 
-    private function nameAndValue($column)
+    private function value($column)
     {
         $name = str_replace('_', '-', $column);
 
@@ -50,6 +54,6 @@ class ViewEditGenerator extends ViewCreateGenerator
         $bound = '$' . $this->model() . '->' . $column;
         $value = "{{ $old ?? $bound }}";
 
-        return [$name, $value];
+        return $value;
     }
 }
