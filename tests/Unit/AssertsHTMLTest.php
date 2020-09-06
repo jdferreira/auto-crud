@@ -111,7 +111,7 @@ class AssertsHTMLTest extends TestCase
     public function it_converts_name_and_value_html_entities()
     {
         $this->assertEquals(
-            "//input[@name='name&apos;s' and @value='The &quot;Burrow&quot;']",
+            "//input[@name='name&#039;s' and @value='The &quot;Burrow&quot;']",
             $this->getXPath('input', 'name\'s', 'The "Burrow"')
         );
 

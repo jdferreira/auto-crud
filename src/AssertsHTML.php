@@ -81,11 +81,11 @@ trait AssertsHTML
     {
         $conditions = [];
 
-        $name = htmlentities($name, ENT_QUOTES | ENT_HTML5);
+        $name = htmlentities($name, ENT_QUOTES);
         $conditions[] = "@name='$name'";
 
         if ($value !== null) {
-            $value = htmlentities($value, ENT_QUOTES | ENT_HTML5);
+            $value = htmlentities($value, ENT_QUOTES);
 
             $attr = $tag !== 'textarea' ? '@value' : 'text()';
 
