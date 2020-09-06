@@ -119,11 +119,14 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     {
         ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
 
-        $response = $this->put(${{ modelVariableSingular }}->path(), [
-            '{{ oneRequiredField }}' => null,
-        ]);
+        $updated = ${{ modelVariableSingular }}->toArray();
+        $updated['{{ oneConstraintField }}'] = {{ oneInvalidValue }};
 
-        $response->assertSessionHasInput('{{ oneRequiredField }}', null);
+        $this->withExceptionHandling();
+
+        $response = $this->put(${{ modelVariableSingular }}->path(), $updated);
+
+        $response->assertSessionHasInput('{{ oneConstraintField }}', {{ oneInvalidValue }});
     }
 
     /** @test */

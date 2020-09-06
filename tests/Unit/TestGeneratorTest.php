@@ -209,11 +209,14 @@ class TestGeneratorTest extends TestCase
             {
                 $user = factory(User::class)->states(\'full_model\')->create();
 
-                $response = $this->put($user->path(), [
-                    \'name\' => null,
-                ]);
+                $updated = $user->toArray();
+                $updated[\'name\'] = \'\';
 
-                $response->assertSessionHasInput(\'name\', null);
+                $this->withExceptionHandling();
+
+                $response = $this->put($user->path(), $updated);
+
+                $response->assertSessionHasInput(\'name\', \'\');
             }
         ', $code);
     }

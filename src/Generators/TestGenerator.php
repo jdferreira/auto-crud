@@ -9,6 +9,9 @@ use Ferreira\AutoCrud\AccessorBuilder;
 
 class TestGenerator extends BaseGenerator
 {
+    /** @var null|string */
+    private $oneConstraintField = null;
+
     /** @var string[] */
     private $fakes = [];
 
@@ -36,7 +39,8 @@ class TestGenerator extends BaseGenerator
             'tablenameSingular' => $this->tablenameSingular(),
             'assertHTMLOnForm' => $this->assertHTMLOnForm(),
             'assertEditFormHasValues' => $this->assertEditFormHasValues(),
-            'oneRequiredField' => $this->oneRequiredField(),
+            'oneConstraintField' => $this->oneConstraintField(),
+            'oneInvalidValue' => $this->oneInvalidValue(),
             'assertRequiredFields' => $this->assertRequiredFields(),
             'assertRawEqualsCreated' => $this->assertRawEqualsCreated(),
             'assertNewEqualsFresh' => $this->assertNewEqualsFresh(),
@@ -168,6 +172,64 @@ class TestGenerator extends BaseGenerator
                 && ! $this->table->hasDefault($column)
                 && $this->table->type($column) !== Type::BOOLEAN;
         })->first();
+    }
+
+    private function oneConstraintField()
+    {
+        // A constraint field is one that fits one of the following:
+        // - required without a default value
+        // - an integer
+        // - a boolean
+        // - a datetime, date, time
+        // - a decimal
+        // - an enum
+        // - a key to a foreign table
+        // - an email or UUID
+
+        return $this->oneConstraintField = $this->fieldsExcept(['id'])->filter(function ($column) {
+            static $constraintTypes = [
+                Type::INTEGER,
+                Type::BOOLEAN,
+                Type::DATETIME,
+                Type::DATE,
+                Type::TIME,
+                Type::DECIMAL,
+                Type::ENUM,
+            ];
+
+            return ($this->table->required($column) && ! $this->table->hasDefault($column))
+                || in_array($this->table->type($column), $constraintTypes)
+                || in_array($column, ['email', 'uuid'])
+                || $this->table->reference($column) !== null;
+        })->first();
+    }
+
+    private function oneInvalidValue()
+    {
+        // Let's generate a value that is invalid for the constraint field.
+        $column = $this->oneConstraintField;
+
+        // If the field is required without a default value, just send an empty string
+        if ($this->table->required($column) && ! $this->table->hasDefault($column)) {
+            return "''";
+        }
+
+        // The string '???' is invalid for all constraint types (integer,
+        // boolean, datetime, date, time, decimal), all emails and all UUIDs. It
+        // is also invalid for foreign keys. It should also be invalid for enum
+        // columns that do not contain that string as a valid value (which is
+        // likely!).
+        if (
+            $this->table->type($column) !== Type::ENUM
+            || ! in_array('???', $validValues = $this->table->getEnumValid($column))
+        ) {
+            return "'???'";
+        }
+
+        // Otherwise, we are dealing with an enum column that accepts the string
+        // '???'. Let's find an invalid value for this column as well. If we
+        // concatenate all values and append an X, the result is not valid
+        return '"' . substr('"', '', collect($validValues)->join('')) . 'X' . '"';
     }
 
     private function assertRequiredFields()
