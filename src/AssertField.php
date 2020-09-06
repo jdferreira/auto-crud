@@ -39,7 +39,7 @@ class AssertField
      *
      * @return $this
      */
-    public function accepts(?string $value): self
+    public function accepts($value): self
     {
         $this->request($value)
             ->assertSuccessful();
@@ -54,7 +54,7 @@ class AssertField
      *
      * @return $this
      */
-    public function rejects(?string $value): self
+    public function rejects($value): self
     {
         $this->request($value)
             ->assertRedirect()
@@ -63,7 +63,7 @@ class AssertField
         return $this;
     }
 
-    private function request(?string $value): TestResponse
+    private function request($value): TestResponse
     {
         // TODO: Is there a PHP_CS fix to convert `$this->$methodName` into
         // `$this->{$methodName}`?

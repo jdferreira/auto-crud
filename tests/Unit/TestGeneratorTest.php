@@ -334,8 +334,11 @@ class TestGeneratorTest extends TestCase
 
                 $this->assertField(\'subscribed\')
                     ->accepts(\'on\')
+                    ->accepts(true)
+                    ->accepts(false)
                     ->rejects(\'yes\')
-                    ->rejects(\'true\')
+                    ->rejects(\'no\')
+                    ->rejects(\'2\')
                     ->accepts(null);
 
                 $this->assertField(\'birthday\')

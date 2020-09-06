@@ -93,7 +93,7 @@ class RuleGeneratorTest extends TestCase
     {
         $validation = [
             Type::INTEGER => 'integer',
-            Type::BOOLEAN => 'regex:/on/',
+            Type::BOOLEAN => 'boolean',
             Type::DATETIME => 'date',
             Type::DATE => 'date_format:Y-m-d',
             Type::TIME => 'date_format:H:i:s',

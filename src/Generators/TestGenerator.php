@@ -415,6 +415,8 @@ class TestGenerator extends BaseGenerator
         } elseif ($this->table->type($column) === Type::BOOLEAN) {
             return [
                 'on',
+                true,
+                false,
             ];
         } elseif ($this->table->type($column) === Type::DATETIME) {
             return [
@@ -463,7 +465,7 @@ class TestGenerator extends BaseGenerator
         } elseif ($this->table->type($column) === Type::INTEGER) {
             return ['3.14', 'not-a-number'];
         } elseif ($this->table->type($column) === Type::BOOLEAN) {
-            return ['yes', 'true'];
+            return ['yes', 'no', '2'];
         } elseif ($this->table->type($column) === Type::DATETIME) {
             return [
                 '2020-13-01 00:00:00',
@@ -502,10 +504,16 @@ class TestGenerator extends BaseGenerator
         return [];
     }
 
-    private function quoteValue(?string $value): string
+    private function quoteValue($value): string
     {
         if ($value === null) {
             return 'null';
+        } elseif ($value === true) {
+            return 'true';
+        } elseif ($value === false) {
+            return 'false';
+        } elseif (is_int($value)) {
+            return $value;
         } else {
             $value = str_replace(['\\', "'"], ['\\\\', "\\'"], $value);
 
