@@ -70,7 +70,7 @@ class CodeContainsConstraint extends Constraint
     {
         return \sprintf(
             'contains %s',
-            $this->exporter->export(implode("\n", $this->lines))
+            $this->exporter()->export(implode("\n", $this->lines))
         );
     }
 
