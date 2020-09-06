@@ -65,7 +65,7 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_generates_thirteen_tests()
+    public function it_generates_twelve_tests()
     {
         $code = $this->generator('users')->generate();
 
@@ -80,7 +80,7 @@ class TestGeneratorTest extends TestCase
         //
         // In this case, we want only the full matches, so $matches[0]
 
-        $this->assertCount(13, $matches[0]);
+        $this->assertCount(12, $matches[0]);
     }
 
     /** @test */

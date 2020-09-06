@@ -15,7 +15,14 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         AssertsHTML,
         AssertsField;
 
-    /** @test */
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutExceptionHandling();
+    }
+
+    /** @not-a-test this will be deleted in the future */
     public function regular_crud_routes_exist_for_{{ tablename }}()
     {
         factory({{ modelClass }}::class)->create();
