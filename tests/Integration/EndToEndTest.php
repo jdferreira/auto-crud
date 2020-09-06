@@ -128,6 +128,8 @@ class EndToEndTest extends TestCase
 
     private function assertPhpunitSucceeds()
     {
+        $this->assertTrue(false); // TODO: Remove! This is just to ensure that PHPUnit actually does not run
+
         $specs = [
             1 => ['file', 'phpunit.stdout.txt', 'w'],
             2 => ['file', 'phpunit.stderr.txt', 'w'],
