@@ -40,7 +40,7 @@ trait AssertsField
     public function assertField(string $field): AssertField
     {
         if ($this->assertFieldRoutePath === null || $this->assertFieldRouteMethod === null) {
-            throw new Exception('You must run `assertFieldsOnRoute` first');
+            throw new Exception('You must run `beginAssertFields` first');
         }
 
         return new AssertField(

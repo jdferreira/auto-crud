@@ -240,6 +240,7 @@ class MigrationGenerator
         // TODO: Add columns `json`/`jsonb`, `set` and `year`.
 
         return $schema;
+        // TODO: Ensure no duplicate names
     }
 
     private function randomSet()
