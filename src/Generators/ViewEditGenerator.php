@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Str;
 
 class ViewEditGenerator extends ViewCreateGenerator
@@ -51,7 +52,7 @@ class ViewEditGenerator extends ViewCreateGenerator
         $attrs = parent::attributes($column);
 
         $value = $this->value($column);
-        $checked = "{{ ($value ) ? 'checked' : '' }}";
+        $checked = "{{ ($value) ? 'checked' : '' }}";
 
         return [
             "<input $attrs $checked type=\"checkbox\" value=\"1\">",
@@ -63,6 +64,20 @@ class ViewEditGenerator extends ViewCreateGenerator
     {
         $old = 'old(\'' . str_replace('_', '-', $column) . '\')';
         $bound = '$' . $this->model() . '->' . $column;
+
+        switch ($this->table->type($column)) {
+            case Type::DATE:
+                $bound .= '->format(\'Y-m-d\')';
+                break;
+
+            case Type::DATETIME:
+                $bound .= '->format(\'Y-m-d\TH:i:s\')';
+                break;
+
+            case Type::TIME:
+                $bound .= '->format(\'H:i:s\')';
+                break;
+        }
 
         return "$old ?? $bound";
     }

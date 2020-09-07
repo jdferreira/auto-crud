@@ -192,8 +192,8 @@ class TestGeneratorTest extends TestCase
                 $this->assertHTML($this->getXPath(\'input\', \'name\', $user->name), $document);
                 $this->assertHTML($this->getXPath(\'input\', \'email\', $user->email), $document);
                 $this->assertHTML($this->getXPath(\'input\', \'subscribed\', $user->subscribed), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'birthday\', $user->birthday), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'wake_up\', $user->wake_up), $document);
+                $this->assertHTML($this->getXPath(\'input\', \'birthday\', $user->birthday->format(\'Y-m-d\')), $document);
+                $this->assertHTML($this->getXPath(\'input\', \'wake_up\', $user->wake_up->format(\'H:i:s\')), $document);
             }
         ', $code);
     }

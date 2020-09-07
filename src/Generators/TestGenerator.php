@@ -160,7 +160,23 @@ class TestGenerator extends BaseGenerator
                     $tag = 'input';
                 }
 
-                return "\$this->assertHTML(\$this->getXPath('$tag', '$column', \${$this->modelVariableSingular()}->$column), \$document);";
+                $value = "\${$this->modelVariableSingular()}->$column";
+
+                switch ($this->table->type($column)) {
+                    case Type::DATE:
+                        $value .= '->format(\'Y-m-d\')';
+                        break;
+
+                    case Type::DATETIME:
+                        $value .= '->format(\'Y-m-d\TH:i:s\')';
+                        break;
+
+                    case Type::TIME:
+                        $value .= '->format(\'H:i:s\')';
+                        break;
+                }
+
+                return "\$this->assertHTML(\$this->getXPath('$tag', '$column', $value), \$document);";
             })
             ->all();
     }

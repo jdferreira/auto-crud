@@ -122,7 +122,7 @@ class ViewEditGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
 
-        $this->assertCodeContains('<input name="subscribed" {{ (old(\'subscribed\') ?? $user->subscribed ) ? \'checked\' : \'\' }} type="checkbox" value="1">', $code);
+        $this->assertCodeContains('<input name="subscribed" {{ (old(\'subscribed\') ?? $user->subscribed) ? \'checked\' : \'\' }} type="checkbox" value="1">', $code);
         $this->assertCodeContains('<input name="subscribed" type="hidden" value="0">', $code);
     }
 
@@ -149,11 +149,11 @@ class ViewEditGeneratorTest extends TestCase
 
         $this->assertStringContainsString('value="{{ old(\'name\') ?? $user->name }}"', $code);
         $this->assertStringContainsString('value="{{ old(\'email\') ?? $user->email }}"', $code);
-        $this->assertStringContainsString('value="{{ old(\'birthday\') ?? $user->birthday }}"', $code);
-        $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'birthday\') ?? $user->birthday->format(\'Y-m-d\') }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up->format(\'H:i:s\') }}"', $code);
 
         // Boolean fields are a little different
-        $this->assertStringContainsString("{{ (old('subscribed') ?? \$user->subscribed ) ? 'checked' : '' }}", $code);
+        $this->assertStringContainsString("{{ (old('subscribed') ?? \$user->subscribed) ? 'checked' : '' }}", $code);
 
         $code = $this->generator('products')->generate();
         // Note that we split this next assertion in two so that we are not
