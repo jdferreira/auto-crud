@@ -91,9 +91,11 @@ class ViewEditGeneratorTest extends TestCase
         $code = $this->generator('users')->generate();
         $this->assertRegExp('/<input name="name" required value=".*" type="text">/', $code);
         $this->assertRegExp('/<input name="email" value=".*" type="email">/', $code);
-        $this->assertRegExp('/<input name="subscribed" value=".*" type="checkbox">/', $code);
         $this->assertRegExp('/<input name="birthday" required value=".*" type="date">/', $code);
         $this->assertRegExp('/<input name="wake-up" value=".*" type="time">/', $code);
+
+        // Boolean fields are a little different
+        $this->assertRegExp('/<input name="subscribed" .*? type="checkbox" value="1">/', $code);
 
         $code = $this->generator('avatars')->generate();
         $this->assertRegExp('/<input name="user-id" required value=".*" type="text">/', $code);
@@ -113,6 +115,15 @@ class ViewEditGeneratorTest extends TestCase
 
         $code = $this->generator('payment_methods')->generate();
         $this->assertRegExp('/<textarea name="primary" required>.*?<\/textarea>/', $code);
+    }
+
+    /** @test */
+    public function it_adds_a_hidden_field_with_value_0_for_checkboxes()
+    {
+        $code = $this->generator('users')->generate();
+
+        $this->assertCodeContains('<input name="subscribed" {{ (old(\'subscribed\') ?? $user->subscribed ) ? \'checked\' : \'\' }} type="checkbox" value="1">', $code);
+        $this->assertCodeContains('<input name="subscribed" type="hidden" value="0">', $code);
     }
 
     /** @test */
@@ -138,9 +149,11 @@ class ViewEditGeneratorTest extends TestCase
 
         $this->assertStringContainsString('value="{{ old(\'name\') ?? $user->name }}"', $code);
         $this->assertStringContainsString('value="{{ old(\'email\') ?? $user->email }}"', $code);
-        $this->assertStringContainsString('value="{{ old(\'subscribed\') ?? $user->subscribed }}"', $code);
         $this->assertStringContainsString('value="{{ old(\'birthday\') ?? $user->birthday }}"', $code);
         $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up }}"', $code);
+
+        // Boolean fields are a little different
+        $this->assertStringContainsString("{{ (old('subscribed') ?? \$user->subscribed ) ? 'checked' : '' }}", $code);
 
         $code = $this->generator('products')->generate();
         // Note that we split this next assertion in two so that we are not

@@ -156,7 +156,7 @@ class ViewCreateGenerator extends BaseGenerator
                 return '<input ' . $attrs . ' type="text">';
 
             case Type::BOOLEAN:
-                return '<input ' . $attrs . ' type="checkbox">';
+                return $this->checkboxInput($column);
 
             case Type::DATE:
                 return '<input ' . $attrs . ' type="date">';
@@ -185,6 +185,16 @@ class ViewCreateGenerator extends BaseGenerator
         $attrs = $this->attributes($column);
 
         return "<textarea $attrs></textarea>";
+    }
+
+    protected function checkboxInput(string $column)
+    {
+        $attrs = $this->attributes($column);
+
+        return [
+            '<input ' . $attrs . ' type="checkbox" value="1">',
+            '<input ' . $attrs . ' type="hidden" value="0">',
+        ];
     }
 
     public function buttons()

@@ -34,7 +34,7 @@ class ViewEditGenerator extends ViewCreateGenerator
 
         $value = $this->value($column);
 
-        return "$attrs value=\"$value\"";
+        return "$attrs value=\"{{ $value }}\"";
     }
 
     protected function textareaInput(string $column)
@@ -43,17 +43,27 @@ class ViewEditGenerator extends ViewCreateGenerator
 
         $value = $this->value($column);
 
-        return "<textarea $attrs>$value</textarea>";
+        return "<textarea $attrs>{{ $value }}</textarea>";
+    }
+
+    protected function checkboxInput(string $column)
+    {
+        $attrs = parent::attributes($column);
+
+        $value = $this->value($column);
+        $checked = "{{ ($value ) ? 'checked' : '' }}";
+
+        return [
+            "<input $attrs $checked type=\"checkbox\" value=\"1\">",
+            "<input $attrs type=\"hidden\" value=\"0\">",
+        ];
     }
 
     private function value($column)
     {
-        $name = str_replace('_', '-', $column);
-
-        $old = 'old(\'' . $name . '\')';
+        $old = 'old(\'' . str_replace('_', '-', $column) . '\')';
         $bound = '$' . $this->model() . '->' . $column;
-        $value = "{{ $old ?? $bound }}";
 
-        return $value;
+        return "$old ?? $bound";
     }
 }

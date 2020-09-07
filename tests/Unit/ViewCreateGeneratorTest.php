@@ -89,9 +89,11 @@ class ViewCreateGeneratorTest extends TestCase
         $code = $this->generator('users')->generate();
         $this->assertStringContainsString('<input name="name" required type="text">', $code);
         $this->assertStringContainsString('<input name="email" type="email">', $code);
-        $this->assertStringContainsString('<input name="subscribed" type="checkbox">', $code);
         $this->assertStringContainsString('<input name="birthday" required type="date">', $code);
         $this->assertStringContainsString('<input name="wake-up" type="time">', $code);
+
+        // Boolean fields are a little different
+        $this->assertStringContainsString('<input name="subscribed" type="checkbox" value="1">', $code);
 
         $code = $this->generator('avatars')->generate();
         $this->assertStringContainsString('<input name="user-id" required type="text">', $code);
@@ -109,6 +111,14 @@ class ViewCreateGeneratorTest extends TestCase
 
         $code = $this->generator('payment_methods')->generate();
         $this->assertStringContainsString('<textarea name="primary" required></textarea>', $code);
+    }
+
+    /** @test */
+    public function it_adds_a_hidden_field_with_value_0_for_checkboxes()
+    {
+        $code = $this->generator('users')->generate();
+        $this->assertCodeContains('<input name="subscribed" type="checkbox" value="1">', $code);
+        $this->assertCodeContains('<input name="subscribed" type="hidden" value="0">', $code);
     }
 
     /** @test */
