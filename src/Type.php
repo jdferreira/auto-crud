@@ -15,7 +15,7 @@ class Type
     public const DECIMAL = 'decimal';
     public const STRING = 'string';
     public const TEXT = 'text';
-    public const BINARY = 'binary';
+    public const BINARY = 'binary'; // TODO: binary columns should render file inputs on create/edit forms
     public const ENUM = 'enum';
 
     public const UNRECOGNIZED = 'unrecognized';

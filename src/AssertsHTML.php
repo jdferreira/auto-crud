@@ -66,48 +66,21 @@ trait AssertsHTML
     }
 
     /**
-     * Returns an XPath query string that searches for elements with the given
-     * `tag` and `name` attribute. Optionally, the method accepts the `value`
-     * attribute and whether the HTML attribute `required` is present.
+     * Returns an XPath query string based on a template, where all placeholders
+     * are replaced with the corresponding HTML-escaped string given in the
+     * arguments.
      *
-     * @param string $tag
-     * @param string $name
-     * @param mixed $value
-     * @param null|bool $required
+     * @param string $template
+     * @param mixed ...$args
      *
      * @return string
      */
-    public function getXPath(string $tag, string $name, $value = null, bool $required = null): string
+    public function xpath(string $template, ...$args): string
     {
-        // TODO: This might be more useful if we accept any attributes, instead
-        // of hardcoding the `name`, `value` and `required`. For example, what
-        // about `type`? If we do it, the tests at
-        // ViewCreateGeneratorTest::it_renders_input_fields_according_to_field_type
-        // could use this method!
-
-        $conditions = [];
-
-        $name = htmlentities($name, ENT_QUOTES);
-        $conditions[] = "@name='$name'";
-
-        if ($value !== null) {
-            $value = htmlentities($value, ENT_QUOTES);
-
-            $attr = $tag !== 'textarea' ? '@value' : 'text()';
-
-            $conditions[] = "$attr='$value'";
+        foreach ($args as &$arg) {
+            $arg = htmlentities($arg, ENT_QUOTES);
         }
 
-        if ($required !== null) {
-            if ($required) {
-                $conditions[] = '@required';
-            } else {
-                $conditions[] = 'not(@required)';
-            }
-        }
-
-        $conditions = implode(' and ', $conditions);
-
-        return "//{$tag}[$conditions]";
+        return sprintf($template, ...$args);
     }
 }

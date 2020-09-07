@@ -87,46 +87,4 @@ class AssertsHTMLTest extends TestCase
             });
         });
     }
-
-    /** @test */
-    public function it_creates_simple_xpath_query_strings()
-    {
-        $this->assertEquals(
-            "//input[@name='name']",
-            $this->getXPath('input', 'name')
-        );
-
-        $this->assertEquals(
-            "//input[@name='name' and @value='value']",
-            $this->getXPath('input', 'name', 'value')
-        );
-
-        $this->assertEquals(
-            "//input[@name='name' and @required]",
-            $this->getXPath('input', 'name', null, true)
-        );
-    }
-
-    /** @test */
-    public function it_converts_name_and_value_html_entities()
-    {
-        $this->assertEquals(
-            "//input[@name='name&#039;s' and @value='The &quot;Burrow&quot;']",
-            $this->getXPath('input', 'name\'s', 'The "Burrow"')
-        );
-
-        $this->assertEquals(
-            "//input[@name='&lt;&gt;' and @value='&lt;&gt;']",
-            $this->getXPath('input', '<>', '<>')
-        );
-    }
-
-    /** @test */
-    public function it_special_cases_textarea_tag()
-    {
-        $this->assertEquals(
-            "//textarea[@name='name' and text()='value']",
-            $this->getXPath('textarea', 'name', 'value')
-        );
-    }
 }

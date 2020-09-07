@@ -165,11 +165,11 @@ class TestGeneratorTest extends TestCase
                     $this->get(\'/users/create\')
                 );
 
-                $this->assertHTML($this->getXPath(\'input\', \'name\'), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'email\'), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'subscribed\'), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'birthday\'), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'wake_up\'), $document);
+                $this->assertHTML("//input[@name=\'name\' and @type=\'text\']", $document);
+                $this->assertHTML("//input[@name=\'email\' and @type=\'email\']", $document);
+                $this->assertHTML("//input[@name=\'subscribed\' and @type=\'checkbox\']", $document);
+                $this->assertHTML("//input[@name=\'birthday\' and @type=\'date\']", $document);
+                $this->assertHTML("//input[@name=\'wake-up\' and @type=\'time\']", $document);
             }
         ', $code);
     }
@@ -189,14 +189,37 @@ class TestGeneratorTest extends TestCase
                     $this->get($user->path() . \'/edit\')
                 );
 
-                $this->assertHTML($this->getXPath(\'input\', \'name\', $user->name), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'email\', $user->email), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'subscribed\', $user->subscribed), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'birthday\', $user->birthday->format(\'Y-m-d\')), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'wake_up\', $user->wake_up->format(\'H:i:s\')), $document);
+                $this->assertHTML($this->xpath("//*[@name=\'name\' and @value=\'%s\']", $user->name), $document);
+                $this->assertHTML($this->xpath("//*[@name=\'email\' and @value=\'%s\']", $user->email), $document);
+                $this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $user->birthday->format(\'Y-m-d\')), $document);
+                $this->assertHTML($this->xpath("//*[@name=\'wake-up\' and @value=\'%s\']", $user->wake_up->format(\'H:i:s\')), $document);
+
+                $subscribedChecked = $user->subscribed ? \'@checked\' : \'not(@checked)\';
+                $this->assertHTML("//*[@name=\'subscribed\' and $subscribedChecked]", $document);
             }
         ', $code);
     }
+
+    // static $x =
+    // '
+    //     /** @test */
+    //     public function it_starts_the_edit_form_with_the_user_current_values()
+    //     {
+    //         $user = factory(User::class)->states(\'full_model\')->create();
+
+    //         $document = $this->getDOMDocument(
+    //             $this->get($user->path() . \'/edit\')
+    //         );
+
+    //         $this->assertHTML($this->xpath("//*[@name=\'name\' and @value=\'%s\']", $user->name), $document);
+    //         $this->assertHTML($this->xpath("//*[@name=\'email\' and @value=\'%s\']", $user->email), $document);
+    //         $this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $user->birthday->format('Y-m-d')), $document);
+    //         $this->assertHTML($this->xpath("//*[@name=\'wake-up\' and @value=\'%s\']", $user->wake_up->format('H:i:s')), $document);
+
+    //         $subscribedChecked = $user->subscribed ? \'@checked\' : \'not(@checked)\';
+    //         $this->assertHTML("//*[@name=\'subscribed\' and $subscribedChecked]", $document);
+    //     }
+    // ';
 
     /** @test */
     public function it_tests_old_values_from_a_previous_form_submission()
@@ -238,21 +261,21 @@ class TestGeneratorTest extends TestCase
             {
                 $document = $this->getDOMDocument($this->get(\'/users/create\'));
 
-                $this->assertHTML($this->getXPath(\'input\', \'name\', null, true), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'email\', null, false), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'subscribed\', null, false), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'birthday\', null, true), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'wake_up\', null, false), $document);
+                $this->assertHTML("//*[@name=\'name\' and @required]", $document);
+                $this->assertHTML("//*[@name=\'email\' and not(@required)]", $document);
+                $this->assertHTML("//*[@name=\'subscribed\' and not(@required)]", $document);
+                $this->assertHTML("//*[@name=\'birthday\' and @required]", $document);
+                $this->assertHTML("//*[@name=\'wake-up\' and not(@required)]", $document);
 
                 $user = factory(User::class)->create();
 
                 $document = $this->getDOMDocument($this->get($user->path() . \'/edit\'));
 
-                $this->assertHTML($this->getXPath(\'input\', \'name\', null, true), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'email\', null, false), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'subscribed\', null, false), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'birthday\', null, true), $document);
-                $this->assertHTML($this->getXPath(\'input\', \'wake_up\', null, false), $document);
+                $this->assertHTML("//*[@name=\'name\' and @required]", $document);
+                $this->assertHTML("//*[@name=\'email\' and not(@required)]", $document);
+                $this->assertHTML("//*[@name=\'subscribed\' and not(@required)]", $document);
+                $this->assertHTML("//*[@name=\'birthday\' and @required]", $document);
+                $this->assertHTML("//*[@name=\'wake-up\' and not(@required)]", $document);
             }
         ', $code);
     }

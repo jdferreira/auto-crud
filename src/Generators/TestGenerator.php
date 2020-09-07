@@ -133,33 +133,46 @@ class TestGenerator extends BaseGenerator
             ->map(function ($column) {
                 $type = $this->table->type($column);
 
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
                 if ($type === Type::ENUM || $this->table->reference($column) !== null) {
-                    $tag = 'select';
+                    $xpath = "//select[@name='$name']";
                 } elseif ($type === Type::TEXT) {
-                    $tag = 'textarea';
+                    $xpath = "//textarea[@name='$name']";
                 } else {
-                    $tag = 'input';
+                    if ($column === 'email' && $type === Type::STRING) {
+                        $type = 'email';
+                    } elseif ($type === Type::DATE) {
+                        $type = 'date';
+                    } elseif ($type === Type::TIME) {
+                        $type = 'time';
+                    } elseif ($type === Type::DATETIME) {
+                        $type = 'datetime';
+                    } elseif ($type === Type::BOOLEAN) {
+                        $type = 'checkbox';
+                    } else {
+                        $type = 'text';
+                    }
+
+                    $xpath = "//input[@name='$name' and @type='$type']";
                 }
 
-                return "\$this->assertHTML(\$this->getXPath('$tag', '$column'), \$document);";
+                return '$this->assertHTML("' . $xpath . '", $document);';
             })
             ->all();
     }
 
     private function assertEditFormHasValues()
     {
-        return $this->fieldsExcept(['id'])
+        [$checkboxes, $nonCheckboxes] = $this->fieldsExcept(['id'])
+            ->partition(function ($column) {
+                return $this->table->type($column) === Type::BOOLEAN;
+            });
+
+        /** @var Collection $checkboxes */
+        /** @var Collection $nonCheckboxes */
+        $nonCheckboxes = $nonCheckboxes
             ->map(function ($column) {
-                $type = $this->table->type($column);
-
-                if ($type === Type::ENUM || $this->table->reference($column) !== null) {
-                    $tag = 'select';
-                } elseif ($type === Type::TEXT) {
-                    $tag = 'textarea';
-                } else {
-                    $tag = 'input';
-                }
-
                 $value = "\${$this->modelVariableSingular()}->$column";
 
                 switch ($this->table->type($column)) {
@@ -176,9 +189,27 @@ class TestGenerator extends BaseGenerator
                         break;
                 }
 
-                return "\$this->assertHTML(\$this->getXPath('$tag', '$column', $value), \$document);";
-            })
-            ->all();
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
+                return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name' and @value='%s']\", $value), \$document);";
+            });
+
+        $checkboxes = $checkboxes
+            ->flatMap(function ($column) {
+                $value = "\${$this->modelVariableSingular()}->$column";
+                $column = Str::camel($column);
+
+                return [
+                    "\${$column}Checked = $value ? '@checked' : 'not(@checked)';",
+                    "\$this->assertHTML(\"//*[@name='subscribed' and \${$column}Checked]\", \$document);",
+                ];
+            });
+
+        if ($nonCheckboxes->count() > 0 && $checkboxes->count() > 0) {
+            $nonCheckboxes->push('');
+        }
+
+        return $nonCheckboxes->merge($checkboxes)->all();
     }
 
     private function oneRequiredField()
@@ -252,22 +283,15 @@ class TestGenerator extends BaseGenerator
     {
         return $this->fieldsExcept(['id'])
             ->map(function ($column) {
-                $type = $this->table->type($column);
-
-                if ($type === Type::ENUM || $this->table->reference($column) !== null) {
-                    $tag = 'select';
-                } elseif ($type === Type::TEXT) {
-                    $tag = 'textarea';
-                } else {
-                    $tag = 'input';
-                }
-
                 $required = $this->table->required($column)
                     && ! $this->table->hasDefault($column)
                     && $this->table->type($column) !== Type::BOOLEAN;
-                $required = $required ? 'true' : 'false';
 
-                return "\$this->assertHTML(\$this->getXPath('$tag', '$column', null, $required), \$document);";
+                $required = $required ? '@required' : 'not(@required)';
+
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
+                return "\$this->assertHTML(\"//*[@name='$name' and $required]\", \$document);";
             })
             ->all();
     }
