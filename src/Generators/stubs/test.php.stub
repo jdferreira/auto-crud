@@ -201,6 +201,8 @@ class {{ modelClassPlural }}CrudTest extends TestCase
 
     public function assertFields()
     {
+        $this->withExceptionHandling();
+
         {{ assertFields }}
     }
 }

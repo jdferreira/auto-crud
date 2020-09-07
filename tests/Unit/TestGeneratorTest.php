@@ -340,6 +340,8 @@ class TestGeneratorTest extends TestCase
         $this->assertCodeContains('
             public function assertFields()
             {
+                $this->withExceptionHandling();
+
                 // Create one user to test fields that should contain unique values
                 factory(User::class)->create([
                     \'email\' => \'mail@example.com\',
