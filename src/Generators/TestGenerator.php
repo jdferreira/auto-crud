@@ -199,9 +199,11 @@ class TestGenerator extends BaseGenerator
                 $value = "\${$this->modelVariableSingular()}->$column";
                 $column = Str::camel($column);
 
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
                 return [
                     "\${$column}Checked = $value ? '@checked' : 'not(@checked)';",
-                    "\$this->assertHTML(\"//*[@name='subscribed' and \${$column}Checked]\", \$document);",
+                    "\$this->assertHTML(\"//*[@name='$name' and \${$column}Checked]\", \$document);",
                 ];
             });
 
