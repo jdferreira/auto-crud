@@ -237,4 +237,20 @@ class ModelGeneratorTest extends TestCase
             }
         ', $code);
     }
+
+    /** @test */
+    public function it_has_a_fillable_attribute_to_guard_agains_mass_assignments()
+    {
+        $code = $this->generator('users')->generate();
+
+        $this->assertCodeContains('
+            protected $fillable = [
+                \'name\',
+                \'email\',
+                \'subscribed\',
+                \'birthday\',
+                \'wake_up\',
+            ];
+        ', $code);
+    }
 }

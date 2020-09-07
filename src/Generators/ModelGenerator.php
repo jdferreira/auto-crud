@@ -51,6 +51,7 @@ class ModelGenerator extends BaseGenerator
             'useSoftDeletesTrait' => $this->useSoftDeletes(),
             'customPrimaryKey' => $this->primaryKey(),
             'casts' => $this->casts(),
+            'fillable' => $this->fillable(),
             'relationships' => $this->relationships(),
             'path' => $this->path(),
         ];
@@ -164,6 +165,38 @@ class ModelGenerator extends BaseGenerator
         } else {
             return [];
         }
+    }
+
+    protected function fillable()
+    {
+        $fillable = collect($this->table->columns())
+            ->map(function ($column) {
+                if (
+                    in_array($column, ['created_at', 'updated_at', 'deleted_at'])
+                    || $column === $this->table->primaryKey()
+                ) {
+                    return;
+                }
+
+                return "    '$column',";
+            })
+            ->filter()
+            ->all();
+
+        return array_merge(
+            [
+                '/**',
+                ' * The attributes that are mass assignable.',
+                ' *',
+                ' * @var array',
+                ' */',
+                'protected $fillable = [',
+            ],
+            $fillable,
+            [
+                '];',
+            ]
+        );
     }
 
     protected function relationships()
