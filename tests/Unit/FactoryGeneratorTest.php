@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Generators\ColumnFaker;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\FactoryGenerator;
 
 class FactoryGeneratorTest extends TestCase
@@ -26,7 +27,7 @@ class FactoryGeneratorTest extends TestCase
     private function generator(string $table): FactoryGenerator
     {
         return app(FactoryGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

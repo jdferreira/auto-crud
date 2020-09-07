@@ -7,13 +7,6 @@ use Ferreira\AutoCrud\Generators\BaseGenerator;
 
 class BaseGeneratorTest extends TestCase
 {
-    /**
-     * The directory holding the migrations for these tests.
-     *
-     * @var string
-     */
-    protected $migrations = __DIR__ . '/../migrations';
-
     /** @test */
     public function it_does_not_emit_arguments_equal_to_their_default()
     {

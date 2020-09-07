@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ControllerGenerator;
 
 class ControllerGeneratorTest extends TestCase
@@ -25,7 +26,7 @@ class ControllerGeneratorTest extends TestCase
     private function generator(string $table): ControllerGenerator
     {
         return app(ControllerGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

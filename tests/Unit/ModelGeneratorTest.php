@@ -26,7 +26,7 @@ class ModelGeneratorTest extends TestCase
     private function generator(string $table): ModelGenerator
     {
         return app(ModelGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

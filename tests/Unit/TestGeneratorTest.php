@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Generators\TestGenerator;
+use Ferreira\AutoCrud\Database\TableInformation;
 use PHPUnit\Framework\ExpectationFailedException;
 
 class TestGeneratorTest extends TestCase
@@ -21,7 +22,7 @@ class TestGeneratorTest extends TestCase
     private function generator(string $table): TestGenerator
     {
         return app(TestGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

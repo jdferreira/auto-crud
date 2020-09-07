@@ -6,6 +6,7 @@ use Exception;
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Database\TableInformation;
+use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class TableInformationTest extends TestCase
 {

@@ -4,11 +4,14 @@ namespace Ferreira\AutoCrud\Commands;
 
 use Illuminate\Console\Command;
 use Ferreira\AutoCrud\Injectors\SeederInjector;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\SeederGenerator;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class SeederCommand extends Command
 {
+    use Concerns\TableBasedCommand;
+
     /**
      * The name and signature of the console command.
      *
@@ -32,20 +35,10 @@ class SeederCommand extends Command
      */
     public function handle()
     {
-        $requested = $this->option('table');
-
-        $tablenames = count($requested) > 0
-            ? $requested
-            : $this->laravel->make(DatabaseInformation::class)->tablenames(false);
-
-        foreach ($tablenames as $table) {
-            $this->laravel->make(SeederGenerator::class, [
-                'table' => $table,
-            ])->save();
-        }
+        $this->handleMultipleTables(SeederGenerator::class);
 
         $this->laravel->make(SeederInjector::class, [
-            'tables' => $tablenames,
+            'tables' => $this->tablenames(),
         ])->inject();
     }
 }

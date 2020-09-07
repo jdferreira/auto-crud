@@ -4,10 +4,13 @@ namespace Ferreira\AutoCrud\Commands;
 
 use Illuminate\Console\Command;
 use Ferreira\AutoCrud\Generators\TestGenerator;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class TestCommand extends Command
 {
+    use Concerns\TableBasedCommand;
+
     /**
      * The name and signature of the console command.
      *
@@ -31,16 +34,6 @@ class TestCommand extends Command
      */
     public function handle()
     {
-        $requested = $this->option('table');
-
-        $tablenames = count($requested) > 0
-            ? $requested
-            : $this->laravel->make(DatabaseInformation::class)->tablenames(false);
-
-        foreach ($tablenames as $table) {
-            $this->laravel->make(TestGenerator::class, [
-                'table' => $table,
-            ])->save();
-        }
+        $this->handleMultipleTables(TestGenerator::class);
     }
 }

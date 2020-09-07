@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ViewIndexGenerator;
 
 class ViewIndexGeneratorTest extends TestCase
@@ -24,7 +25,7 @@ class ViewIndexGeneratorTest extends TestCase
     private function generator(string $table): ViewIndexGenerator
     {
         return app(ViewIndexGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ViewEditGenerator;
 
 class ViewEditGeneratorTest extends TestCase
@@ -24,7 +25,7 @@ class ViewEditGeneratorTest extends TestCase
     private function generator(string $table): ViewEditGenerator
     {
         return app(ViewEditGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

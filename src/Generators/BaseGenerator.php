@@ -13,17 +13,17 @@ use Ferreira\AutoCrud\Database\DatabaseInformation;
 abstract class BaseGenerator
 {
     /**
-     * @var \Illuminate\Filesystem\Filesystem
+     * @var Filesystem
      */
     protected $files;
 
     /**
-     * @var \Ferreira\AutoCrud\Database\DatabaseInformation
+     * @var DatabaseInformation
      */
     protected $db;
 
     /**
-     * @var null|\Ferreira\AutoCrud\Database\TableInformation
+     * @var TableInformation
      */
     protected $table;
 
@@ -44,14 +44,14 @@ abstract class BaseGenerator
     /**
      * Create a new generator, responsible for generating the CRUD files for a certain table.
      *
-     * @param string $table The table name
+     * @param TableInformation $table
      */
-    public function __construct(string $table)
+    public function __construct(TableInformation $table)
     {
         $this->files = app(Filesystem::class);
         $this->db = app(DatabaseInformation::class);
 
-        $this->table = new TableInformation($table);
+        $this->table = $table;
 
         // Default values. Use the setters to change them
         $this->dir = '';

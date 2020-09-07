@@ -3,6 +3,7 @@
 namespace Ferreira\AutoCrud\Commands;
 
 use Illuminate\Console\Command;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 use Ferreira\AutoCrud\Generators\ViewEditGenerator;
 use Ferreira\AutoCrud\Generators\ViewShowGenerator;
@@ -12,6 +13,8 @@ use Ferreira\AutoCrud\Generators\ViewCreateGenerator;
 
 class ViewCommand extends Command
 {
+    use Concerns\TableBasedCommand;
+
     /**
      * The name and signature of the console command.
      *
@@ -35,12 +38,6 @@ class ViewCommand extends Command
      */
     public function handle()
     {
-        $requested = $this->option('table');
-
-        $tablenames = count($requested) > 0
-            ? $requested
-            : $this->laravel->make(DatabaseInformation::class)->tablenames(false);
-
         $this->laravel->make(LayoutViewGenerator::class)->save();
 
         $generators = [
@@ -51,11 +48,7 @@ class ViewCommand extends Command
         ];
 
         foreach ($generators as $generator) {
-            foreach ($tablenames as $table) {
-                $this->laravel->make($generator, [
-                    'table' => $table,
-                ])->save();
-            }
+            $this->handleMultipleTables($generator);
         }
     }
 }

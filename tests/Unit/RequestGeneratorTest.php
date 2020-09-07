@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\RequestGenerator;
 
 class RequestGeneratorTest extends TestCase
@@ -26,7 +27,7 @@ class RequestGeneratorTest extends TestCase
     private function generator(string $table): RequestGenerator
     {
         return app(RequestGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 

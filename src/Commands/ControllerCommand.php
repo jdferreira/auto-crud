@@ -3,11 +3,12 @@
 namespace Ferreira\AutoCrud\Commands;
 
 use Illuminate\Console\Command;
-use Ferreira\AutoCrud\Database\DatabaseInformation;
 use Ferreira\AutoCrud\Generators\ControllerGenerator;
 
 class ControllerCommand extends Command
 {
+    use Concerns\TableBasedCommand;
+
     /**
      * The name and signature of the console command.
      *
@@ -31,16 +32,6 @@ class ControllerCommand extends Command
      */
     public function handle()
     {
-        $requested = $this->option('table');
-
-        $tablenames = count($requested) > 0
-            ? $requested
-            : $this->laravel->make(DatabaseInformation::class)->tablenames(false);
-
-        foreach ($tablenames as $table) {
-            $this->laravel->make(ControllerGenerator::class, [
-                'table' => $table,
-            ])->save();
-        }
+        $this->handleMultipleTables(ControllerGenerator::class);
     }
 }

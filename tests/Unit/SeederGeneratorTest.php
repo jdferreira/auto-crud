@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\SeederGenerator;
 
 class SeederGeneratorTest extends TestCase
@@ -25,7 +26,7 @@ class SeederGeneratorTest extends TestCase
     private function generator(string $table): SeederGenerator
     {
         return app(SeederGenerator::class, [
-            'table' => $table,
+            'table' => app(TableInformation::class, ['name' => $table]),
         ]);
     }
 
