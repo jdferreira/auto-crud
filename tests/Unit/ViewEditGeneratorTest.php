@@ -2,17 +2,11 @@
 
 namespace Tests\Unit;
 
-use DOMNode;
-use DOMXPath;
-use DOMDocument;
 use Tests\TestCase;
-use Ferreira\AutoCrud\AssertsHTML;
 use Ferreira\AutoCrud\Generators\ViewEditGenerator;
 
 class ViewEditGeneratorTest extends TestCase
 {
-    use AssertsHTML;
-
     /**
      * The directory holding the migrations for these tests.
      *
@@ -34,15 +28,6 @@ class ViewEditGeneratorTest extends TestCase
         ]);
     }
 
-    private function getDOMDocument(string $table): DOMDocument
-    {
-        $doc = new DOMDocument();
-
-        $doc->loadHTML($this->generator($table)->generate());
-
-        return $doc;
-    }
-
     /** @test */
     public function it_can_generate_a_view()
     {
@@ -54,37 +39,38 @@ class ViewEditGeneratorTest extends TestCase
     /** @test */
     public function it_shows_a_form()
     {
-        $doc = $this->getDOMDocument('users');
+        $code = $this->generator('users')->generate();
 
-        $this->assertHTML("//form[@method='POST']", $doc);
+        $this->assertStringContainsString('<form method="POST">', $code);
+        $this->assertStringContainsString('</form>', $code);
     }
 
     /** @test */
     public function it_is_titled_based_on_the_model_name()
     {
-        $doc = $this->getDOMDocument('users');
+        $code = $this->generator('users')->generate();
 
-        $this->assertHTML("//h1[text()='Edit user']", $doc);
+        $this->assertStringContainsString('<h1>Edit user</h1>', $code);
     }
 
     /** @test */
     public function it_contains_a_label_for_each_field()
     {
-        $doc = $this->getDOMDocument('users');
+        $code = $this->generator('users')->generate();
 
-        $this->assertHTML("//label[@for='name' and text()='Name']", $doc);
-        $this->assertHTML("//label[@for='email' and text()='Email']", $doc);
-        $this->assertHTML("//label[@for='subscribed' and text()='Subscribed']", $doc);
-        $this->assertHTML("//label[@for='birthday' and text()='Birthday']", $doc);
-        $this->assertHTML("//label[@for='wake-up' and text()='Wake up']", $doc);
+        $this->assertStringContainsString('<label for="name">Name</label>', $code);
+        $this->assertStringContainsString('<label for="email">Email</label>', $code);
+        $this->assertStringContainsString('<label for="subscribed">Subscribed</label>', $code);
+        $this->assertStringContainsString('<label for="birthday">Birthday</label>', $code);
+        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
     }
 
     /** @test */
     public function it_converts_names_to_kebab_case()
     {
-        $doc = $this->getDOMDocument('users');
+        $code = $this->generator('users')->generate();
 
-        $this->assertHTML("//label[@for='wake-up' and text()='Wake up']", $doc);
+        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
     }
 
     /** @test */
@@ -102,67 +88,47 @@ class ViewEditGeneratorTest extends TestCase
         // of attributes, and such. For the time being, let's not worry about
         // it, though.
 
-        $doc = $this->getDOMDocument('users');
-        $this->assertHTML("//input[@name='name' and @type='text']", $doc);
-        $this->assertHTML("//input[@name='email' and @type='email']", $doc);
-        $this->assertHTML("//input[@name='subscribed' and @type='checkbox']", $doc);
-        $this->assertHTML("//input[@name='birthday' and @type='date']", $doc);
-        $this->assertHTML("//input[@name='wake-up' and @type='time']", $doc);
+        $code = $this->generator('users')->generate();
+        $this->assertRegExp('/<input name="name" required value=".*" type="text">/', $code);
+        $this->assertRegExp('/<input name="email" value=".*" type="email">/', $code);
+        $this->assertRegExp('/<input name="subscribed" value=".*" type="checkbox">/', $code);
+        $this->assertRegExp('/<input name="birthday" required value=".*" type="date">/', $code);
+        $this->assertRegExp('/<input name="wake-up" value=".*" type="time">/', $code);
 
-        $doc = $this->getDOMDocument('avatars');
-        $this->assertHTML("//input[@name='user-id' and @type='text']", $doc);
-        $this->assertHTML("//input[@name='data' and @type='file']", $doc);
+        $code = $this->generator('avatars')->generate();
+        $this->assertRegExp('/<input name="user-id" required value=".*" type="text">/', $code);
+        $this->assertRegExp('/<input name="file" required value=".*" type="text">/', $code);
+        $this->assertRegExp('/<input name="data" required value=".*" type="file">/', $code);
 
-        $doc = $this->getDOMDocument('products');
-        $this->assertHTML("//select[@name='type']", $doc);
+        $code = $this->generator('products')->generate();
+        // We split the code contains assertion in two parts so that we are not
+        // testing the value attribute here.
+        $this->assertRegExp('/<select name="type" value=".*">/', $code);
+        $this->assertCodeContains('
+                <option value="food">Food</option>
+                <option value="stationery">Stationery</option>
+                <option value="other">Other</option>
+            </select>
+        ', $code);
 
-        $doc = $this->getDOMDocument('payment_methods');
-        $this->assertHTML("//textarea[@name='primary']", $doc);
-    }
-
-    /** @test */
-    public function it_offers_the_valid_values_for_enum_fields()
-    {
-        $doc = $this->getDOMDocument('products');
-        $xpath = new DOMXPath($doc);
-        $node = $xpath->query("//select[@name='type']")->item(0);
-
-        $childNodes = collect($node->childNodes)->filter(function (DOMNode $node) {
-            return $node->nodeName !== '#text';
-        })->values();
-
-        $typesOfChildren = $childNodes->map(function (DOMNode $node) {
-            return $node->nodeName;
-        })->unique()->all();
-
-        $options = $childNodes->mapWithKeys(function (DOMNode $node) {
-            $key = $node->attributes->getNamedItem('value')->nodeValue;
-            $value = $node->textContent;
-
-            return [$key => $value];
-        })->all();
-
-        $this->assertEquals(['option'], $typesOfChildren);
-
-        $this->assertEquals([
-            'food' => 'Food',
-            'stationery' => 'Stationery',
-            'other' => 'Other',
-        ], $options);
+        $code = $this->generator('payment_methods')->generate();
+        $this->assertRegExp('/<textarea name="primary" required>.*?<\/textarea>/', $code);
     }
 
     /** @test */
     public function it_renders_numeric_fields_as_inputs_of_type_text()
     {
-        $doc = $this->getDOMDocument('avatars');
-        $this->assertHTML("//input[@name='user-id' and @type='text']", $doc);
+        $code = $this->generator('avatars')->generate();
+
+        $this->assertRegExp('/<input name="user-id" required value=".*?" type="text">/', $code);
     }
 
     /** @test */
     public function it_renders_text_fields_named_email_as_inputs_of_type_email()
     {
-        $doc = $this->getDOMDocument('users');
-        $this->assertHTML("//input[@name='email' and @type='email']", $doc);
+        $code = $this->generator('users')->generate();
+
+        $this->assertRegExp('/<input name="email" value=".*?" type="email">/', $code);
     }
 
     /** @test */
@@ -177,23 +143,19 @@ class ViewEditGeneratorTest extends TestCase
         $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up }}"', $code);
 
         $code = $this->generator('products')->generate();
-        $this->assertStringContainsString('<select name="type" value="{{ old(\'type\') ?? $product->type }}">', $code);
+        // Note that we split this next assertion in two so that we are not
+        // testing the value attribute here.
+        $this->assertCodeContains('<select name="type" value="{{ old(\'type\') ?? $product->type }}">', $code);
 
         $code = $this->generator('payment_methods')->generate();
-        $this->assertStringContainsString('{{ old(\'primary\') ?? $paymentMethod->primary }}', $code);
+        $this->assertStringContainsString('<textarea name="primary" required>{{ old(\'primary\') ?? $paymentMethod->primary }}</textarea>', $code);
     }
 
     /** @test */
     public function it_renders_a_submit_button()
     {
-        $doc = $this->getDOMDocument('users');
-        $this->assertHTML("//button[@type='submit' and text()='Submit']", $doc);
-    }
+        $code = $this->generator('users')->generate();
 
-    /** @test */
-    public function it_marks_required_input_fields_as_such()
-    {
-        $doc = $this->getDOMDocument('users');
-        $this->assertHTML("//input[@name='name' and @required]", $doc);
+        $this->assertStringContainsString('<button type="submit">Submit</button>', $code);
     }
 }
