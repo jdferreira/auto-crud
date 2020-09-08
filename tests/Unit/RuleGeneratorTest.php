@@ -143,7 +143,7 @@ class RuleGeneratorTest extends TestCase
 
         $rule = new RuleGenerator($table, 'decimal');
 
-        $this->assertContains("'regex:/^(?:\d+\.?|\d*\.\d+)$/'", $rule->makeRules());
+        $this->assertContains("'regex:/^[+-]?(?:\d+\.?|\d*\.\d+)$/'", $rule->makeRules());
     }
 
     /** @test */

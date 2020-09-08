@@ -150,7 +150,7 @@ class RuleGenerator
         if ($this->table->type($this->column) === Type::DECIMAL) {
             $this->implodable = false;
 
-            return $this->quote('regex:/^(?:\d+\.?|\d*\.\d+)$/');
+            return $this->quote('regex:/^[+-]?(?:\d+\.?|\d*\.\d+)$/');
         }
     }
 

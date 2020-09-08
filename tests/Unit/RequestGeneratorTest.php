@@ -131,7 +131,7 @@ class RequestGeneratorTest extends TestCase
                 'type' => 'nullable|in:food,stationery,other',
                 'value' => [
                     'required',
-                    'regex:/^(?:\d+\.?|\d*\.\d+)$/',
+                    'regex:/^[+-]?(?:\d+\.?|\d*\.\d+)$/',
                 ],
                 'start_at' => 'required|date',
             ];
