@@ -4,7 +4,9 @@ namespace Ferreira\AutoCrud;
 
 use Tests\TestCase;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
+use Illuminate\Support\Facades\Session;
 
 class AssertField
 {
@@ -20,8 +22,11 @@ class AssertField
     /** @var string */
     private $field;
 
-    /** @var string[] */
+    /** @var mixed[] */
     private $defaultValues;
+
+    /** @var string[] */
+    private $shouldPass;
 
     public function __construct(string $path, string $method, array $defaultValues, string $field, TestCase $test)
     {
@@ -30,6 +35,8 @@ class AssertField
         $this->defaultValues = $defaultValues;
         $this->field = $field;
         $this->test = $test;
+
+        $this->shouldPass = collect(array_keys($this->defaultValues))->diff($field)->all();
     }
 
     /**
@@ -41,8 +48,15 @@ class AssertField
      */
     public function accepts($value): self
     {
+        DB::beginTransaction();
+
         $this->request($value)
-            ->assertSuccessful();
+            ->assertSessionDoesntHaveErrors();
+
+        // Rollback, because this previous statement added a row to the table
+        // and, because of uniqueness, the following assertions could fail
+        // Rolling back here is a way of refreshing the database state.
+        DB::rollBack();
 
         return $this;
     }
@@ -57,8 +71,8 @@ class AssertField
     public function rejects($value): self
     {
         $this->request($value)
-            ->assertRedirect()
-            ->assertSessionHasErrors($this->field);
+            ->assertSessionHasErrors($this->field)
+            ->assertSessionDoesntHaveErrors($this->shouldPass);
 
         return $this;
     }
@@ -72,6 +86,12 @@ class AssertField
 
         $data = $this->defaultValues;
         $data[$this->field] = $value;
+
+        // We need to forget previous flash session items, because Laravel does
+        // not clear them automatically inside a test case.
+        Session::forget('errors');
+        Session::forget('_old_input');
+        Session::forget('_flash');
 
         return $this->test->{$method}($this->path, $data);
     }

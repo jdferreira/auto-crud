@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use Exception;
 use Tests\TestCase;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Router;
 use Ferreira\AutoCrud\AssertsField;
 use Illuminate\Support\Facades\Route;
 
@@ -44,7 +43,6 @@ class AssertsFieldTest extends TestCase
             'field3' => null,
         ]);
 
-        // We want to be able to detect it
         $this->assertField('field1')
             ->accepts('123')
             ->rejects('456')
@@ -57,9 +55,7 @@ class AssertsFieldTest extends TestCase
 
         $this->assertField('field3')
             ->accepts(true)
-            ->accepts(false)
-            ->accepts('1')
-            ->rejects('on')
+            ->rejects('not-a-boolean')
             ->accepts(null);
     }
 }
