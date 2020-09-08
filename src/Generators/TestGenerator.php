@@ -164,14 +164,21 @@ class TestGenerator extends BaseGenerator
 
     private function assertEditFormHasValues()
     {
-        [$checkboxes, $nonCheckboxes] = $this->fieldsExcept(['id'])
-            ->partition(function ($column) {
-                return $this->table->type($column) === Type::BOOLEAN;
-            });
+        $groups = $this->fieldsExcept(['id'])->groupBy(function ($column) {
+            $type = $this->table->type($column);
 
-        /** @var Collection $checkboxes */
-        /** @var Collection $nonCheckboxes */
-        $nonCheckboxes = $nonCheckboxes
+            if ($type === Type::BOOLEAN) {
+                return 'checkbox';
+            } elseif ($type === Type::ENUM) {
+                return 'select';
+            } elseif ($type === Type::BINARY || $type === Type::TEXT) {
+                return 'textarea';
+            } else {
+                return 'regular';
+            }
+        });
+
+        $regularInputs = $groups->get('regular', collect())
             ->map(function ($column) {
                 $value = "\${$this->modelVariableSingular()}->$column";
 
@@ -194,7 +201,7 @@ class TestGenerator extends BaseGenerator
                 return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name' and @value='%s']\", $value), \$document);";
             });
 
-        $checkboxes = $checkboxes
+        $checkboxInputs = $groups->get('checkbox', collect())
             ->flatMap(function ($column) {
                 $value = "\${$this->modelVariableSingular()}->$column";
                 $column = Str::camel($column);
@@ -207,11 +214,34 @@ class TestGenerator extends BaseGenerator
                 ];
             });
 
-        if ($nonCheckboxes->count() > 0 && $checkboxes->count() > 0) {
-            $nonCheckboxes->push('');
+        $selectInputs = $groups->get('select', collect())
+            ->map(function ($column) {
+                $value = "\${$this->modelVariableSingular()}->$column";
+
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
+                return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name']/option[@value='%s' and @selected]\", $value), \$document);";
+            });
+
+        $textareaInputs = $groups->get('textarea', collect())
+            ->map(function ($column) {
+                $value = "\${$this->modelVariableSingular()}->$column";
+
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
+                return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name' and text()='%s']\", $value), \$document);";
+            });
+
+        $inputs = $regularInputs;
+
+        foreach ([$checkboxInputs, $selectInputs, $textareaInputs] as $partial) {
+            if ($inputs->count() > 0 && $partial->count() > 0) {
+                $inputs->push('');
+                $inputs = $inputs->merge($partial);
+            }
         }
 
-        return $nonCheckboxes->merge($checkboxes)->all();
+        return $inputs->all();
     }
 
     private function oneRequiredField()
@@ -286,7 +316,6 @@ class TestGenerator extends BaseGenerator
         return $this->fieldsExcept(['id'])
             ->map(function ($column) {
                 $required = $this->table->required($column)
-                    && ! $this->table->hasDefault($column)
                     && $this->table->type($column) !== Type::BOOLEAN;
 
                 $required = $required ? '@required' : 'not(@required)';
