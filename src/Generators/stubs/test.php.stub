@@ -156,23 +156,24 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     {
         $this->assertNull({{ modelClass }}::find(1));
 
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->raw();
+        $new = factory({{ modelClass }}::class)->raw();
 
-        $this->post('/{{ tablename }}', ${{ modelVariableSingular }});
+        $this->post('/{{ tablename }}', $new);
 
-        $this->assertNotNull($created = {{ modelClass }}::find(1));
+        $this->assertNotNull(${{ modelVariableSingular }} = {{ modelClass }}::find(1));
 
-        {{ assertRawEqualsCreated }}
+        {{ assertNewEqualsModel }}
     }
 
     /** @test */
     public function it_validates_field_values_when_updating_{{ tablenameSingularWithArticle }}()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        $new = factory({{ modelClass }}::class)->raw();
 
-        $data = ${{ modelVariableSingular }}->toArray();
+        ${{ modelVariableSingular }} = new {{ modelClass }}($new);
+        ${{ modelVariableSingular }}->save();
 
-        $this->beginAssertFields('PUT', ${{ modelVariableSingular }}->path(), $data)->assertFields();
+        $this->beginAssertFields('PUT', ${ modelVariableSingular }->path(), $new)->assertFields();
     }
 
     /** @test */
@@ -184,9 +185,9 @@ class {{ modelClassPlural }}CrudTest extends TestCase
 
         $this->put(${{ modelVariableSingular }}->path(), $new);
 
-        $fresh = ${{ modelVariableSingular }}->fresh();
+        ${{ modelVariableSingular }} = ${{ modelVariableSingular }}->fresh();
 
-        {{ assertNewEqualsFresh }}
+        {{ assertNewEqualsModel }}
     }
 
     /** @test */

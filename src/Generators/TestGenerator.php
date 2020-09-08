@@ -42,8 +42,7 @@ class TestGenerator extends BaseGenerator
             'oneConstraintField' => $this->oneConstraintField(),
             'oneInvalidValue' => $this->oneInvalidValue(),
             'assertRequiredFields' => $this->assertRequiredFields(),
-            'assertRawEqualsCreated' => $this->assertRawEqualsCreated(),
-            'assertNewEqualsFresh' => $this->assertNewEqualsFresh(),
+            'assertNewEqualsModel' => $this->assertNewEqualsModel(),
             'assertFields' => $this->assertFields(),
         ];
     }
@@ -327,20 +326,24 @@ class TestGenerator extends BaseGenerator
             ->all();
     }
 
-    private function assertRawEqualsCreated()
+    private function assertNewEqualsModel()
     {
         return $this->fieldsExcept(['id'])
             ->map(function ($column) {
-                return "\$this->assertEquals(\${$this->modelVariableSingular()}->$column, \$created->$column);";
-            })
-            ->all();
-    }
+                $expected = "\$new['$column']";
+                $retrieved = "\${$this->modelVariableSingular()}->$column";
 
-    private function assertNewEqualsFresh()
-    {
-        return $this->fieldsExcept(['id'])
-            ->map(function ($column) {
-                return "\$this->assertEquals(\$new->$column, \$fresh->$column);";
+                $type = $this->table->type($column);
+
+                if ($type === Type::DATETIME) {
+                    $retrieved .= "->format('Y-m-d\\TH:i:s')";
+                } elseif ($type === Type::DATE) {
+                    $retrieved .= "->format('Y-m-d')";
+                } elseif ($type === Type::TIME) {
+                    $retrieved .= "->format('H:i:s')";
+                }
+
+                return "\$this->assertEquals($expected, $retrieved);";
             })
             ->all();
     }

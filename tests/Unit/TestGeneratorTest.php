@@ -267,17 +267,17 @@ class TestGeneratorTest extends TestCase
             {
                 $this->assertNull(User::find(1));
 
-                $user = factory(User::class)->raw();
+                $new = factory(User::class)->raw();
 
-                $this->post(\'/users\', $user);
+                $this->post(\'/users\', $new);
 
-                $this->assertNotNull($created = User::find(1));
+                $this->assertNotNull($user = User::find(1));
 
-                $this->assertEquals($user->name, $created->name);
-                $this->assertEquals($user->email, $created->email);
-                $this->assertEquals($user->subscribed, $created->subscribed);
-                $this->assertEquals($user->birthday, $created->birthday);
-                $this->assertEquals($user->wake_up, $created->wake_up);
+                $this->assertEquals($new[\'name\'], $user->name);
+                $this->assertEquals($new[\'email\'], $user->email);
+                $this->assertEquals($new[\'subscribed\'], $user->subscribed);
+                $this->assertEquals($new[\'birthday\'], $user->birthday->format(\'Y-m-d\'));
+                $this->assertEquals($new[\'wake_up\'], $user->wake_up->format(\'H:i:s\'));
             }
         ', $code);
     }
@@ -297,13 +297,13 @@ class TestGeneratorTest extends TestCase
 
                 $this->put($user->path(), $new);
 
-                $fresh = $user->fresh();
+                $user = $user->fresh();
 
-                $this->assertEquals($new->name, $fresh->name);
-                $this->assertEquals($new->email, $fresh->email);
-                $this->assertEquals($new->subscribed, $fresh->subscribed);
-                $this->assertEquals($new->birthday, $fresh->birthday);
-                $this->assertEquals($new->wake_up, $fresh->wake_up);
+                $this->assertEquals($new[\'name\'], $user->name);
+                $this->assertEquals($new[\'email\'], $user->email);
+                $this->assertEquals($new[\'subscribed\'], $user->subscribed);
+                $this->assertEquals($new[\'birthday\'], $user->birthday->format(\'Y-m-d\'));
+                $this->assertEquals($new[\'wake_up\'], $user->wake_up->format(\'H:i:s\'));
             }
         ', $code);
     }
