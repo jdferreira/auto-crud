@@ -104,7 +104,7 @@ class TestGeneratorTest extends TestCase
         $cmd = 'php -l';
         $specs = [
             0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'], // TODO: This line can probably be removed
+            1 => ['pipe', 'w'],
             2 => ['pipe', 'w'],
         ];
 
@@ -113,6 +113,8 @@ class TestGeneratorTest extends TestCase
         fwrite($pipes[0], $code);
         fclose($pipes[0]);
 
+        // Apparently we need to read the STDOUT pipe, or the process fails with a 255 code
+        stream_get_contents($pipes[1]);
         fclose($pipes[1]);
 
         $errors = stream_get_contents($pipes[2]);
@@ -120,13 +122,7 @@ class TestGeneratorTest extends TestCase
 
         $exitCode = proc_close($proc);
 
-        try {
-            $this->assertEquals(0, $exitCode, 'File contains syntax errors:' . PHP_EOL . $errors);
-        } catch (ExpectationFailedException $e) {
-            dump($code);
-
-            throw $e;
-        }
+        $this->assertEquals(0, $exitCode, 'File contains syntax errors:' . PHP_EOL . $errors);
     }
 
     /** @test */
@@ -200,27 +196,6 @@ class TestGeneratorTest extends TestCase
             }
         ', $code);
     }
-
-    // static $x =
-    // '
-    //     /** @test */
-    //     public function it_starts_the_edit_form_with_the_user_current_values()
-    //     {
-    //         $user = factory(User::class)->states(\'full_model\')->create();
-
-    //         $document = $this->getDOMDocument(
-    //             $this->get($user->path() . \'/edit\')
-    //         );
-
-    //         $this->assertHTML($this->xpath("//*[@name=\'name\' and @value=\'%s\']", $user->name), $document);
-    //         $this->assertHTML($this->xpath("//*[@name=\'email\' and @value=\'%s\']", $user->email), $document);
-    //         $this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $user->birthday->format('Y-m-d')), $document);
-    //         $this->assertHTML($this->xpath("//*[@name=\'wake-up\' and @value=\'%s\']", $user->wake_up->format('H:i:s')), $document);
-
-    //         $subscribedChecked = $user->subscribed ? \'@checked\' : \'not(@checked)\';
-    //         $this->assertHTML("//*[@name=\'subscribed\' and $subscribedChecked]", $document);
-    //     }
-    // ';
 
     /** @test */
     public function it_tests_old_values_from_a_previous_form_submission()
@@ -365,7 +340,7 @@ class TestGeneratorTest extends TestCase
                     ->rejects(\'yes\')
                     ->rejects(\'no\')
                     ->rejects(\'2\')
-                    ->accepts(null);
+                    ->rejects(null);
 
                 $this->assertField(\'birthday\')
                     ->accepts(\'2020-01-01\')

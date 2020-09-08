@@ -386,10 +386,7 @@ class TestGenerator extends BaseGenerator
             $this->stackFieldAssertion($rejects, 'rejects')
         );
 
-        $required =
-            $this->table->required($column)
-            && ! $this->table->hasDefault($column)
-            && $this->table->type($column) !== Type::BOOLEAN;
+        $required = $this->table->required($column);
 
         $assertions[] = $required
             ? '    ->rejects(null);'

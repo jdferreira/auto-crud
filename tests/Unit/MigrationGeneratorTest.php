@@ -27,6 +27,8 @@ class MigrationGeneratorTest extends TestCase
         fwrite($pipes[0], $code);
         fclose($pipes[0]);
 
+        // Apparently we need to read the STDOUT pipe, or the process fails with a 255 code
+        stream_get_contents($pipes[1]);
         fclose($pipes[1]);
 
         $errors = stream_get_contents($pipes[2]);
@@ -34,13 +36,7 @@ class MigrationGeneratorTest extends TestCase
 
         $exitCode = proc_close($proc);
 
-        try {
-            $this->assertEquals(0, $exitCode, 'File contains syntax errors:' . PHP_EOL . $errors);
-        } catch (ExpectationFailedException $e) {
-            dump($code);
-
-            throw $e;
-        }
+        $this->assertEquals(0, $exitCode, 'File contains syntax errors:' . PHP_EOL . $errors);
     }
 
     /** @test */
