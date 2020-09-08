@@ -104,21 +104,6 @@ class RuleGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_always_generates_nullable_for_boolean_column()
-    {
-        $table = $this->mockTable('tablename', [
-            'nullable' => ['type' => Type::BOOLEAN, 'required' => false],
-            'required' => ['type' => Type::BOOLEAN, 'required' => true],
-        ]);
-
-        $rule = new RuleGenerator($table, 'nullable');
-        $this->assertContains("'nullable'", $rule->makeRules());
-
-        $rule = new RuleGenerator($table, 'required');
-        $this->assertContains("'nullable'", $rule->makeRules());
-    }
-
-    /** @test */
     public function it_accepts_all_values_for_string_and_binary_columns()
     {
         $table = $this->mockTable('tablename', [

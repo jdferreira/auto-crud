@@ -558,7 +558,7 @@ class TestGenerator extends BaseGenerator
             ];
         } elseif ($this->table->type($column) === Type::DECIMAL) {
             return [
-                '2.718281828',
+                '2.7.1',
                 'not-a-number',
             ];
         } elseif ($this->table->type($column) === Type::ENUM) {

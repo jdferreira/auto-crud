@@ -108,18 +108,10 @@ class RuleGenerator
     private function nullable()
     {
         return $this->quote(
-            $this->required()
+            $this->table->required($this->column)
                 ? 'required'
                 : 'nullable'
         );
-    }
-
-    private function required()
-    {
-        // TODO: This should be moved into the TableInformation somehow;
-        // many other classes use this definition of required!
-        return $this->table->required($this->column)
-            && $this->table->type($this->column) !== Type::BOOLEAN;
     }
 
     private function byColumnName()
