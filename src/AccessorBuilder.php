@@ -161,7 +161,7 @@ class AccessorBuilder
                     $formatted = "($formatted)";
                 }
 
-                $formatted = "$simple === null ? $formatted : null";
+                $formatted = "$simple !== null ? $formatted : null";
             }
 
             return "{{ $formatted }}";

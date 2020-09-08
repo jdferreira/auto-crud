@@ -70,7 +70,7 @@ class ViewShowGeneratorTest extends TestCase
         $this->assertStringContainsString('<td>{{ $user->email }}</td>', $code);
         $this->assertStringContainsString("<td>{{ \$user->subscribed ? '&#10004;' : '&#10008;' }}</td>", $code);
         $this->assertStringContainsString("<td>{{ \$user->birthday->format('Y-m-d') }}</td>", $code);
-        $this->assertStringContainsString("<td>{{ \$user->wake_up === null ? \$user->wake_up->format('H:i:s') : null }}</td>", $code);
+        $this->assertStringContainsString("<td>{{ \$user->wake_up !== null ? \$user->wake_up->format('H:i:s') : null }}</td>", $code);
     }
 
     /** @test */

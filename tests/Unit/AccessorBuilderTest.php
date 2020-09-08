@@ -184,7 +184,7 @@ class AccessorBuilderTest extends TestCase
         ]));
 
         $this->assertEquals(
-            "{{ \$player->is_good === null ? (\$player->is_good ? '&#10004;' : '&#10008;') : null }}",
+            "{{ \$player->is_good !== null ? (\$player->is_good ? '&#10004;' : '&#10008;') : null }}",
             $builder->viewAccessor('is_good')
         );
     }
@@ -203,7 +203,7 @@ class AccessorBuilderTest extends TestCase
         ]));
 
         $this->assertEquals(
-            "{{ \$player->date === null ? \$player->date->format('Y-m-d') : null }}",
+            "{{ \$player->date !== null ? \$player->date->format('Y-m-d') : null }}",
             $builder->viewAccessor('date')
         );
 

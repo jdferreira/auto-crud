@@ -130,7 +130,7 @@ class ViewIndexGeneratorTest extends TestCase
         $code = $this->generator('users')->generate();
 
         $this->assertStringContainsString('{{ $user->email }}', $code);
-        $this->assertStringContainsString('{{ $user->wake_up === null ? $user->wake_up->format(\'H:i:s\') : null }}', $code);
+        $this->assertStringContainsString('{{ $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null }}', $code);
 
         $code = $this->generator('products')->generate();
 
@@ -205,7 +205,7 @@ class ViewIndexGeneratorTest extends TestCase
                         <td>{{ \$user->email }}</td>
                         <td>{{ \$user->subscribed ? '&#10004;' : '&#10008;' }}</td>
                         <td>{{ \$user->birthday->format('Y-m-d') }}</td>
-                        <td>{{ \$user->wake_up === null ? \$user->wake_up->format('H:i:s') : null }}</td>
+                        <td>{{ \$user->wake_up !== null ? \$user->wake_up->format('H:i:s') : null }}</td>
                     </tr>
                 @endforeach
             </table>
