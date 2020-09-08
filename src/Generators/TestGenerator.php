@@ -482,7 +482,6 @@ class TestGenerator extends BaseGenerator
             ];
         } elseif ($this->table->type($column) === Type::BOOLEAN) {
             return [
-                'on',
                 true,
                 false,
             ];
