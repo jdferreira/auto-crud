@@ -133,7 +133,7 @@ class RequestGeneratorTest extends TestCase
                     'required',
                     'regex:/^(?:\d+\.?|\d*\.\d+)$/',
                 ],
-                'start_at' => 'nullable|date',
+                'start_at' => 'required|date',
             ];
         ", $code);
     }

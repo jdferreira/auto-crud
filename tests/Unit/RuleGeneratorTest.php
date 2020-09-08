@@ -58,17 +58,6 @@ class RuleGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_generates_nullable_rule_for_columns_with_default_value()
-    {
-        $table = $this->mockTable('tablename', [
-            'count' => ['required' => true, 'hasDefault' => true],
-        ]);
-
-        $rule = new RuleGenerator($table, 'count');
-        $this->assertContains("'nullable'", $rule->makeRules());
-    }
-
-    /** @test */
     public function it_knows_of_email_and_uuid_column_names()
     {
         $table = $this->mockTable('tablename', [

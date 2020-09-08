@@ -119,7 +119,6 @@ class RuleGenerator
         // TODO: This should be moved into the TableInformation somehow;
         // many other classes use this definition of required!
         return $this->table->required($this->column)
-            && ! $this->table->hasDefault($this->column)
             && $this->table->type($this->column) !== Type::BOOLEAN;
     }
 
