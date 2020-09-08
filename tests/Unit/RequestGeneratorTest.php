@@ -83,7 +83,7 @@ class RequestGeneratorTest extends TestCase
         $code = $this->generator('users')->generate();
 
         $this->assertCodeContains("
-            \$model = \$this->route('id') ? User::find(\$this->input('id')) : null;
+            \$model = \$this->route('user');
 
             return [
                 'name' => 'required',
@@ -105,7 +105,7 @@ class RequestGeneratorTest extends TestCase
         $code = $this->generator('avatars')->generate();
 
         $this->assertCodeContains("
-            \$model = \$this->route('id') ? Avatar::find(\$this->input('id')) : null;
+            \$model = \$this->route('avatar');
 
             return [
                 'user_id' => [

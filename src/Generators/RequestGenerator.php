@@ -80,8 +80,10 @@ class RequestGenerator extends BaseGenerator
         $lines[] = '];';
 
         if ($this->needsModel) {
+            $param = Str::singular($this->table->name());
+
             $lines = array_merge([
-                "\$model = \$this->route('id') ? {$this->modelClass()}::find(\$this->input('id')) : null;",
+                "\$model = \$this->route('$param');",
                 '',
             ], $lines);
 
