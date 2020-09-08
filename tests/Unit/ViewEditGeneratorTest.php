@@ -101,18 +101,15 @@ class ViewEditGeneratorTest extends TestCase
         $code = $this->generator('avatars')->generate();
         $this->assertRegExp('/<input name="user-id" required value=".*" type="text">/', $code);
         $this->assertRegExp('/<input name="file" required value=".*" type="text">/', $code);
-        $this->assertRegExp('/<input name="data" required value=".*" type="file">/', $code);
+        $this->assertRegExp('/<textarea name="data" required>/', $code);
 
         $code = $this->generator('products')->generate();
         // We split the code contains assertion in two parts so that we are not
         // testing the value attribute here.
-        $this->assertRegExp('/<select name="type" value=".*">/', $code);
-        $this->assertCodeContains('
-                <option value="food">Food</option>
-                <option value="stationery">Stationery</option>
-                <option value="other">Other</option>
-            </select>
-        ', $code);
+        $this->assertRegExp('/<select name="type">/', $code);
+        $this->assertRegExp('/<option value="food"/', $code);
+        $this->assertRegExp('/<option value="stationery"/', $code);
+        $this->assertRegExp('/<option value="other"/', $code);
 
         $code = $this->generator('payment_methods')->generate();
         $this->assertRegExp('/<textarea name="primary" required>.*?<\/textarea>/', $code);
@@ -157,9 +154,10 @@ class ViewEditGeneratorTest extends TestCase
         $this->assertStringContainsString("{{ (old('subscribed') ?? \$user->subscribed) ? 'checked' : '' }}", $code);
 
         $code = $this->generator('products')->generate();
-        // Note that we split this next assertion in two so that we are not
-        // testing the value attribute here.
-        $this->assertCodeContains('<select name="type" value="{{ old(\'type\') ?? $product->type }}">', $code);
+        $this->assertStringContainsString(
+            '<option value="food" {{ (old(\'type\') ?? $product->type) === \'food\' ? \'selected\' : \'\' }}>',
+            $code
+        );
 
         $code = $this->generator('payment_methods')->generate();
         $this->assertStringContainsString('<textarea name="primary" required>{{ old(\'primary\') ?? $paymentMethod->primary }}</textarea>', $code);

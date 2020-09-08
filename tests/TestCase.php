@@ -244,6 +244,8 @@ abstract class TestCase extends BaseTestCase
      *     this column references. Defaults to `null`.
      *   - hasDefault: whether the column has a default value. Defaults to
      *     false.
+     *   - default: the default value of the column. Giving this changes the
+     *     `hasDefault` property to true.
      *
      * @return TableInformation
      */
@@ -259,6 +261,10 @@ abstract class TestCase extends BaseTestCase
 
                 if (($choices = Arr::get($properties, 'enum', null)) !== null) {
                     $properties['type'] = Type::ENUM;
+                }
+
+                if (Arr::has($properties, 'default')) {
+                    $properties['hasDefault'] = true;
                 }
 
                 $mock->shouldReceive('type')->with($column)->andReturn(
@@ -279,10 +285,17 @@ abstract class TestCase extends BaseTestCase
                 $mock->shouldReceive('hasDefault')->with($column)->andReturn(
                     Arr::get($properties, 'hasDefault', false)
                 );
+
+                if (Arr::has($properties, 'default')) {
+                    $mock->shouldReceive('default')->with($column)->andReturn(
+                        Arr::get($properties, 'default')
+                    );
+                }
             }
 
             $mock->shouldReceive('name')->andReturn($tablename);
             $mock->shouldReceive('primaryKey')->andReturn($primaryKey);
+            $mock->shouldReceive('columns')->andReturn(array_keys($columns));
         });
     }
 }

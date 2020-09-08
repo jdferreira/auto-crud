@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ViewCreateGenerator;
 
@@ -99,7 +100,7 @@ class ViewCreateGeneratorTest extends TestCase
         $code = $this->generator('avatars')->generate();
         $this->assertStringContainsString('<input name="user-id" required type="text">', $code);
         $this->assertStringContainsString('<input name="file" required type="text">', $code);
-        $this->assertStringContainsString('<input name="data" required type="file">', $code);
+        $this->assertStringContainsString('<textarea name="data" required></textarea>', $code);
 
         $code = $this->generator('products')->generate();
         $this->assertCodeContains('
@@ -134,6 +135,53 @@ class ViewCreateGeneratorTest extends TestCase
     {
         $code = $this->generator('users')->generate();
         $this->assertStringContainsString('<input name="email" type="email">', $code);
+    }
+
+    /** @test */
+    public function it_fills_fields_with_default_values_with_that_value()
+    {
+        $table = $this->mockTable('schools', [
+            'name' => [
+                'type' => Type::STRING,
+                'default' => 'Hogwarts',
+            ],
+            'motto' => [
+                'type' => Type::TEXT,
+                'default' => 'Draco dormiens nunquam titillandus',
+            ],
+            'magical' => [
+                'type' => Type::BOOLEAN,
+                'default' => true,
+            ],
+            'country' => [
+                'enum' => ['uk', 'fr', 'de'],
+                'default' => 'uk',
+            ],
+        ]);
+
+        $code = app(ViewCreateGenerator::class, [
+            'table' => $table,
+        ])->generate();
+
+        $this->assertStringContainsString(
+            '<input name="name" required type="text" value="Hogwarts">',
+            $code
+        );
+
+        $this->assertStringContainsString(
+            '<textarea name="motto" required>Draco dormiens nunquam titillandus</textarea>',
+            $code
+        );
+
+        $this->assertStringContainsString(
+            '<input name="magical" type="checkbox" value="1" checked>',
+            $code
+        );
+
+        $this->assertStringContainsString(
+            '<option value="uk" selected>',
+            $code
+        );
     }
 
     /** @test */

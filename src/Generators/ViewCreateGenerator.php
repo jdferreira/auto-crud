@@ -105,74 +105,52 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function attributes(string $column)
     {
-        if ($this->required($column)) {
-            $required = ' required';
-        } else {
-            $required = '';
-        }
+        $name = str_replace('_', '-', $column);
 
-        return 'name="' . str_replace('_', '-', $column) . '"' . $required;
+        $required = $this->required($column) ? ' required' : '';
+
+        return "name=\"$name\"$required";
     }
 
     private function required(string $column)
     {
         return $this->table->required($column)
-            && ! $this->table->hasDefault($column)
             && $this->table->type($column) !== Type::BOOLEAN;
     }
 
     private function input(string $column)
     {
-        $attrs = $this->attributes($column);
-
         $type = $this->table->type($column);
 
         if ($type === Type::ENUM) {
-            $values = collect($this->table->getEnumValid($column))->map(function ($value) {
-                $label = Str::ucfirst(str_replace('_', ' ', $value));
-
-                return "    <option value=\"$value\">$label</option>";
-            })->all();
-
-            return array_merge(
-                [
-                    '<select ' . $attrs . '>',
-                ],
-                $values,
-                [
-                    '</select>',
-                ]
-            );
+            return $this->selectInput($column);
         }
 
         if ($column === 'email' && $type === Type::STRING) {
-            return '<input ' . $attrs . ' type="email">';
+            return $this->regularInput($column, 'email');
         }
 
         switch ($type) {
             case Type::STRING:
             case Type::INTEGER:
             case Type::DECIMAL:
-                return '<input ' . $attrs . ' type="text">';
+                return $this->regularInput($column, 'text');
 
             case Type::BOOLEAN:
                 return $this->checkboxInput($column);
 
             case Type::DATE:
-                return '<input ' . $attrs . ' type="date">';
+                return $this->regularInput($column, 'date');
 
             case Type::TIME:
-                return '<input ' . $attrs . ' type="time">';
+                return $this->regularInput($column, 'time');
 
             case Type::DATETIME:
-                return '<input ' . $attrs . ' type="datetime">'; // TODO: This has been deprecated in HTML!
+                // TODO: This has been deprecated in HTML! Do we need to adapt?
+                return $this->regularInput($column, 'datetime');
 
             case Type::BINARY:
-                return '<input ' . $attrs . ' type="file">'; // TODO: This must be converted to binary on the controller!
-
             case Type::TEXT:
-                // This is its own method because it needs to be overwritten in
-                // the `ViewEditGenerator` class
                 return $this->textareaInput($column);
 
             default:
@@ -180,21 +158,76 @@ class ViewCreateGenerator extends BaseGenerator
         }
     }
 
+    protected function regularInput(string $column, string $inputType)
+    {
+        $attrs = $this->attributes($column);
+
+        if ($this->table->hasDefault($column)) {
+            $default = ' value="' . $this->table->default($column) . '"';
+        } else {
+            $default = '';
+        }
+
+        return "<input $attrs type=\"$inputType\"$default>";
+    }
+
     protected function textareaInput(string $column)
     {
         $attrs = $this->attributes($column);
 
-        return "<textarea $attrs></textarea>";
+        if ($this->table->hasDefault($column)) {
+            $default = $this->table->default($column);
+        } else {
+            $default = '';
+        }
+
+        return "<textarea $attrs>$default</textarea>";
     }
 
     protected function checkboxInput(string $column)
     {
         $attrs = $this->attributes($column);
 
+        if ($this->table->hasDefault($column)) {
+            $default = $this->table->default($column) ? ' checked' : '';
+        } else {
+            $default = '';
+        }
+
         return [
-            '<input ' . $attrs . ' type="checkbox" value="1">',
-            '<input ' . $attrs . ' type="hidden" value="0">',
+            "<input $attrs type=\"checkbox\" value=\"1\"$default>",
+            "<input $attrs type=\"hidden\" value=\"0\">",
         ];
+    }
+
+    protected function selectInput(string $column)
+    {
+        $attrs = $this->attributes($column);
+
+        $values = collect($this->table->getEnumValid($column))->map(function ($value) use ($column) {
+            $option = $this->optionItem($column, $value);
+
+            return "    $option";
+        })->all();
+
+        return array_merge(
+            [
+                '<select ' . $attrs . '>',
+            ],
+            $values,
+            [
+                '</select>',
+            ]
+        );
+    }
+
+    protected function optionItem(string $column, string $value)
+    {
+        $label = Str::ucfirst(str_replace('_', ' ', $value));
+
+        $selected = $this->table->default($column) === $value ? ' selected' : '';
+
+        return "<option value=\"$value\"$selected>$label</option>";
     }
 
     public function buttons()
