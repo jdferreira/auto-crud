@@ -104,7 +104,7 @@ class ColumnFaker
             Type::DATETIME => 'dateTimeBetween(\'-10 years\', \'now\')',
             Type::DATE => 'date',
             Type::TIME => 'time',
-            Type::DECIMAL => 'numerify(\'###.##\')',
+            Type::DECIMAL => 'numerify(\'%##.##\')',
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
             Type::BINARY => 'passthrough(random_bytes(1024))',

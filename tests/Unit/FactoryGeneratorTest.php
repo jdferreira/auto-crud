@@ -125,7 +125,7 @@ class FactoryGeneratorTest extends TestCase
                     return factory(User::class)->create()->id;
                 },
                 'type' => \$faker->optional(0.9)->randomElement(['food', 'stationery', 'other']),
-                'value' => \$faker->numerify('###.##'),
+                'value' => \$faker->numerify('%##.##'),
                 'start_at' => \$faker->dateTimeBetween('-10 years', 'now'),
             ];
         ", $code);
