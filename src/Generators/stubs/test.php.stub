@@ -173,7 +173,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         ${{ modelVariableSingular }} = new {{ modelClass }}($new);
         ${{ modelVariableSingular }}->save();
 
-        $this->beginAssertFields('PUT', ${ modelVariableSingular }->path(), $new)->assertFields();
+        $this->beginAssertFields('PUT', ${{ modelVariableSingular }}->path(), $new)->assertFields();
     }
 
     /** @test */
