@@ -29,32 +29,26 @@ class ViewEditGenerator extends ViewCreateGenerator
         return Str::camel(Str::singular($this->table->name()));
     }
 
-    protected function attributes(string $column)
+    protected function regularInput(string $column, string $inputType, string $attrs)
     {
-        $attrs = parent::attributes($column);
-
-        if (in_array($this->table->type($column), [Type::BINARY, Type::ENUM])) {
-            return $attrs;
-        } else {
+        if (! in_array($this->table->type($column), [Type::BINARY, Type::ENUM])) {
             $value = $this->value($column);
 
-            return "$attrs value=\"{{ $value }}\"";
+            $attrs = "$attrs value=\"{{ $value }}\"";
         }
+
+        return "<input $attrs type=\"$inputType\">";
     }
 
-    protected function textareaInput(string $column)
+    protected function textareaInput(string $column, string $attrs)
     {
-        $attrs = parent::attributes($column);
-
         $value = $this->value($column);
 
         return "<textarea $attrs>{{ $value }}</textarea>";
     }
 
-    protected function checkboxInput(string $column)
+    protected function checkboxInput(string $column, string $attrs)
     {
-        $attrs = parent::attributes($column);
-
         $value = $this->value($column);
         $checked = "{{ ($value) ? 'checked' : '' }}";
 
@@ -68,7 +62,7 @@ class ViewEditGenerator extends ViewCreateGenerator
     {
         $label = Str::ucfirst(str_replace('_', ' ', $value));
 
-        $model = $this->modelSingular();
+        $model = $this->model();
 
         $selected = "{{ (old('$column') ?? \$$model->$column) === '$value' ? 'selected' : '' }}";
 

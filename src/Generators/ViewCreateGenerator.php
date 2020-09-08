@@ -120,48 +120,48 @@ class ViewCreateGenerator extends BaseGenerator
 
     private function input(string $column)
     {
+        $attrs = $this->attributes($column);
+
         $type = $this->table->type($column);
 
         if ($type === Type::ENUM) {
-            return $this->selectInput($column);
+            return $this->selectInput($column, $attrs);
         }
 
         if ($column === 'email' && $type === Type::STRING) {
-            return $this->regularInput($column, 'email');
+            return $this->regularInput($column, 'email', $attrs);
         }
 
         switch ($type) {
             case Type::STRING:
             case Type::INTEGER:
             case Type::DECIMAL:
-                return $this->regularInput($column, 'text');
+                return $this->regularInput($column, 'text', $attrs);
 
             case Type::BOOLEAN:
-                return $this->checkboxInput($column);
+                return $this->checkboxInput($column, $attrs);
 
             case Type::DATE:
-                return $this->regularInput($column, 'date');
+                return $this->regularInput($column, 'date', $attrs);
 
             case Type::TIME:
-                return $this->regularInput($column, 'time');
+                return $this->regularInput($column, 'time', $attrs);
 
             case Type::DATETIME:
                 // TODO: This has been deprecated in HTML! Do we need to adapt?
-                return $this->regularInput($column, 'datetime');
+                return $this->regularInput($column, 'datetime', $attrs);
 
             case Type::BINARY:
             case Type::TEXT:
-                return $this->textareaInput($column);
+                return $this->textareaInput($column, $attrs);
 
             default:
                 break;
         }
     }
 
-    protected function regularInput(string $column, string $inputType)
+    protected function regularInput(string $column, string $inputType, string $attrs)
     {
-        $attrs = $this->attributes($column);
-
         if ($this->table->hasDefault($column)) {
             $default = ' value="' . $this->table->default($column) . '"';
         } else {
@@ -171,10 +171,8 @@ class ViewCreateGenerator extends BaseGenerator
         return "<input $attrs type=\"$inputType\"$default>";
     }
 
-    protected function textareaInput(string $column)
+    protected function textareaInput(string $column, string $attrs)
     {
-        $attrs = $this->attributes($column);
-
         if ($this->table->hasDefault($column)) {
             $default = $this->table->default($column);
         } else {
@@ -184,10 +182,8 @@ class ViewCreateGenerator extends BaseGenerator
         return "<textarea $attrs>$default</textarea>";
     }
 
-    protected function checkboxInput(string $column)
+    protected function checkboxInput(string $column, string $attrs)
     {
-        $attrs = $this->attributes($column);
-
         if ($this->table->hasDefault($column)) {
             $default = $this->table->default($column) ? ' checked' : '';
         } else {
@@ -200,10 +196,8 @@ class ViewCreateGenerator extends BaseGenerator
         ];
     }
 
-    protected function selectInput(string $column)
+    protected function selectInput(string $column, string $attrs)
     {
-        $attrs = $this->attributes($column);
-
         $values = collect($this->table->getEnumValid($column))->map(function ($value) use ($column) {
             $option = $this->optionItem($column, $value);
 
