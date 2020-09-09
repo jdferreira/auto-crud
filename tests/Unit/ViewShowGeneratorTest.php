@@ -74,12 +74,20 @@ class ViewShowGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_contains_labels_for_binary_columns()
+    public function it_does_not_render_laravel_timestamps()
+    {
+        $code = $this->generator('users')->generate();
+
+        $this->assertStringNotContainsString('$user->created_at', $code);
+    }
+
+    /** @test */
+    public function it_does_not_render_binary_columns()
     {
         $code = $this->generator('avatars')->generate();
 
-        $this->assertStringContainsString('<th>Data</th>', $code);
-        $this->assertStringContainsString('<td>{{ $avatar->data }}</td>', $code);
+        $this->assertStringNotContainsString('<th>Data</th>', $code);
+        $this->assertStringNotContainsString('$avatar->data', $code);
     }
 
     /** @test */

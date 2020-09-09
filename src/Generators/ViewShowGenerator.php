@@ -53,16 +53,24 @@ class ViewShowGenerator extends BaseGenerator
     {
         $result = [];
 
-        foreach ($this->table->columns() as $column) {
+        foreach ($this->visibleColumns() as $column) {
             $builder = app(AccessorBuilder::class, ['table' => $this->table]);
 
             $label = $builder->label($column);
             $accessor = $builder->viewAccessor($column);
 
-            $result[] = "    <tr><th>$label</th><td>$accessor</td></tr>";
+            $result[] = "<tr><th>$label</th><td>$accessor</td></tr>";
         }
 
         return $result;
+    }
+
+    protected function visibleColumns()
+    {
+        return collect($this->table->columns())->filter(function ($column) {
+            return ! in_array($column, ['created_at', 'updated_at', 'deleted_at'])
+                && $this->table->type($column) !== Type::BINARY;
+        });
     }
 
     private function buttons()
