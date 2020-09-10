@@ -52,7 +52,7 @@ class ColumnFakerTest extends TestCase
         $faker = new ColumnFaker($table, 'deleted_at');
 
         $this->assertEquals(
-            '$faker->optional(0.9)->dateTimeBetween(\'-10 years\', \'now\')->format(\'Y-m-d H:i:s\')',
+            "\$faker->optional(0.9)->passthrough(\$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s'))",
             $faker->fake()
         );
     }
@@ -244,5 +244,23 @@ class ColumnFakerTest extends TestCase
         $parent = new ColumnFaker($table, 'parent');
         $parent->fake();
         $this->assertEquals('users', $parent->referencedTable());
+    }
+
+    /** @test */
+    public function it_correctly_handles_nullable_columns_with_complex_faker_logic()
+    {
+        $table = $this->mockTable('students', [
+            'latest_detention' => [
+                'required' => false,
+                'type' => Type::DATETIME,
+            ],
+        ]);
+
+        $faker = new ColumnFaker($table, 'latest_detention');
+
+        $this->assertEquals(
+            "\$faker->optional(0.9)->passthrough(\$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s'))",
+            $faker->fake()
+        );
     }
 }

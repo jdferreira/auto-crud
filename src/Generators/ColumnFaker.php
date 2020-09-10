@@ -88,7 +88,11 @@ class ColumnFaker
             // out the potential for null ourselves.
             return "\$faker->randomFloat() <= 0.9 ? \$faker->unique()->$fake : null";
         } elseif ($nullable) {
-            return "\$faker->optional(0.9)->$fake";
+            if (strpos($fake, '->') !== false) {
+                return "\$faker->optional(0.9)->passthrough(\$faker->$fake)";
+            } else {
+                return "\$faker->optional(0.9)->$fake";
+            }
         } elseif ($unique) {
             return "\$faker->unique()->$fake";
         } else {
