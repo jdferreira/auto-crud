@@ -9,6 +9,8 @@ class {{ class }} extends Model
 {
     {{ useSoftDeletesTrait }}
 
+    {{ disableTimestamps }}
+
     {{ customPrimaryKey }}
 
     {{ casts }}

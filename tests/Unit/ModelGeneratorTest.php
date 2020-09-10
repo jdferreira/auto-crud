@@ -253,4 +253,20 @@ class ModelGeneratorTest extends TestCase
             ];
         ', $code);
     }
+
+    /** @test */
+    public function it_marks_models_without_eloquent_timestamps()
+    {
+        $table = $this->mockTable('students', [
+            'name' => [],
+        ]);
+
+        $generator = app(ModelGenerator::class, [
+            'table' => $table,
+        ]);
+
+        $code = $generator->generate();
+
+        $this->assertStringContainsString('public $timestamps = false;', $code);
+    }
 }

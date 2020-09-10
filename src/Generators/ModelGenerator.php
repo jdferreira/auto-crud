@@ -48,6 +48,7 @@ class ModelGenerator extends BaseGenerator
             'namespace' => $this->namespace(),
             'class' => $this->class(),
             'importSoftDeletesTrait' => $this->importSoftDeletes(),
+            'disableTimestamps' => $this->disableTimestamps(),
             'useSoftDeletesTrait' => $this->useSoftDeletes(),
             'customPrimaryKey' => $this->primaryKey(),
             'casts' => $this->casts(),
@@ -75,6 +76,13 @@ class ModelGenerator extends BaseGenerator
     {
         return $this->table->softDeletes()
             ? 'use Illuminate\\Database\\Eloquent\\SoftDeletes;'
+            : '';
+    }
+
+    protected function disableTimestamps()
+    {
+        return ! $this->table->has('created_at') || ! $this->table->has('updated_at')
+            ? 'public $timestamps = false;'
             : '';
     }
 
