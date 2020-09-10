@@ -336,7 +336,7 @@ class TestGenerator extends BaseGenerator
                 $type = $this->table->type($column);
 
                 if ($type === Type::DATETIME) {
-                    $retrieved .= "->format('Y-m-d\\TH:i:s')";
+                    $retrieved .= "->format('Y-m-d H:i:s')";
                 } elseif ($type === Type::DATE) {
                     $retrieved .= "->format('Y-m-d')";
                 } elseif ($type === Type::TIME) {

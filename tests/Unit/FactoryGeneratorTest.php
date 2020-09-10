@@ -126,7 +126,7 @@ class FactoryGeneratorTest extends TestCase
                 },
                 'type' => \$faker->optional(0.9)->randomElement(['food', 'stationery', 'other']),
                 'value' => \$faker->numerify('%##.##'),
-                'start_at' => \$faker->dateTimeBetween('-10 years', 'now'),
+                'start_at' => \$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s'),
             ];
         ", $code);
     }

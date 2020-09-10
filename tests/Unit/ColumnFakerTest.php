@@ -51,7 +51,10 @@ class ColumnFakerTest extends TestCase
 
         $faker = new ColumnFaker($table, 'deleted_at');
 
-        $this->assertEquals('$faker->optional(0.9)->dateTimeBetween(\'-10 years\', \'now\')', $faker->fake());
+        $this->assertEquals(
+            '$faker->optional(0.9)->dateTimeBetween(\'-10 years\', \'now\')->format(\'Y-m-d H:i:s\')',
+            $faker->fake()
+        );
     }
 
     /** @test */
@@ -60,7 +63,7 @@ class ColumnFakerTest extends TestCase
         $fakes = [
             Type::INTEGER => 'numberBetween(0, 10000)',
             Type::BOOLEAN => 'boolean',
-            Type::DATETIME => "dateTimeBetween('-10 years', 'now')",
+            Type::DATETIME => "dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s')",
             Type::DATE => 'date',
             Type::TIME => 'time',
             Type::DECIMAL => "numerify('%##.##')",

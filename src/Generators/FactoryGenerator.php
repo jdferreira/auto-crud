@@ -96,11 +96,7 @@ class FactoryGenerator extends BaseGenerator
 
     private function extendFake($fake, $name)
     {
-        if (strpos($fake, "\n") !== false) {
-            $lines = explode("\n", $fake);
-        } else {
-            $lines = [$fake];
-        }
+        $lines = explode("\n", $fake);
 
         $lines[0] = "'$name' => " . $lines[0];
         $lines[count($lines) - 1] .= ',';
