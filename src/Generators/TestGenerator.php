@@ -335,12 +335,8 @@ class TestGenerator extends BaseGenerator
 
                 $type = $this->table->type($column);
 
-                if ($type === Type::DATETIME) {
-                    $retrieved .= "->format('Y-m-d H:i:s')";
-                } elseif ($type === Type::DATE) {
-                    $retrieved .= "->format('Y-m-d')";
-                } elseif ($type === Type::TIME) {
-                    $retrieved .= "->format('H:i:s')";
+                if (($format = Type::dateTimeFormat($type)) !== null) {
+                    $retrieved = "${retrieved}->format($format)";
                 }
 
                 return "\$this->assertEquals($expected, $retrieved);";

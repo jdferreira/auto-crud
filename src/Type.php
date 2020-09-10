@@ -19,4 +19,17 @@ class Type
     public const ENUM = 'enum';
 
     public const UNRECOGNIZED = 'unrecognized';
+
+    public static function dateTimeFormat(string $type): ?string
+    {
+        if ($type === self::DATETIME) {
+            return "'Y-m-d H:i:s'";
+        } elseif ($type === self::DATE) {
+            return "'Y-m-d'";
+        } elseif ($type === self::TIME) {
+            return "'H:i:s'";
+        } else {
+            return null;
+        }
+    }
 }
