@@ -177,22 +177,19 @@ class TestGenerator extends BaseGenerator
             }
         });
 
+        $builder = app(AccessorBuilder::class, [
+            'table' => $this->table,
+        ]);
+
         $regularInputs = $groups->get('regular', collect())
-            ->map(function ($column) {
-                $value = "\${$this->modelVariableSingular()}->$column";
+            ->map(function ($column) use ($builder) {
+                $value = $builder->simpleAccessor(
+                    $column,
+                    '$' . $this->modelVariableSingular()
+                );
 
-                switch ($this->table->type($column)) {
-                    case Type::DATE:
-                        $value .= '->format(\'Y-m-d\')';
-                        break;
-
-                    case Type::DATETIME:
-                        $value .= '->format(\'Y-m-d\TH:i:s\')';
-                        break;
-
-                    case Type::TIME:
-                        $value .= '->format(\'H:i:s\')';
-                        break;
+                if (Type::dateTimeFormat($this->table->type($column)) !== null) {
+                    $value = $builder->formatAccessor($value, $column);
                 }
 
                 $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
@@ -241,15 +238,6 @@ class TestGenerator extends BaseGenerator
         }
 
         return $inputs->all();
-    }
-
-    private function oneRequiredField()
-    {
-        return $this->fieldsExcept(['id'])->filter(function ($column) {
-            return $this->table->required($column)
-                && ! $this->table->hasDefault($column)
-                && $this->table->type($column) !== Type::BOOLEAN;
-        })->first();
     }
 
     private function oneConstraintField()
@@ -336,7 +324,11 @@ class TestGenerator extends BaseGenerator
                 $type = $this->table->type($column);
 
                 if (($format = Type::dateTimeFormat($type)) !== null) {
-                    $retrieved = "${retrieved}->format($format)";
+                    if ($this->table->required($column)) {
+                        $retrieved .= "->format($format)";
+                    } else {
+                        $retrieved = "$retrieved !== null ? ${retrieved}->format($format) : null";
+                    }
                 }
 
                 return "\$this->assertEquals($expected, $retrieved);";
@@ -486,8 +478,8 @@ class TestGenerator extends BaseGenerator
             ];
         } elseif ($this->table->type($column) === Type::DATETIME) {
             return [
-                '2020-01-01', // TODO: This needs check with MDN on datetime input value format...
-                '2021-12-31',
+                '2020-01-01 00:00:00', // TODO: This needs check with MDN on datetime input value format...
+                '2021-12-31 23:59:59',
             ];
         } elseif ($this->table->type($column) === Type::DATE) {
             return [

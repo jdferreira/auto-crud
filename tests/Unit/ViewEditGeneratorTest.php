@@ -148,7 +148,7 @@ class ViewEditGeneratorTest extends TestCase
         $this->assertStringContainsString('value="{{ old(\'name\') ?? $user->name }}"', $code);
         $this->assertStringContainsString('value="{{ old(\'email\') ?? $user->email }}"', $code);
         $this->assertStringContainsString('value="{{ old(\'birthday\') ?? $user->birthday->format(\'Y-m-d\') }}"', $code);
-        $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up->format(\'H:i:s\') }}"', $code);
+        $this->assertStringContainsString('value="{{ old(\'wake-up\') ?? $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null }}"', $code);
 
         // Boolean fields are a little different
         $this->assertStringContainsString("{{ (old('subscribed') ?? \$user->subscribed) ? 'checked' : '' }}", $code);

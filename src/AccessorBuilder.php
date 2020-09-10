@@ -104,11 +104,11 @@ class AccessorBuilder
         return "$model->$column";
     }
 
-    public function simpleAccessorFormatted(string $column)
+    public function simpleAccessorFormatted(string $column, string $model = null): string
     {
-        $accessor = $this->simpleAccessor($column);
+        $accessor = $this->simpleAccessor($column, $model);
 
-        return static::formatAccessor($accessor, $this->table->type($column));
+        return $this->formatAccessor($accessor, $column);
     }
 
     /**
@@ -154,34 +154,42 @@ class AccessorBuilder
                 return '<a href="' . $route . '">' . $foreignLabel . ' #{{ ' . $simple . ' }}</a>';
             }
         } else {
-            $formatted = static::formatAccessor($simple, $this->table->type($column));
-
-            if (! $this->table->required($column) && $formatted !== $simple) {
-                if ($this->table->type($column) === Type::BOOLEAN) {
-                    $formatted = "($formatted)";
-                }
-
-                $formatted = "$simple !== null ? $formatted : null";
-            }
+            $formatted = $this->formatAccessor($simple, $column);
 
             return "{{ $formatted }}";
         }
     }
 
-    private static function formatAccessor($accessor, $type)
+    /**
+     * Returns a string of code used to format the value obtained with the given
+     * accessor based on the column's specification, namely its type and whether
+     * it is nullable.
+     *
+     * @param string $accessor
+     * @param string $column
+     * @param bool $view
+     *
+     * @return string
+     */
+    public function formatAccessor(string $accessor, string $column): string
     {
+        $type = $this->table->type($column);
+        $required = $this->table->required($column);
+
         switch ($type) {
             case Type::BOOLEAN:
-                return "$accessor ? '&#10004;' : '&#10008;'";
+                return $required
+                    ? "$accessor ? '&#10004;' : '&#10008;'"
+                    : "$accessor !== null ? ($accessor ? '&#10004;' : '&#10008;') : null";
 
             case Type::DATETIME:
-                return "${accessor}->format('Y-m-d H:i:s')";
-
             case Type::DATE:
-                return "${accessor}->format('Y-m-d')";
-
             case Type::TIME:
-                return "${accessor}->format('H:i:s')";
+                $format = Type::dateTimeFormat($type);
+
+                return $required
+                    ? "${accessor}->format($format)"
+                    : "$accessor !== null ? ${accessor}->format($format) : null";
 
             case Type::TEXT:
                 return "\Illuminate\Support\Str::limit(${accessor}, 30)";

@@ -143,7 +143,7 @@ class TestGeneratorTest extends TestCase
                         ->assertSeeText($user->email)
                         ->assertSeeText($user->subscribed ? \'&#10004;\' : \'&#10008;\')
                         ->assertSeeText($user->birthday->format(\'Y-m-d\'))
-                        ->assertSeeText($user->wake_up->format(\'H:i:s\'));
+                        ->assertSeeText($user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null);
                 }
             }
         ', $code);
@@ -189,7 +189,7 @@ class TestGeneratorTest extends TestCase
                 $this->assertHTML($this->xpath("//*[@name=\'name\' and @value=\'%s\']", $user->name), $document);
                 $this->assertHTML($this->xpath("//*[@name=\'email\' and @value=\'%s\']", $user->email), $document);
                 $this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $user->birthday->format(\'Y-m-d\')), $document);
-                $this->assertHTML($this->xpath("//*[@name=\'wake-up\' and @value=\'%s\']", $user->wake_up->format(\'H:i:s\')), $document);
+                $this->assertHTML($this->xpath("//*[@name=\'wake-up\' and @value=\'%s\']", $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null), $document);
 
                 $subscribedChecked = $user->subscribed ? \'@checked\' : \'not(@checked)\';
                 $this->assertHTML("//*[@name=\'subscribed\' and $subscribedChecked]", $document);
@@ -277,7 +277,7 @@ class TestGeneratorTest extends TestCase
                 $this->assertEquals($new[\'email\'], $user->email);
                 $this->assertEquals($new[\'subscribed\'], $user->subscribed);
                 $this->assertEquals($new[\'birthday\'], $user->birthday->format(\'Y-m-d\'));
-                $this->assertEquals($new[\'wake_up\'], $user->wake_up->format(\'H:i:s\'));
+                $this->assertEquals($new[\'wake_up\'], $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null);
             }
         ', $code);
     }
@@ -303,7 +303,7 @@ class TestGeneratorTest extends TestCase
                 $this->assertEquals($new[\'email\'], $user->email);
                 $this->assertEquals($new[\'subscribed\'], $user->subscribed);
                 $this->assertEquals($new[\'birthday\'], $user->birthday->format(\'Y-m-d\'));
-                $this->assertEquals($new[\'wake_up\'], $user->wake_up->format(\'H:i:s\'));
+                $this->assertEquals($new[\'wake_up\'], $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null);
             }
         ', $code);
     }

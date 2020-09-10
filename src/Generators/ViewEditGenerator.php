@@ -4,9 +4,25 @@ namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Str;
+use Ferreira\AutoCrud\AccessorBuilder;
+use Ferreira\AutoCrud\Database\TableInformation;
 
 class ViewEditGenerator extends ViewCreateGenerator
 {
+    /**
+     * @var AccessorBuilder
+     */
+    private $builder;
+
+    public function __construct(TableInformation $table)
+    {
+        parent::__construct($table);
+
+        $this->builder = app(AccessorBuilder::class, [
+            'table' => $table,
+        ]);
+    }
+
     /**
      * Return the output filename where this file will be saved to.
      *
@@ -72,20 +88,12 @@ class ViewEditGenerator extends ViewCreateGenerator
     private function value($column)
     {
         $old = 'old(\'' . str_replace('_', '-', $column) . '\')';
-        $bound = '$' . $this->model() . '->' . $column;
+        // $bound = '$' . $this->model() . '->' . $column;
 
-        switch ($this->table->type($column)) {
-            case Type::DATE:
-                $bound .= '->format(\'Y-m-d\')';
-                break;
+        $bound = $this->builder->simpleAccessor($column);
 
-            case Type::DATETIME:
-                $bound .= '->format(\'Y-m-d\TH:i:s\')';
-                break;
-
-            case Type::TIME:
-                $bound .= '->format(\'H:i:s\')';
-                break;
+        if (Type::dateTimeFormat($this->table->type($column)) !== null) {
+            $bound = $this->builder->formatAccessor($bound, $column);
         }
 
         return "$old ?? $bound";
