@@ -11,8 +11,8 @@ exec(
 exec('php-cs-fixer fix --dry-run >/dev/null 2>&1', $_, $exitCode);
 
 if ($exitCode !== 0) {
-    echo "\033[32m"; // Green text
-    echo 'Code style fixes are required';
+    echo "\033[33m"; // Yellow text
+    echo 'Code style fixes are required: the commit has been aborted';
     echo "\033[m";
     echo PHP_EOL;
 
@@ -25,7 +25,7 @@ if ($exitCode !== 0) {
 }
 
 // Run phpunit before committing and make sure all tests pass
-echo "\033[33m"; // Yellow text
+echo "\033[32m"; // Green text
 echo 'PHPUnit will check the tests. Hold on';
 echo "\033[m";
 echo PHP_EOL . PHP_EOL;
@@ -46,7 +46,7 @@ fclose($pipes[2]);
 
 if (proc_close($pupunitProcess) !== 0) {
     echo "\033[31m"; // Red text
-    echo 'PHPUnit failed';
+    echo 'PHPUnit failed: the commit has been aborted';
     echo "\033[m";
     echo PHP_EOL;
 
