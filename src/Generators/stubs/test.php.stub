@@ -91,6 +91,16 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
+    public function it_starts_the_{{ tablenameSingular }}_create_form_with_the_default_values()
+    {
+        $document = $this->getDOMDocument(
+            $this->get('/{{ tablename }}/create')
+        );
+
+        {{ assertDefaultValuesOnCreateForm }}
+    }
+
+    /** @test */
     public function it_asks_for_all_columns_on_the_edit_form_of_{{ tablenameSingularWithArticle }}()
     {
         ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();

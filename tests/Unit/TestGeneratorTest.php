@@ -3,9 +3,9 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Generators\TestGenerator;
 use Ferreira\AutoCrud\Database\TableInformation;
-use PHPUnit\Framework\ExpectationFailedException;
 
 class TestGeneratorTest extends TestCase
 {
@@ -27,7 +27,7 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_can_generate_a_model()
+    public function it_can_generate_a_test()
     {
         $this->generator('users')->save();
 
@@ -63,25 +63,6 @@ class TestGeneratorTest extends TestCase
                 AssertsHTML,
                 AssertsField;
         ', $code);
-    }
-
-    /** @test */
-    public function it_generates_twelve_tests()
-    {
-        $code = $this->generator('users')->generate();
-
-        preg_match_all('/\/\*\* @test \*\/\n *.*function \w+/', $code, $matches);
-
-        // Note that with preg_match_all, the $matches variable contains matches
-        // and groups:
-        // - $matches[0] is an array of all strings that matched full pattern
-        // - $matches[1] is an array of strings matched by the first
-        //   parenthesized subpattern
-        // - etc.
-        //
-        // In this case, we want only the full matches, so $matches[0]
-
-        $this->assertCount(12, $matches[0]);
     }
 
     /** @test */
@@ -172,6 +153,106 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_starts_the_create_form_with_the_default_values()
+    {
+        $table = $this->mockTable('students', [
+            'nationality' => [
+                'type' => Type::STRING,
+                'default' => 'British',
+            ],
+            'true_blood' => [
+                'type' => Type::BOOLEAN,
+                'default' => true,
+            ],
+            'house' => [
+                'enum' => [
+                    'gryffindor',
+                    'hufflepuff',
+                    'ravenclaw',
+                    'slytherin',
+                ],
+                'default' => 'hufflepuff',
+            ],
+        ]);
+
+        $code = app(TestGenerator::class, [
+            'table' => $table,
+        ])->generate();
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_starts_the_student_create_form_with_the_default_values()
+            {
+                $document = $this->getDOMDocument(
+                    $this->get(\'/students/create\')
+                );
+
+                $this->assertHTML("//input[@name=\'nationality\' and @type=\'text\' and @value=\'British\']", $document);
+                $this->assertHTML("//input[@name=\'true-blood\' and @type=\'checkbox\' and @checked]", $document);
+                $this->assertHTML("//select[@name=\'house\']/option[@name=\'hufflepuff\' and @selected]", $document);
+            }
+        ', $code);
+    }
+
+    /** @test */
+    public function it_handles_datetime_with_current_timestamp_as_default_value()
+    {
+        $table = $this->mockTable('students', [
+            'datetime' => [
+                'default' => 'CURRENT_TIMESTAMP',
+                'type' => Type::DATETIME,
+            ],
+            'date' => [
+                'default' => 'CURRENT_TIMESTAMP',
+                'type' => Type::DATE,
+            ],
+            'hour' => [
+                'default' => 'CURRENT_TIMESTAMP',
+                'type' => Type::TIME,
+            ],
+        ]);
+
+        $code = app(TestGenerator::class, [
+            'table' => $table,
+        ])->generate();
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_starts_the_student_create_form_with_the_default_values()
+            {
+                $document = $this->getDOMDocument(
+                    $this->get(\'/students/create\')
+                );
+
+                \Carbon\Carbon::setTestNow(\'2020-01-01 01:02:03\');
+
+                $this->assertHTML("//input[@name=\'datetime\' and @type=\'datetime\' and @value=\'2020-01-01 01:02:03\']", $document);
+                $this->assertHTML("//input[@name=\'date\' and @type=\'date\' and @value=\'2020-01-01\']", $document);
+                $this->assertHTML("//input[@name=\'hour\' and @type=\'time\' and @value=\'01:02:03\']", $document);
+            }
+        ', $code);
+    }
+
+    /** @test */
+    public function it_does_not_test_default_values_on_the_create_form_when_the_table_has_none()
+    {
+        $table = $this->mockTable('student', [
+            'name' => [
+                'type' => Type::STRING,
+            ],
+        ]);
+
+        $code = app(TestGenerator::class, [
+            'table' => $table,
+        ])->generate();
+
+        $this->assertStringNotContainsString(
+            'public function it_starts_the_user_create_form_with_the_default_values()',
+            $code
+        );
+    }
+
+    /** @test */
     public function it_tests_current_values_on_edit_form()
     {
         $code = $this->generator('users')->generate();
@@ -220,11 +301,22 @@ class TestGeneratorTest extends TestCase
         ', $code);
     }
 
-    // /** @test */
-    // public function it_marks_test_for_old_values_as_skipped_when_all_fields_are_optional()
-    // {
-    //     $this->markTestSkipped('I must refactor the code, perhaps, to make this code actually writable');
-    // }
+    /** @test */
+    public function it_does_not_test_for_old_values_when_all_fields_are_optional()
+    {
+        $table = $this->mockTable('student', [
+            'name' => ['required' => false],
+        ]);
+
+        $code = app(TestGenerator::class, [
+            'table' => $table,
+        ])->generate();
+
+        $this->assertStringNotContainsString(
+            'public function it_starts_the_user_create_form_with_the_default_values()',
+            $code
+        );
+    }
 
     /** @test */
     public function it_tests_required_fields()

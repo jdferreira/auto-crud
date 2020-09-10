@@ -98,10 +98,10 @@ abstract class BaseGenerator
      */
     public function generate(): string
     {
-        return StubRenderer::render(
+        return $this->postProcess(StubRenderer::render(
             $this->readStub(),
             $this->replacements()
-        );
+        ));
     }
 
     /**
@@ -192,4 +192,17 @@ abstract class BaseGenerator
      * @return string
      */
     abstract protected function filename(): string;
+
+    /**
+     * Tweak the final result from rendering the stub with the replacements.
+     * Defaults to no-op.
+     *
+     * @param string $code
+     *
+     * @return string
+     */
+    protected function postProcess(string $code): string
+    {
+        return $code;
+    }
 }

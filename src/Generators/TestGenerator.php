@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Carbon\Carbon;
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
@@ -38,6 +39,7 @@ class TestGenerator extends BaseGenerator
             'tablenameSingularWithArticle' => $this->tablenameSingularWithArticle(),
             'tablenameSingular' => $this->tablenameSingular(),
             'assertHTMLOnForm' => $this->assertHTMLOnForm(),
+            'assertDefaultValuesOnCreateForm' => $this->assertDefaultValuesOnCreateForm(),
             'assertEditFormHasValues' => $this->assertEditFormHasValues(),
             'oneConstraintField' => $this->oneConstraintField(),
             'oneInvalidValue' => $this->oneInvalidValue(),
@@ -45,6 +47,29 @@ class TestGenerator extends BaseGenerator
             'assertNewEqualsModel' => $this->assertNewEqualsModel(),
             'assertFields' => $this->assertFields(),
         ];
+    }
+
+    protected function postProcess(string $code): string
+    {
+        $placeholder = $this->tablenameSingular();
+
+        $countDefaultFields = $this->fields()->filter(function ($column) {
+            return $this->table->hasDefault($column);
+        })->count();
+
+        if ($countDefaultFields === 0) {
+            $code = $this->removeTest("it_starts_the_${placeholder}_create_form_with_the_default_values", $code);
+        }
+
+        $countRequiredFields = $this->fields()->filter(function ($column) {
+            return $this->table->required($column);
+        })->count();
+
+        if ($countRequiredFields === 0) {
+            $code = $this->removeTest("it_keeps_old_values_on_unsuccessful_${placeholder}_update", $code);
+        }
+
+        return $code;
     }
 
     private function modelNamespace(): string
@@ -161,6 +186,70 @@ class TestGenerator extends BaseGenerator
             ->all();
     }
 
+    public function assertDefaultValuesOnCreateForm()
+    {
+        $hasDates = false;
+
+        $lines = $this->fieldsExcept(['id'])
+            ->map(function ($column) use (&$hasDates) {
+                if (! $this->table->hasDefault($column)) {
+                    return;
+                }
+
+                $type = $this->table->type($column);
+
+                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+
+                $value = $this->table->default($column);
+
+                if ($type === Type::ENUM || $this->table->reference($column) !== null) {
+                    $xpath = "//select[@name='$name']/option[@name='$value' and @selected]";
+                } elseif ($type === Type::TEXT) {
+                    $xpath = "//textarea[@name='$name' and text()='$value']";
+                } elseif ($type === Type::BOOLEAN) {
+                    $checked = $value ? '@checked' : 'not(@checked)';
+
+                    $xpath = "//input[@name='$name' and @type='checkbox' and $checked]";
+                } else {
+                    if ($column === 'email' && $type === Type::STRING) {
+                        $type = 'email';
+                    } elseif ($type === Type::DATE) {
+                        $type = 'date';
+                        $hasDates = true;
+                        $value = '2020-01-01';
+                    } elseif ($type === Type::TIME) {
+                        $type = 'time';
+                        $hasDates = true;
+                        $value = '01:02:03';
+                    } elseif ($type === Type::DATETIME) {
+                        $type = 'datetime';
+                        $hasDates = true;
+                        $value = '2020-01-01 01:02:03';
+                    } else {
+                        $type = 'text';
+                    }
+
+                    $xpath = "//input[@name='$name' and @type='$type' and @value='$value']";
+                }
+
+                return '$this->assertHTML("' . $xpath . '", $document);';
+            })
+            ->filter()
+            ->all();
+
+        if ($hasDates) {
+            $lines = array_merge(
+                [
+                    '\Carbon\Carbon::setTestNow(\'2020-01-01 01:02:03\');',
+                    '',
+                ],
+                $lines
+            );
+        }
+
+        return $lines;
+    }
+
     private function assertEditFormHasValues()
     {
         $groups = $this->fieldsExcept(['id'])->groupBy(function ($column) {
@@ -274,6 +363,13 @@ class TestGenerator extends BaseGenerator
     {
         // Let's generate a value that is invalid for the constraint field.
         $column = $this->oneConstraintField;
+
+        // If no constraint column exists, this method is not meaningful (and
+        // the code that is generated based on its returned value is going to be
+        // cut anyway). As such, just return null and don't worry about it.
+        if ($column === null) {
+            return null;
+        }
 
         // If the field is required without a default value, just send an empty string
         if ($this->table->required($column) && ! $this->table->hasDefault($column)) {
@@ -577,5 +673,27 @@ class TestGenerator extends BaseGenerator
 
             return "'$value'";
         }
+    }
+
+    private function removeTest(string $testName, string $code): string
+    {
+        $lines = explode("\n", $code);
+
+        for ($i = 0; $i < count($lines); $i++) {
+            if (strpos($lines[$i], $testName) !== false) {
+                $start = $i - 1; // Remove the "/** @test */" line as well
+            } elseif (isset($start) && $lines[$i] === '    }') {
+                $end = $i;
+                break;
+            }
+        }
+
+        if (isset($start)) {
+            for ($i = $start; $i < $end; $i++) {
+                unset($lines[$i]);
+            }
+        }
+
+        return implode("\n", $lines);
     }
 }
