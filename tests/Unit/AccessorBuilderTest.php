@@ -10,6 +10,28 @@ use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class AccessorBuilderTest extends TestCase
 {
+    /**
+     * Mocks the `DatabaseInformation` such that we can specify the label column
+     * of any specific table. Note that only the last call to this method takes
+     * effect, as it effectively rebind the DatabaseInformation instance in the
+     * application
+     *
+     * @param string $tablename
+     * @param string|null $column
+     */
+    private function mockLabelColumn(string $tablename, ?string $column)
+    {
+        $this->app->bind(DatabaseInformation::class, function () use ($tablename, $column) {
+            return $this->mock(DatabaseInformation::class, function ($mock) use ($tablename, $column) {
+                $mock->shouldReceive('table')->with($tablename)->andReturn(
+                    $this->mock(TableInformation::class, function ($mock) use ($column) {
+                        $mock->shouldReceive('labelColumn')->with()->andReturn($column);
+                    })
+                );
+            });
+        });
+    }
+
     /** @test */
     public function it_builds_labels_and_accessor()
     {
@@ -53,20 +75,7 @@ class AccessorBuilderTest extends TestCase
             ],
         ]);
 
-        // Let's mock the DatabaseInformation class, so that we can test the
-        // case where the column `team_id` refers to the column `id` on the
-        // table `teams`. Note that the label column is always a string, as per
-        // the definition in `TableInformation::computeLabelColumn`.
-
-        $this->app->bind(DatabaseInformation::class, function () {
-            return $this->mock(DatabaseInformation::class, function ($mock) {
-                $mock->shouldReceive('table')->with('teams')->andReturn(
-                    $this->mock(TableInformation::class, function ($mock) {
-                        $mock->shouldReceive('labelColumn')->with()->andReturn('name');
-                    })
-                );
-            });
-        });
+        $this->mockLabelColumn('teams', 'name');
 
         $builder = new AccessorBuilder($table);
 
@@ -82,20 +91,7 @@ class AccessorBuilderTest extends TestCase
             ],
         ]);
 
-        // Let's mock the DatabaseInformation class, so that we can test the
-        // case where the column `team_id` refers to the column `id` on the
-        // table `teams`. Note that the label column is always a string, as per
-        // the definition in `TableInformation::computeLabelColumn`.
-
-        $this->app->bind(DatabaseInformation::class, function () {
-            return $this->mock(DatabaseInformation::class, function ($mock) {
-                $mock->shouldReceive('table')->with('shirts')->andReturn(
-                    $this->mock(TableInformation::class, function ($mock) {
-                        $mock->shouldReceive('labelColumn')->with()->andReturn(null);
-                    })
-                );
-            });
-        });
+        $this->mockLabelColumn('shirts', null);
 
         $builder = new AccessorBuilder($table);
 
@@ -264,15 +260,7 @@ class AccessorBuilderTest extends TestCase
             ],
         ]);
 
-        $this->app->bind(DatabaseInformation::class, function () {
-            return $this->mock(DatabaseInformation::class, function ($mock) {
-                $mock->shouldReceive('table')->with('teams')->andReturn(
-                    $this->mock(TableInformation::class, function ($mock) {
-                        $mock->shouldReceive('labelColumn')->with()->andReturn(null);
-                    })
-                );
-            });
-        });
+        $this->mockLabelColumn('teams', null);
 
         $builder = new AccessorBuilder($table);
 
