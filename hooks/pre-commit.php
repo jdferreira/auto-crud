@@ -25,6 +25,11 @@ if ($exitCode !== 0) {
 }
 
 // Run phpunit before committing and make sure all tests pass
+echo "\033[33m"; // Yellow text
+echo 'PHPUnit will check the tests. Hold on';
+echo "\033[m";
+echo PHP_EOL . PHP_EOL;
+
 $specs = [
     0 => ['file', '/dev/null', 'r'],
     1 => ['pipe', 'w'],
