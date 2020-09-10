@@ -138,11 +138,11 @@ class AccessorBuilder
         $simple = $this->simpleAccessor($column);
 
         if (($foreignTable = $this->refersTo($column)) !== null) {
-            $foreignModel = Str::camel(Str::singular($foreignTable));
+            $routeParameter = Str::singular($foreignTable);
 
             $idAccessor = '$' . $this->modelSingular() . "->$column";
 
-            $route = "{{ route('$foreignTable.show', ['$foreignModel' => $idAccessor]) }}";
+            $route = "{{ route('$foreignTable.show', ['$routeParameter' => $idAccessor]) }}";
 
             if ($this->db->table($foreignTable)->labelColumn() !== null) {
                 return '<a href="' . $route . '">{{ ' . $simple . ' }}</a>';

@@ -14,7 +14,7 @@ class AccessorBuilderTest extends TestCase
      * Mocks the `DatabaseInformation` such that we can specify the label column
      * of any specific table. Note that only the last call to this method takes
      * effect, as it effectively rebind the DatabaseInformation instance in the
-     * application
+     * application.
      *
      * @param string $tablename
      * @param string|null $column
@@ -267,6 +267,25 @@ class AccessorBuilderTest extends TestCase
         $this->assertEquals(
             '<a href="{{ route(\'teams.show\', [\'team\' => $player->team_id]) }}">Team #{{ $player->team_id }}</a>',
             $builder->viewAccessor('team_id')
+        );
+    }
+
+    /** @test */
+    public function it_snake_cases_route_parameters()
+    {
+        $table = $this->mockTable('student', [
+            'school_id' => [
+                'reference' => ['magical_schools', 'id'],
+            ],
+        ]);
+
+        $this->mockLabelColumn('magical_schools', null);
+
+        $builder = new AccessorBuilder($table);
+
+        $this->assertEquals(
+            '<a href="{{ route(\'magical_schools.show\', [\'magical_school\' => $student->school_id]) }}">Magical school #{{ $student->school_id }}</a>',
+            $builder->viewAccessor('school_id')
         );
     }
 
