@@ -68,8 +68,7 @@ class ViewShowGenerator extends BaseGenerator
     protected function visibleColumns()
     {
         return collect($this->table->columns())->filter(function ($column) {
-            return ! in_array($column, ['created_at', 'updated_at', 'deleted_at'])
-                && $this->table->type($column) !== Type::BINARY;
+            return ! in_array($column, ['created_at', 'updated_at', 'deleted_at']);
         });
     }
 

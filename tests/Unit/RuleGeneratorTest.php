@@ -109,10 +109,9 @@ class RuleGeneratorTest extends TestCase
         $table = $this->mockTable('tablename', [
             'string' => ['type' => Type::STRING, 'required' => true],
             'text' => ['type' => Type::TEXT, 'required' => true],
-            'binary' => ['type' => Type::BINARY, 'required' => true],
         ]);
 
-        foreach (['string', 'text', 'binary'] as $column) {
+        foreach (['string', 'text'] as $column) {
             $rule = new RuleGenerator($table, $column);
 
             $this->assertEquals(["'required'"], $rule->makeRules());

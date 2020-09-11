@@ -17,7 +17,6 @@ class CreatePaymentMethodsTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->text('primary');
-            $table->json('metadata');
             $table->timestamps();
         });
     }

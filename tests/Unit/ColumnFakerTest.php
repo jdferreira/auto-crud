@@ -69,7 +69,6 @@ class ColumnFakerTest extends TestCase
             Type::DECIMAL => "numerify('%##.##')",
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
-            Type::BINARY => 'passthrough(random_bytes(1024))',
             // Type::ENUM uses a different mechanism
         ];
 

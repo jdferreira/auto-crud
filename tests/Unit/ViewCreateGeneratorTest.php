@@ -100,7 +100,6 @@ class ViewCreateGeneratorTest extends TestCase
         $code = $this->generator('avatars')->generate();
         $this->assertStringContainsString('<input name="user-id" required type="text">', $code);
         $this->assertStringContainsString('<input name="file" required type="text">', $code);
-        $this->assertStringContainsString('<textarea name="data" required></textarea>', $code);
 
         $code = $this->generator('products')->generate();
         $this->assertCodeContains('

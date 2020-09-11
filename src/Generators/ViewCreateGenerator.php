@@ -151,7 +151,6 @@ class ViewCreateGenerator extends BaseGenerator
                 // TODO: This has been deprecated in HTML! Do we need to adapt?
                 return $this->regularInput($column, 'datetime', $attrs);
 
-            case Type::BINARY:
             case Type::TEXT:
                 return $this->textareaInput($column, $attrs);
 

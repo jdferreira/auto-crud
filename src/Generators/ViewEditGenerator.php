@@ -47,11 +47,9 @@ class ViewEditGenerator extends ViewCreateGenerator
 
     protected function regularInput(string $column, string $inputType, string $attrs)
     {
-        if (! in_array($this->table->type($column), [Type::BINARY, Type::ENUM])) {
-            $value = $this->value($column);
+        $value = $this->value($column);
 
-            $attrs = "$attrs value=\"{{ $value }}\"";
-        }
+        $attrs = "$attrs value=\"{{ $value }}\"";
 
         return "<input $attrs type=\"$inputType\">";
     }

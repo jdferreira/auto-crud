@@ -111,7 +111,6 @@ class ColumnFaker
             Type::DECIMAL => 'numerify(\'%##.##\')',
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
-            Type::BINARY => 'passthrough(random_bytes(1024))',
             // Type::ENUM was already processed before this `default` method was called
         ];
 

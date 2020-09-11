@@ -243,7 +243,11 @@ class TableInformation
     }
 
     /**
-     * Get the Doctrine's string representation of the column's type.
+     * Get the type of the column. This is given in terms of the constants
+     * defined in `Type`.
+     *
+     * @see \Ferreira\AutoCrud\Database\Type
+     * TODO: Move the Type class into the Database namespace
      *
      * @param  string  $column
      * @return null|string
@@ -289,12 +293,10 @@ class TableInformation
             case DoctrineType::TEXT:
                 return Type::TEXT;
 
-            case DoctrineType::BINARY:
-            case DoctrineType::BLOB:
-                return Type::BINARY;
-
             default:
-                return Type::UNRECOGNIZED;
+                throw new DatabaseException(
+                    "Table $this->name contains an unrecognized column type: $type"
+                );
         }
     }
 

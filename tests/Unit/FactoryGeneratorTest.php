@@ -109,7 +109,6 @@ class FactoryGeneratorTest extends TestCase
                     return factory(User::class)->create()->id;
                 },
                 'file' => \$faker->file,
-                'data' => \$faker->passthrough(random_bytes(1024)),
             ];
         ", $code);
     }

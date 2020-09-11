@@ -101,7 +101,6 @@ class ViewEditGeneratorTest extends TestCase
         $code = $this->generator('avatars')->generate();
         $this->assertRegExp('/<input name="user-id" required value=".*" type="text">/', $code);
         $this->assertRegExp('/<input name="file" required value=".*" type="text">/', $code);
-        $this->assertRegExp('/<textarea name="data" required>/', $code);
 
         $code = $this->generator('products')->generate();
         // We split the code contains assertion in two parts so that we are not

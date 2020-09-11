@@ -259,7 +259,7 @@ class TestGenerator extends BaseGenerator
                 return 'checkbox';
             } elseif ($type === Type::ENUM) {
                 return 'select';
-            } elseif ($type === Type::BINARY || $type === Type::TEXT) {
+            } elseif ($type === Type::TEXT) {
                 return 'textarea';
             } else {
                 return 'regular';
@@ -593,11 +593,6 @@ class TestGenerator extends BaseGenerator
                 '13.37',
                 '-12.34',
             ];
-        } elseif ($this->table->type($column) === Type::BINARY) {
-            return [
-                'BINARY',
-                'BINARY_DATA',
-            ];
         } elseif ($this->table->type($column) === Type::ENUM) {
             return $this->table->getEnumValid($column);
         }
@@ -614,8 +609,6 @@ class TestGenerator extends BaseGenerator
             return []; // All strings are allowed
         } elseif ($this->table->type($column) === Type::TEXT) {
             return []; // All strings are allowed
-        } elseif ($this->table->type($column) === Type::BINARY) {
-            return []; // All binary data is valid
         } elseif ($this->table->type($column) === Type::INTEGER) {
             return ['3.14', 'not-a-number'];
         } elseif ($this->table->type($column) === Type::BOOLEAN) {
