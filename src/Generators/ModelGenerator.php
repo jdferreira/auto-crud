@@ -45,7 +45,7 @@ class ModelGenerator extends BaseGenerator
     protected function replacements(): array
     {
         return [
-            'namespace' => $this->namespace(),
+            'namespace' => $this->modelNamespace(),
             'class' => $this->class(),
             'importSoftDeletesTrait' => $this->importSoftDeletes(),
             'disableTimestamps' => $this->disableTimestamps(),
@@ -56,15 +56,6 @@ class ModelGenerator extends BaseGenerator
             'relationships' => $this->relationships(),
             'path' => $this->path(),
         ];
-    }
-
-    protected function namespace()
-    {
-        if ($this->dir === '') {
-            return 'App';
-        } else {
-            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
     }
 
     private function class()

@@ -170,6 +170,15 @@ abstract class BaseGenerator
         }
     }
 
+    public function modelNamespace()
+    {
+        if ($this->dir === '') {
+            return 'App';
+        } else {
+            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
+        }
+    }
+
     /**
      * Return the filename containing the stub this generator is based on.
      *

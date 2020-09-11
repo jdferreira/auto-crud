@@ -47,15 +47,6 @@ class FactoryGenerator extends BaseGenerator
         ];
     }
 
-    private function modelNamespace(): string
-    {
-        if ($this->dir === '') {
-            return 'App';
-        } else {
-            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
-    }
-
     private function modelClass()
     {
         return Str::studly(Str::singular($this->table->name()));
@@ -109,22 +100,12 @@ class FactoryGenerator extends BaseGenerator
         $result = [];
 
         foreach ($this->referencedTables as $table) {
-            $namespace = $this->namespace();
-            $class = Str::singular(Str::ucfirst(Str::camel($table)));
+            $classname = $this->modelNamespace() . '\\' . Str::studly(Str::singular($table));
 
-            $result[] = "use $namespace\\$class;";
+            $result[] = "use $classname;";
         }
 
         return $result;
-    }
-
-    private function namespace()
-    {
-        if ($this->dir === '') {
-            return 'App';
-        } else {
-            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
     }
 
     public function fullModel()

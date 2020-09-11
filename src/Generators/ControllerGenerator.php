@@ -42,15 +42,6 @@ class ControllerGenerator extends BaseGenerator
         return Str::studly(Str::singular($this->table->name())) . 'Controller';
     }
 
-    private function modelNamespace(): string
-    {
-        if ($this->dir === '') {
-            return 'App';
-        } else {
-            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
-    }
-
     private function modelClass()
     {
         return Str::studly(Str::singular($this->table->name()));

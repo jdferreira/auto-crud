@@ -31,19 +31,6 @@ class ControllerGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_detects_model_namespace()
-    {
-        $code = $this->generator(
-            $this->mockTable('students')
-        )->setModelDirectory('Models')->generate();
-
-        $this->assertStringContainsString(
-            'use App\Models\Student;',
-            $code
-        );
-    }
-
-    /** @test */
     public function it_uses_the_tablename_to_name_the_controller()
     {
         $code = $this->generator(

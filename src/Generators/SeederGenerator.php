@@ -44,13 +44,9 @@ class SeederGenerator extends BaseGenerator
             return '';
         }
 
-        if ($this->dir === '') {
-            $namespace = 'App';
-        } else {
-            $namespace = 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
+        $classname = $this->modelNamespace() . '\\' . $this->modelClass();
 
-        return "use $namespace\\" . $this->modelClass() . ';';
+        return "use $classname;";
     }
 
     private function modelClass()

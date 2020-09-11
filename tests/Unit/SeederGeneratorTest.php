@@ -39,20 +39,6 @@ class SeederGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_detects_model_namespace()
-    {
-        $this->assertStringContainsString(
-            'use App\User;',
-            $this->generator('users')->generate()
-        );
-
-        $this->assertStringContainsString(
-            'use App\Models\User;',
-            $this->generator('users')->setModelDirectory('Models')->generate()
-        );
-    }
-
-    /** @test */
     public function it_defines_a_seeder()
     {
         $code = $this->generator('products')->generate();

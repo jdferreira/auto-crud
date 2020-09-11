@@ -26,4 +26,24 @@ class BaseGeneratorTest extends TestCase
             BaseGenerator::removeDefaults($args, $defaults)
         );
     }
+
+    /** @test */
+    public function it_detects_model_namespace()
+    {
+        $table = $this->mockTable('players');
+
+        $stub = $this->getMockForAbstractClass(
+            BaseGenerator::class,
+            [$table]
+        );
+
+        $this->assertEquals('App', $stub->modelNamespace());
+
+        $stub = $this->getMockForAbstractClass(
+            BaseGenerator::class,
+            [$table]
+        )->setModelDirectory('Models');
+
+        $this->assertEquals('App\\Models', $stub->modelNamespace());
+    }
 }

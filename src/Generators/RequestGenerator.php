@@ -114,12 +114,8 @@ class RequestGenerator extends BaseGenerator
             return '';
         }
 
-        $namespace = $this->dir === ''
-            ? 'App'
-            : 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
+        $classname = $this->modelNamespace() . '\\' . $this->modelClass();
 
-        $class = $this->modelClass();
-
-        return "use $namespace\\$class;";
+        return "use $classname;";
     }
 }

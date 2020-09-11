@@ -72,15 +72,6 @@ class TestGenerator extends BaseGenerator
         return $code;
     }
 
-    private function modelNamespace(): string
-    {
-        if ($this->dir === '') {
-            return 'App';
-        } else {
-            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
-    }
-
     private function modelClass()
     {
         return Str::studly(Str::singular($this->table->name()));
