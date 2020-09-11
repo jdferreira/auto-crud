@@ -104,18 +104,6 @@ class ColumnFakerTest extends TestCase
     }
 
     /** @test */
-    public function it_defaults_to_the_string_null()
-    {
-        $table = $this->mockTable('tablename', [
-            'column' => ['type' => Type::UNRECOGNIZED],
-        ]);
-
-        $faker = new ColumnFaker($table, 'column');
-
-        $this->assertEquals('null', $faker->fake());
-    }
-
-    /** @test */
     public function it_uses_faker_methods_when_faker_has_a_method_with_the_name_of_the_column()
     {
         // Complete equivalence

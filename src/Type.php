@@ -17,8 +17,6 @@ class Type
     public const TEXT = 'text';
     public const ENUM = 'enum';
 
-    public const UNRECOGNIZED = 'unrecognized';
-
     public static function dateTimeFormat(string $type): ?string
     {
         if ($type === self::DATETIME) {

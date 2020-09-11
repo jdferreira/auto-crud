@@ -103,16 +103,6 @@ class TableInformationTest extends TestCase
         $this->assertEquals(Type::DATETIME, $table->type('created_at'));
 
         $this->assertNull($table->type('non_existing_column'));
-
-        // Note that the following does not work correctly on SQLite, as the
-        // types in there are simplified (JSON columns are actually text
-        // columns). For this reason, the tests are not executed at the moment.
-        // I first need to find a way to test things in specific database
-        // drivers.
-        if (false) {
-            $table = new TableInformation('payment_methods');
-            $this->assertEquals(Type::UNRECOGNIZED, $table->type('uuid'));
-        }
     }
 
     /** @test */

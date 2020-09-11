@@ -294,6 +294,7 @@ class TableInformation
                 return Type::TEXT;
 
             default:
+                // TODO: Add a test for this throw
                 throw new DatabaseException(
                     "Table $this->name contains an unrecognized column type: $type"
                 );
