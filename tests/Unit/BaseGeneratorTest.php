@@ -46,4 +46,17 @@ class BaseGeneratorTest extends TestCase
 
         $this->assertEquals('App\\Models', $stub->modelNamespace());
     }
+
+    /** @test */
+    public function it_knows_the_model_class()
+    {
+        $table = $this->mockTable('players');
+
+        $stub = $this->getMockForAbstractClass(
+            BaseGenerator::class,
+            [$table]
+        );
+
+        $this->assertEquals('Player', $stub->modelClass());
+    }
 }

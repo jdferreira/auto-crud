@@ -5,7 +5,7 @@ namespace {{ namespace }};
 use Illuminate\Database\Eloquent\Model;
 {{ importSoftDeletesTrait }}
 
-class {{ class }} extends Model
+class {{ modelClass }} extends Model
 {
     {{ useSoftDeletesTrait }}
 

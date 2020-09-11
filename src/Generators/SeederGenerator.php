@@ -21,7 +21,7 @@ class SeederGenerator extends BaseGenerator
     protected function filename(): string
     {
         return database_path(
-            'seeds/' . Str::studly(Str::singular($this->table->name())) . 'Seeder.php'
+            'seeds/' . $this->modelClass() . 'Seeder.php'
         );
     }
 
@@ -47,11 +47,6 @@ class SeederGenerator extends BaseGenerator
         $classname = $this->modelNamespace() . '\\' . $this->modelClass();
 
         return "use $classname;";
-    }
-
-    private function modelClass()
-    {
-        return Str::studly(Str::singular($this->table->name()));
     }
 
     private function useSeeder()

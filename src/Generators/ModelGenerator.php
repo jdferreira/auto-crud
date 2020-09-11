@@ -26,7 +26,7 @@ class ModelGenerator extends BaseGenerator
      */
     protected function filename(): string
     {
-        $filename = $this->class() . '.php';
+        $filename = $this->modelClass() . '.php';
 
         if ($this->dir === '') {
             $parts = [$filename];
@@ -46,7 +46,7 @@ class ModelGenerator extends BaseGenerator
     {
         return [
             'namespace' => $this->modelNamespace(),
-            'class' => $this->class(),
+            'modelClass' => $this->modelClass(),
             'importSoftDeletesTrait' => $this->importSoftDeletes(),
             'disableTimestamps' => $this->disableTimestamps(),
             'useSoftDeletesTrait' => $this->useSoftDeletes(),
@@ -56,11 +56,6 @@ class ModelGenerator extends BaseGenerator
             'relationships' => $this->relationships(),
             'path' => $this->path(),
         ];
-    }
-
-    private function class()
-    {
-        return Str::studly(Str::singular($this->table->name()));
     }
 
     protected function importSoftDeletes()

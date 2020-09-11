@@ -20,7 +20,7 @@ class ControllerGenerator extends BaseGenerator
      */
     protected function filename(): string
     {
-        return app_path('Http/Controllers/' . $this->class() . '.php');
+        return app_path('Http/Controllers/' . $this->modelClass() . 'Controller.php');
     }
 
     /**
@@ -35,16 +35,6 @@ class ControllerGenerator extends BaseGenerator
             'modelSingular' => $this->modelSingular(),
             'modelPlural' => $this->modelPlural(),
         ];
-    }
-
-    private function class()
-    {
-        return Str::studly(Str::singular($this->table->name())) . 'Controller';
-    }
-
-    private function modelClass()
-    {
-        return Str::studly(Str::singular($this->table->name()));
     }
 
     protected function modelSingular()

@@ -27,7 +27,7 @@ class FactoryGenerator extends BaseGenerator
     protected function filename(): string
     {
         return database_path(
-            'factories/' . Str::studly(Str::singular($this->table->name())) . 'Factory.php'
+            'factories/' . $this->modelClass() . 'Factory.php'
         );
     }
 
@@ -45,11 +45,6 @@ class FactoryGenerator extends BaseGenerator
             'otherUses' => $this->otherUses(),
             'fullModel' => $this->fullModel(),
         ];
-    }
-
-    private function modelClass()
-    {
-        return Str::studly(Str::singular($this->table->name()));
     }
 
     private function fakes(): array

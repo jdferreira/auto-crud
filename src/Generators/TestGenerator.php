@@ -72,11 +72,6 @@ class TestGenerator extends BaseGenerator
         return $code;
     }
 
-    private function modelClass()
-    {
-        return Str::studly(Str::singular($this->table->name()));
-    }
-
     private function modelClassPlural()
     {
         return Str::studly($this->table->name());

@@ -86,7 +86,6 @@ class ViewEditGenerator extends ViewCreateGenerator
     private function value($column)
     {
         $old = 'old(\'' . str_replace('_', '-', $column) . '\')';
-        // $bound = '$' . $this->model() . '->' . $column;
 
         $bound = $this->builder->simpleAccessor($column);
 

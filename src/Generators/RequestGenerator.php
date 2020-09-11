@@ -47,11 +47,6 @@ class RequestGenerator extends BaseGenerator
         // actually generate the rules.
     }
 
-    private function modelClass()
-    {
-        return Str::studly(Str::singular($this->table->name()));
-    }
-
     private function rules()
     {
         $this->needsModel = false;
