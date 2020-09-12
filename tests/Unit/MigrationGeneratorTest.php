@@ -39,7 +39,10 @@ class MigrationGeneratorTest extends TestCase
         $this->assertEquals(0, $exitCode, 'File contains syntax errors:' . PHP_EOL . $errors);
     }
 
-    /** @test */
+    /**
+     * @test
+     * @doesNotPerformAssertions
+     */
     public function it_generates_a_valid_migration_file()
     {
         $dir = '/tmp/xyz';
@@ -54,7 +57,5 @@ class MigrationGeneratorTest extends TestCase
             '--path' => $dir,
             '--realpath' => true,
         ]);
-
-        $this->assertTrue(true); // If we reached this, we have successfully ran the test
     }
 }
