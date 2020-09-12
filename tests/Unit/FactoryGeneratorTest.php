@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use Mockery;
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Generators\ColumnFaker;

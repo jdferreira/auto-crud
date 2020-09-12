@@ -251,7 +251,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function mockTable(string $tablename, array $columns = [])
     {
-        return $this->mock(TableInformation::class, function ($mock) use ($tablename, $columns) {
+        $mock = $this->mock(TableInformation::class, function ($mock) use ($tablename, $columns) {
             $primaryKey = null;
 
             $mock->shouldReceive('has')->andReturn(false);
@@ -259,7 +259,7 @@ abstract class TestCase extends BaseTestCase
             foreach ($columns as $column => $properties) {
                 $mock->shouldReceive('has')->with($column)->andReturn(true);
 
-                if (Arr::get($properties, 'autoincrement', false)) {
+                if (Arr::get($properties, 'primaryKey', false)) {
                     $primaryKey = $column;
                 }
 
@@ -300,7 +300,14 @@ abstract class TestCase extends BaseTestCase
             $mock->shouldReceive('name')->andReturn($tablename);
             $mock->shouldReceive('primaryKey')->andReturn($primaryKey);
             $mock->shouldReceive('columns')->andReturn(array_keys($columns));
-            $mock->shouldReceive('softDeletes')->andReturn(Arr::get($columns, 'deleted_at', false));
+            $mock->shouldReceive('softDeletes')->andReturn(Arr::has($columns, 'deleted_at'));
         });
+
+        // We do not want to count the expectations of this mock as assertions
+        // towards the test being executed. This method is just creates the
+        // actual stub and does not have any impact on the expectations.
+        $this->addToAssertionCount(-$mock->mockery_getExpectationCount());
+
+        return $mock;
     }
 }

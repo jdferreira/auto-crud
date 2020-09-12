@@ -19,10 +19,10 @@ class RuleGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_ignores_autoincrement_columns()
+    public function it_ignores_primary_key_columns()
     {
         $table = $this->mockTable('tablename', [
-            'id' => ['autoincrement' => true],
+            'id' => ['primaryKey' => true],
         ]);
 
         $rule = new RuleGenerator($table, 'id');
