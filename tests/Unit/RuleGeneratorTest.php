@@ -9,19 +9,9 @@ use Ferreira\AutoCrud\Validation\RuleGenerator;
 class RuleGeneratorTest extends TestCase
 {
     /** @test */
-    public function it_accepts_a_table_information_and_a_column_name_as_arguments()
-    {
-        $table = $this->mockTable('tablename');
-
-        $faker = new RuleGenerator($table, 'column');
-
-        $this->assertInstanceOf(RuleGenerator::class, $faker);
-    }
-
-    /** @test */
     public function it_ignores_primary_key_columns()
     {
-        $table = $this->mockTable('tablename', [
+        $table = $this->mockTable('students', [
             'id' => ['primaryKey' => true],
         ]);
 
@@ -33,7 +23,11 @@ class RuleGeneratorTest extends TestCase
     /** @test */
     public function it_ignores_timestamp_columns_and_soft_deleted_at()
     {
-        $table = $this->mockTable('tablename');
+        $table = $this->mockTable('students', [
+            'created_at' => ['type' => Type::DATETIME],
+            'updated_at' => ['type' => Type::DATETIME],
+            'deleted_at' => ['type' => Type::DATETIME],
+        ]);
 
         foreach (['created_at', 'updated_at', 'deleted_at'] as $column) {
             $rule = new RuleGenerator($table, $column);
@@ -45,114 +39,82 @@ class RuleGeneratorTest extends TestCase
     /** @test */
     public function it_detects_required_or_nullable()
     {
-        $table = $this->mockTable('tablename', [
+        $table = $this->mockTable('students', [
             'name' => ['required' => true],
-            'email' => ['required' => false],
+            'patronus_form' => ['required' => false],
         ]);
 
-        $rule = new RuleGenerator($table, 'name');
-        $this->assertContains("'required'", $rule->makeRules());
-
-        $rule = new RuleGenerator($table, 'email');
-        $this->assertContains("'nullable'", $rule->makeRules());
+        $this->assertRulesContain($table, 'name', "'required'");
+        $this->assertRulesContain($table, 'patronus_form', "'nullable'");
     }
 
     /** @test */
     public function it_knows_of_email_and_uuid_column_names()
     {
-        $table = $this->mockTable('tablename', [
+        $table = $this->mockTable('students', [
             'email' => [],
             'uuid' => [],
         ]);
 
-        $customs = [
-            'email' => 'email:rfc',
-            'uuid' => 'uuid',
-        ];
-
-        foreach ($customs as $key => $value) {
-            $rule = new RuleGenerator($table, $key);
-
-            $this->assertContains("'$value'", $rule->makeRules());
-        }
+        $this->assertRulesContain($table, 'email', "'email:rfc'");
+        $this->assertRulesContain($table, 'uuid', "'uuid'");
     }
 
     /** @test */
     public function it_generates_rules_for_column_types()
     {
-        $validation = [
-            Type::INTEGER => 'integer',
-            Type::BOOLEAN => 'boolean',
-            Type::DATETIME => 'date',
-            Type::DATE => 'date_format:Y-m-d',
-            Type::TIME => 'date_format:H:i:s',
-        ];
-
-        $table = $this->mockTable('tablename', [
-            'integer' => ['type' => Type::INTEGER],
-            'boolean' => ['type' => Type::BOOLEAN],
-            'datetime' => ['type' => Type::DATETIME],
-            'date' => ['type' => Type::DATE],
-            'time' => ['type' => Type::TIME],
+        $table = $this->mockTable('students', [
+            'birthday' => ['type' => Type::DATE],
+            'height' => ['type' => Type::DECIMAL],
+            'has_pet' => ['type' => Type::BOOLEAN],
+            'current_year' => ['type' => Type::INTEGER],
+            'letter_sent_at' => ['type' => Type::DATETIME],
+            'preferred_lunch_time' => ['type' => Type::TIME],
         ]);
 
-        foreach ($validation as $key => $value) {
-            $rule = new RuleGenerator($table, $key);
-
-            $this->assertContains("'$value'", $rule->makeRules());
-        }
+        $this->assertRulesContain($table, 'birthday', "'date_format:Y-m-d'");
+        $this->assertRulesContain($table, 'height', "'regex:/^[+-]?(?:\d+\.?|\d*\.\d+)$/'");
+        $this->assertRulesContain($table, 'has_pet', "'boolean'");
+        $this->assertRulesContain($table, 'current_year', "'integer'");
+        $this->assertRulesContain($table, 'letter_sent_at', "'date'");
+        $this->assertRulesContain($table, 'preferred_lunch_time', "'date_format:H:i:s'");
     }
 
     /** @test */
-    public function it_accepts_all_values_for_string_and_binary_columns()
+    public function it_accepts_all_values_for_string_columns()
     {
-        $table = $this->mockTable('tablename', [
-            'string' => ['type' => Type::STRING, 'required' => true],
-            'text' => ['type' => Type::TEXT, 'required' => true],
+        $table = $this->mockTable('schools', [
+            'name' => ['type' => Type::STRING, 'required' => true],
+            'motto' => ['type' => Type::TEXT, 'required' => true],
         ]);
 
-        foreach (['string', 'text'] as $column) {
-            $rule = new RuleGenerator($table, $column);
-
-            $this->assertEquals(["'required'"], $rule->makeRules());
-        }
-    }
-
-    /** @test */
-    public function it_generates_regex_rules_for_decimal_columns()
-    {
-        $table = $this->mockTable('tablename', [
-            'decimal' => ['type' => Type::DECIMAL],
-        ]);
-
-        $rule = new RuleGenerator($table, 'decimal');
-
-        $this->assertContains("'regex:/^[+-]?(?:\d+\.?|\d*\.\d+)$/'", $rule->makeRules());
+        $this->assertEquals(["'required'"], (new RuleGenerator($table, 'name'))->makeRules());
+        $this->assertEquals(["'required'"], (new RuleGenerator($table, 'motto'))->makeRules());
     }
 
     /** @test */
     public function it_generates_rules_for_enum_columns()
     {
-        $table = $this->mockTable('tablename', [
-            'color' => ['enum' => ['red', 'green', 'blue']],
+        $table = $this->mockTable('houses', [
+            'color' => [
+                'enum' => ['red', 'green', 'blue', 'yellow'],
+            ],
         ]);
 
-        $rule = new RuleGenerator($table, 'color');
-
-        $this->assertContains("'in:red,green,blue'", $rule->makeRules());
+        $this->assertRulesContain($table, 'color', "'in:red,green,blue,yellow'");
     }
 
     /** @test */
     public function it_generates_rules_for_unique_columns()
     {
-        $table = $this->mockTable('tablename', [
-            'email' => ['unique' => true],
+        $table = $this->mockTable('schools', [
+            'name' => ['unique' => true],
         ]);
 
-        $rule = new RuleGenerator($table, 'email');
+        $rule = new RuleGenerator($table, 'name');
 
         $this->assertContains(
-            'Rule::unique(\'tablename\')->ignore($model)',
+            'Rule::unique(\'schools\')->ignore($model)',
             $rule->makeRules()
         );
 
@@ -162,38 +124,55 @@ class RuleGeneratorTest extends TestCase
     /** @test */
     public function it_generates_rules_for_foreign_keys()
     {
-        $table = $this->mockTable('tablename', [
-            'user_id' => ['reference' => ['users', 'id']],
-            'state' => ['reference' => ['states', 'state']],
+        $table = $this->mockTable('pets', [
+            'owner_id' => ['reference' => ['students', 'id']],
+            'species' => ['reference' => ['species', 'species']],
         ]);
 
-        $rule = new RuleGenerator($table, 'user_id');
-        $this->assertContains("'exists:users,id'", $rule->makeRules());
+        $this->assertRulesContain($table, 'owner_id', "'exists:students,id'");
 
-        // Test where the name of the foreign column is the same as the name of
-        // the field under validation.
-
-        $rule = new RuleGenerator($table, 'state');
-        $this->assertContains("'exists:states'", $rule->makeRules());
+        // Test for when the name of the foreign column is the same as the name
+        // of the field under validation.
+        $this->assertRulesContain($table, 'species', "'exists:species'");
     }
 
     /** @test */
     public function it_implodes_rules_if_possible()
     {
-        $table = $this->mockTable('users', [
-            'birthday' => ['required' => true, 'type' => Type::DATE],
-            'username' => ['required' => true, 'unique' => true],
+        $table = $this->mockTable('schools', [
+            'foundation_year' => ['required' => true, 'type' => Type::INTEGER],
+            'motto' => ['required' => true, 'unique' => true],
         ]);
 
-        $rule = new RuleGenerator($table, 'birthday');
-        $this->assertEquals(["'required|date_format:Y-m-d'"], $rule->generate());
+        $this->assertEquals(
+            ["'required|integer'"],
+            (new RuleGenerator($table, 'foundation_year'))->generate()
+        );
 
-        $rule = new RuleGenerator($table, 'username');
-        $this->assertEquals([
-            '[',
-            "    'required',",
-            "    Rule::unique('users')->ignore(\$model),",
-            ']',
-        ], $rule->generate());
+        $this->assertEquals(
+            [
+                '[',
+                "    'required',",
+                "    Rule::unique('schools')->ignore(\$model),",
+                ']',
+            ],
+            (new RuleGenerator($table, 'motto'))->generate()
+        );
+    }
+
+    private function assertRulesContain($table, $column, $value)
+    {
+        $this->assertContains(
+            $value,
+            (new RuleGenerator($table, $column))->makeRules()
+        );
+    }
+
+    private function assertRulesEqual($table, $column, $value)
+    {
+        $this->assertEquals(
+            $value,
+            (new RuleGenerator($table, $column))->makeRules()
+        );
     }
 }
