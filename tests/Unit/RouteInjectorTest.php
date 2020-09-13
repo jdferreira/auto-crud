@@ -7,13 +7,6 @@ use Ferreira\AutoCrud\Injectors\RouteInjector;
 
 class RouteInjectorTest extends TestCase
 {
-    /**
-     * The directory holding the migrations for these tests.
-     *
-     * @var string
-     */
-    protected $migrations = __DIR__ . '/../migrations';
-
     public function setUp(): void
     {
         parent::setUp();
@@ -32,14 +25,14 @@ class RouteInjectorTest extends TestCase
     /** @test */
     public function it_creates_the_web_and_api_files_if_necessary()
     {
-        $this->injector(['users', 'avatars'], true)->inject();
+        $this->injector(['students'], true)->inject();
 
         $this->assertFileExists(base_path('routes/web.php'));
         $this->assertFileExists(base_path('routes/api.php'));
     }
 
     /** @test */
-    public function it_does_not_create_files_if_not_necessary()
+    public function it_reuses_existing_route_files()
     {
         $this->files->put(
             base_path('routes/web.php'),
@@ -51,7 +44,7 @@ class RouteInjectorTest extends TestCase
             $this->files->get(base_path('routes/web.php'))
         );
 
-        $this->injector(['users'])->inject();
+        $this->injector(['students'])->inject();
 
         $this->assertStringContainsString(
             'Make sure this line exists',
@@ -62,27 +55,24 @@ class RouteInjectorTest extends TestCase
     /** @test */
     public function it_creates_resource_routes()
     {
-        $this->injector(['users', 'roles'])->inject();
+        $this->injector(['students'])->inject();
 
         $code = $this->files->get(base_path('routes/web.php'));
 
-        $this->assertStringContainsString("Route::resource('/users', 'UserController');", $code);
-        $this->assertStringContainsString("Route::resource('/roles', 'RoleController');", $code);
+        $this->assertStringContainsString("Route::resource('/students', 'StudentController');", $code);
     }
 
     /** @test */
     public function it_handles_api_resources()
     {
-        $this->injector(['users', 'roles'], true)->inject();
+        $this->injector(['students', 'schools'], true)->inject();
 
         $code = $this->files->get(base_path('routes/web.php'));
 
-        $this->assertStringContainsString("Route::resource('/users', 'UserController');", $code);
-        $this->assertStringContainsString("Route::resource('/roles', 'RoleController');", $code);
+        $this->assertStringContainsString("Route::resource('/students', 'StudentController');", $code);
 
         $code = $this->files->get(base_path('routes/api.php'));
 
-        $this->assertStringContainsString("Route::apiResource('/users', 'UserController');", $code);
-        $this->assertStringContainsString("Route::apiResource('/roles', 'RoleController');", $code);
+        $this->assertStringContainsString("Route::apiResource('/students', 'StudentController');", $code);
     }
 }
