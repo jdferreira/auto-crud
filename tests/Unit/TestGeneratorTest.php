@@ -4,59 +4,78 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
+use Illuminate\Support\Arr;
 use Ferreira\AutoCrud\Generators\TestGenerator;
 use Ferreira\AutoCrud\Database\TableInformation;
 
 class TestGeneratorTest extends TestCase
 {
-    protected $migrations = __DIR__ . '/../migrations';
+    // TODO: I don't necessarily like how this code turned out. I'm testing the
+    // inner methods of the generator, but either the names of the tests don't
+    // match what is actually being tested, or the tests seem insufficient or
+    // inelegant. I will most likely want to revisit this test case.
 
     /**
      * Create a generator that can be used to generate or save the expected file.
      *
-     * @param string $table
-     * @param string $dir
+     * @param TableInformation $table
      *
      * @return TestGenerator
      */
-    private function generator(string $table): TestGenerator
+    private function generator(TableInformation $table): TestGenerator
     {
         return app(TestGenerator::class, [
-            'table' => app(TableInformation::class, ['name' => $table]),
+            'table' => $table,
         ]);
     }
 
     /** @test */
     public function it_can_generate_a_test()
     {
-        $this->generator('users')->save();
+        $this->generator(
+            $this->mockTable('students')
+        )->save();
 
-        $this->assertFileExists(base_path('tests/Feature/UsersCrudTest.php'));
+        $this->assertFileExists(base_path('tests/Feature/StudentsCrudTest.php'));
     }
 
     /** @test */
     public function it_detects_referenced_models_qualified_name()
     {
-        $code = $this->generator('users')->generate();
-        $this->assertStringContainsString('use App\User;', $code);
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
-        $code = $this->generator('users')->setModelDirectory('Models')->generate();
-        $this->assertStringContainsString('use App\Models\User;', $code);
+        $this->assertCodeContains('use App\Student;', $code);
+
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->setModelDirectory('Models')->generate();
+
+        $this->assertCodeContains('use App\Models\Student;', $code);
     }
 
     /** @test */
     public function it_defines_a_testcase()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
-        $this->assertStringContainsString('use Tests\TestCase;', $code);
-        $this->assertStringContainsString('class UsersCrudTest extends TestCase', $code);
+        $this->assertCodeContains('use Tests\TestCase;', $code);
+        $this->assertCodeContains('class StudentsCrudTest extends TestCase', $code);
     }
 
     /** @test */
     public function it_uses_the_necessary_traits()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
+
+        $this->assertCodeContains('use Ferreira\AutoCrud\AssertsHTML;', $code);
+        $this->assertCodeContains('use Ferreira\AutoCrud\AssertsField;', $code);
+        $this->assertCodeContains('use Illuminate\Foundation\Testing\RefreshDatabase;', $code);
 
         $this->assertCodeContains('
             use RefreshDatabase,
@@ -68,19 +87,25 @@ class TestGeneratorTest extends TestCase
     /** @test */
     public function it_uses_the_table_name_on_all_test_methods()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
         preg_match_all('/\/\*\* @test \*\/\n *.*function \w+/', $code, $matches);
 
         foreach ($matches[0] as $match) {
-            $this->assertRegExp('/(?:_|\b)users?(?:_|\b)/', $match);
+            $this->assertRegExp('/(?:_|\b)(?:students|a_student|the_student)(?:_|\b)/', $match);
         }
     }
 
     /** @test */
     public function it_generates_valid_PHP_code()
     {
-        $code = $this->generator('users')->generate();
+        // TODO: Make an `assertIsValidCode` in `TestCase`, and use it here, in
+        // `MigrationGeneratorTest`, and in all generators and injectors
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
         $cmd = 'php -l';
         $specs = [
@@ -107,349 +132,362 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_tests_the_index_view()
+    public function it_tests_that_the_columns_appear_on_the_index_and_show_views()
     {
-        $code = $this->generator('users')->generate();
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'name' => [],
+            ])
+        );
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_shows_existing_users_in_the_index()
-            {
-                $users = factory(User::class, 2)->states(\'full_model\')->create();
+        $lines = $generator->assertSeeColumnValuesOnIndexOrShow();
 
-                foreach ($users as $user) {
-                    $this->get(\'/users\')
-                        ->assertSeeText($user->id)
-                        ->assertSeeText($user->name)
-                        ->assertSeeText($user->email)
-                        ->assertSeeText($user->subscribed ? \'&#10004;\' : \'&#10008;\')
-                        ->assertSeeText($user->birthday->format(\'Y-m-d\'))
-                        ->assertSeeText($user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null);
-                }
-            }
-        ', $code);
+        $this->assertEquals([
+            '->assertSeeText($student->name)',
+        ], $lines);
     }
 
     /** @test */
-    public function it_tests_the_create_form()
+    public function it_uses_kebab_case_on_the_html_name_attribute()
     {
-        $code = $this->generator('users')->generate();
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'current_year' => ['type' => Type::INTEGER],
+            ])
+        );
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_asks_for_all_columns_on_the_user_create_form()
-            {
-                $document = $this->getDOMDocument(
-                    $this->get(\'/users/create\')
-                );
+        $this->assertStringContainsString(
+            'current-year',
+            implode("\n", $generator->assertHTMLOnForm())
+        );
 
-                $this->assertHTML("//input[@name=\'name\' and @type=\'text\']", $document);
-                $this->assertHTML("//input[@name=\'email\' and @type=\'email\']", $document);
-                $this->assertHTML("//input[@name=\'subscribed\' and @type=\'checkbox\']", $document);
-                $this->assertHTML("//input[@name=\'birthday\' and @type=\'date\']", $document);
-                $this->assertHTML("//input[@name=\'wake-up\' and @type=\'time\']", $document);
-            }
-        ', $code);
+        // TODO: What other methods generate HTML name attributes? Test them here.
     }
 
     /** @test */
-    public function it_starts_the_create_form_with_the_default_values()
+    public function it_tests_that_fields_appear_on_create_and_edit_forms()
     {
-        $table = $this->mockTable('students', [
-            'nationality' => [
-                'type' => Type::STRING,
-                'default' => 'British',
-            ],
-            'true_blood' => [
-                'type' => Type::BOOLEAN,
-                'default' => true,
-            ],
-            'house' => [
-                'enum' => [
-                    'gryffindor',
-                    'hufflepuff',
-                    'ravenclaw',
-                    'slytherin',
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'lunch' => ['type' => Type::TIME],
+                'year' => ['type' => Type::INTEGER],
+                'squib' => ['type' => Type::BOOLEAN],
+                'birthday' => ['type' => Type::DATE],
+                'height' => ['type' => Type::DECIMAL],
+                'letter' => ['type' => Type::DATETIME],
+                'gender' => ['enum' => ['male', 'female']],
+            ])
+        );
+
+        $lines = $generator->assertHTMLOnForm();
+
+        $this->assertEquals([
+            '$this->assertHTML("//input[@name=\'lunch\' and @type=\'time\']", $document);',
+            '$this->assertHTML("//input[@name=\'year\' and @type=\'text\']", $document);',
+            '$this->assertHTML("//input[@name=\'squib\' and @type=\'checkbox\']", $document);',
+            '$this->assertHTML("//input[@name=\'birthday\' and @type=\'date\']", $document);',
+            '$this->assertHTML("//input[@name=\'height\' and @type=\'text\']", $document);',
+            '$this->assertHTML("//input[@name=\'letter\' and @type=\'datetime\']", $document);',
+            '',
+            '$this->assertHTML("//select[@name=\'gender\']", $document);',
+            '$this->assertHTML("//select[@name=\'gender\']/option[@value=\'male\']", $document);',
+            '$this->assertHTML("//select[@name=\'gender\']/option[@value=\'female\']", $document);',
+        ], $lines);
+    }
+
+    /** @test */
+    public function it_tests_that_the_create_form_starts_with_the_default_values()
+    {
+        $generator = $this->generator(
+            $table = $this->mockTable('schools', [
+                'name' => [
+                    'type' => Type::STRING,
+                    'default' => 'Hogwarts',
                 ],
-                'default' => 'hufflepuff',
-            ],
-        ]);
+                'motto' => [
+                    'type' => Type::TEXT,
+                    'default' => 'Draco dormiens nunquam titillandus',
+                ],
+                'magical' => [
+                    'type' => Type::BOOLEAN,
+                    'default' => true,
+                ],
+                'country' => [
+                    'enum' => ['uk', 'fr', 'de'],
+                    'default' => 'uk',
+                ],
+            ])
+        );
 
-        $code = app(TestGenerator::class, [
-            'table' => $table,
-        ])->generate();
+        $lines = $generator->assertDefaultValuesOnCreateForm();
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_starts_the_student_create_form_with_the_default_values()
-            {
-                $document = $this->getDOMDocument(
-                    $this->get(\'/students/create\')
-                );
-
-                $this->assertHTML("//input[@name=\'nationality\' and @type=\'text\' and @value=\'British\']", $document);
-                $this->assertHTML("//input[@name=\'true-blood\' and @type=\'checkbox\' and @checked]", $document);
-                $this->assertHTML("//select[@name=\'house\']/option[@name=\'hufflepuff\' and @selected]", $document);
-            }
-        ', $code);
+        $this->assertEquals([
+            '$this->assertHTML("//input[@name=\'name\' and @type=\'text\' and @value=\'Hogwarts\']", $document);',
+            '$this->assertHTML("//textarea[@name=\'motto\' and text()=\'Draco dormiens nunquam titillandus\']", $document);',
+            '$this->assertHTML("//input[@name=\'magical\' and @type=\'checkbox\' and @checked]", $document);',
+            '$this->assertHTML("//select[@name=\'country\']/option[@name=\'uk\' and @selected]", $document);',
+        ], $lines);
     }
 
     /** @test */
     public function it_handles_datetime_with_current_timestamp_as_default_value()
     {
-        $table = $this->mockTable('students', [
-            'datetime' => [
-                'default' => 'CURRENT_TIMESTAMP',
-                'type' => Type::DATETIME,
-            ],
-            'date' => [
-                'default' => 'CURRENT_TIMESTAMP',
-                'type' => Type::DATE,
-            ],
-            'hour' => [
-                'default' => 'CURRENT_TIMESTAMP',
-                'type' => Type::TIME,
-            ],
-        ]);
+        $generator = $this->generator(
+            $this->mockTable('tablename', [
+                'datetime' => [
+                    'default' => 'CURRENT_TIMESTAMP',
+                    'type' => Type::DATETIME,
+                ],
+                'date' => [
+                    'default' => 'CURRENT_TIMESTAMP',
+                    'type' => Type::DATE,
+                ],
+                'hour' => [
+                    'default' => 'CURRENT_TIMESTAMP',
+                    'type' => Type::TIME,
+                ],
+            ])
+        );
 
-        $code = app(TestGenerator::class, [
-            'table' => $table,
-        ])->generate();
+        $lines = $generator->assertDefaultValuesOnCreateForm();
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_starts_the_student_create_form_with_the_default_values()
-            {
-                $document = $this->getDOMDocument(
-                    $this->get(\'/students/create\')
-                );
-
-                \Carbon\Carbon::setTestNow(\'2020-01-01 01:02:03\');
-
-                $this->assertHTML("//input[@name=\'datetime\' and @type=\'datetime\' and @value=\'2020-01-01 01:02:03\']", $document);
-                $this->assertHTML("//input[@name=\'date\' and @type=\'date\' and @value=\'2020-01-01\']", $document);
-                $this->assertHTML("//input[@name=\'hour\' and @type=\'time\' and @value=\'01:02:03\']", $document);
-            }
-        ', $code);
+        $this->assertEquals([
+            '\Carbon\Carbon::setTestNow(\'2020-01-01 01:02:03\');',
+            '',
+            '$this->assertHTML("//input[@name=\'datetime\' and @type=\'datetime\' and @value=\'2020-01-01 01:02:03\']", $document);',
+            '$this->assertHTML("//input[@name=\'date\' and @type=\'date\' and @value=\'2020-01-01\']", $document);',
+            '$this->assertHTML("//input[@name=\'hour\' and @type=\'time\' and @value=\'01:02:03\']", $document);',
+        ], $lines);
     }
 
     /** @test */
     public function it_does_not_test_default_values_on_the_create_form_when_the_table_has_none()
     {
-        $table = $this->mockTable('student', [
-            'name' => [
-                'type' => Type::STRING,
-            ],
-        ]);
+        $code = $this->generator(
+            $this->mockTable('student', [
+                'pet_name' => ['default' => null],
+            ])
+        )->generate();
 
-        $code = app(TestGenerator::class, [
-            'table' => $table,
-        ])->generate();
+        $this->assertCodeContains('
+            /** @test */
+            public function it_starts_the_student_create_form_with_the_default_values()
+        ', $code);
 
-        $this->assertStringNotContainsString(
-            'public function it_starts_the_user_create_form_with_the_default_values()',
-            $code
-        );
+        $code = $this->generator(
+            $this->mockTable('student', [
+                'pet_name' => [],
+            ])
+        )->generate();
+
+        $this->assertCodeNotContains('
+            /** @test */
+            public function it_starts_the_student_create_form_with_the_default_values()
+        ', $code);
     }
 
     /** @test */
     public function it_tests_current_values_on_edit_form()
     {
-        $code = $this->generator('users')->generate();
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'notes' => ['type' => Type::TEXT],
+                'lunch' => ['type' => Type::TIME],
+                'year' => ['type' => Type::INTEGER],
+                'squib' => ['type' => Type::BOOLEAN],
+                'birthday' => ['type' => Type::DATE],
+                'height' => ['type' => Type::DECIMAL],
+                'letter' => ['type' => Type::DATETIME],
+                'gender' => ['enum' => ['male', 'female']],
+            ])
+        );
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_starts_the_edit_form_with_the_user_current_values()
-            {
-                $user = factory(User::class)->states(\'full_model\')->create();
+        $lines = $generator->assertEditFormHasValues();
 
-                $document = $this->getDOMDocument(
-                    $this->get($user->path() . \'/edit\')
-                );
+        $this->assertEquals([
+            // TODO: I want again to group checkboxes and not checkboxes, and
+            // not group all different types of input in their own block.
 
-                $this->assertHTML($this->xpath("//*[@name=\'name\' and @value=\'%s\']", $user->name), $document);
-                $this->assertHTML($this->xpath("//*[@name=\'email\' and @value=\'%s\']", $user->email), $document);
-                $this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $user->birthday->format(\'Y-m-d\')), $document);
-                $this->assertHTML($this->xpath("//*[@name=\'wake-up\' and @value=\'%s\']", $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null), $document);
-
-                $subscribedChecked = $user->subscribed ? \'@checked\' : \'not(@checked)\';
-                $this->assertHTML("//*[@name=\'subscribed\' and $subscribedChecked]", $document);
-            }
-        ', $code);
+            '$this->assertHTML($this->xpath("//*[@name=\'lunch\' and @value=\'%s\']", $student->lunch->format(\'H:i:s\')), $document);',
+            '$this->assertHTML($this->xpath("//*[@name=\'year\' and @value=\'%s\']", $student->year), $document);',
+            '$this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $student->birthday->format(\'Y-m-d\')), $document);',
+            '$this->assertHTML($this->xpath("//*[@name=\'height\' and @value=\'%s\']", $student->height), $document);',
+            '$this->assertHTML($this->xpath("//*[@name=\'letter\' and @value=\'%s\']", $student->letter->format(\'Y-m-d H:i:s\')), $document);',
+            '',
+            '$squibChecked = $student->squib ? \'@checked\' : \'not(@checked)\';',
+            '$this->assertHTML("//*[@name=\'squib\' and $squibChecked]", $document);',
+            '',
+            '$this->assertHTML($this->xpath("//*[@name=\'gender\']/option[@value=\'%s\' and @selected]", $student->gender), $document);',
+            '',
+            '$this->assertHTML($this->xpath("//*[@name=\'notes\' and text()=\'%s\']", $student->notes), $document);',
+        ], $lines);
     }
 
     /** @test */
     public function it_tests_old_values_from_a_previous_form_submission()
     {
-        $code = $this->generator('users')->generate();
+        // A constraint field is one that fits one of the following:
+        // - required
+        // - an integer
+        // - a boolean
+        // - a datetime, date, time
+        // - a decimal
+        // - an enum
+        // - a key to a foreign table
+        // - an email or UUID
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_keeps_old_values_on_unsuccessful_user_update()
-            {
-                $user = factory(User::class)->states(\'full_model\')->create();
+        // Given a table with a column that is constraint, and the expected
+        // invalid value, assert that `$generator->oneConstraintField()` returns
+        // that column and that `$generator->oneInvalidValue()` returns the
+        // expected invalid value.
+        $specs = [
+            ['required' => false, 'expected' => null],
+            ['type' => Type::INTEGER, 'expected' => "'???'"],
+            ['type' => Type::BOOLEAN, 'expected' => "'???'"],
+            ['type' => Type::DATETIME, 'expected' => "'???'"],
+            ['type' => Type::DATE, 'expected' => "'???'"],
+            ['type' => Type::TIME, 'expected' => "'???'"],
+            ['type' => Type::DECIMAL, 'expected' => "'???'"],
+            ['enum' => ['red', 'green', 'blue'], 'expected' => "'???'"],
+            ['reference' => ['other', 'id'], 'expected' => "'???'"],
+            ['name' => 'email', 'expected' => "'???'"],
+            ['name' => 'uuid', 'expected' => "'???'"],
+        ];
 
-                $updated = $user->toArray();
-                $updated[\'name\'] = \'\';
+        foreach ($specs as $spec) {
+            $columnName = Arr::pull($spec, 'name', 'column');
+            $expectedInvalidValue = Arr::pull($spec, 'expected');
 
-                $this->withExceptionHandling();
+            $generator = $this->generator(
+                $this->mockTable('students', [
+                    $columnName => $spec,
+                ])
+            );
 
-                $response = $this->put($user->path(), $updated);
-
-                $response->assertSessionHasInput(\'name\', \'\');
+            // The expected invalid value is null to sentinel the case where
+            // there is no actual constraint field. In that case, we want to
+            // test that the constraint column is `null`, and not the column
+            // that we are working with at the moment.
+            if ($expectedInvalidValue === null) {
+                $columnName = null;
             }
-        ', $code);
+
+            $this->assertEquals(
+                $columnName,
+                $generator->oneConstraintField(),
+                sprintf('Expecting to see column \'%s\' as constrained for the spec %s', $columnName, var_export($spec, true))
+            );
+            $this->assertEquals(
+                $expectedInvalidValue,
+                $generator->oneInvalidValue(),
+                sprintf('Expecting to see expected value \'%s\' as invalid for the spec %s', $expectedInvalidValue, var_export($spec, true))
+            );
+        }
     }
 
     /** @test */
-    public function it_does_not_test_for_old_values_when_all_fields_are_optional()
+    public function it_does_not_test_for_old_values_when_all_fields_are_unconstraint()
     {
-        $table = $this->mockTable('student', [
-            'name' => ['required' => false],
-        ]);
+        $code = $this->generator(
+            $this->mockTable('student', [
+                'pet_name' => ['required' => true],
+            ])
+        )->generate();
 
-        $code = app(TestGenerator::class, [
-            'table' => $table,
-        ])->generate();
+        $this->assertCodeContains('
+            /** @test */
+            public function it_keeps_old_values_on_unsuccessful_student_update()
+        ', $code);
 
-        $this->assertStringNotContainsString(
-            'public function it_starts_the_user_create_form_with_the_default_values()',
-            $code
-        );
+        $code = $this->generator(
+            $this->mockTable('student', [
+                'pet_name' => ['required' => false],
+            ])
+        )->generate();
+
+        $this->assertCodeNotContains('
+            /** @test */
+            public function it_starts_the_student_create_form_with_the_default_values()
+        ', $code);
     }
 
     /** @test */
     public function it_tests_required_fields()
     {
-        $code = $this->generator('users')->generate();
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'name' => ['required' => true],
+                'pet' => ['required' => false],
+                'alive' => ['required' => true, 'type' => Type::BOOLEAN],
+            ])
+        );
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_marks_required_labels_on_users_create_and_edit_forms()
-            {
-                $document = $this->getDOMDocument($this->get(\'/users/create\'));
+        $lines = $generator->assertRequiredFields();
 
-                $this->assertHTML("//*[@name=\'name\' and @required]", $document);
-                $this->assertHTML("//*[@name=\'email\' and not(@required)]", $document);
-                $this->assertHTML("//*[@name=\'subscribed\' and not(@required)]", $document);
-                $this->assertHTML("//*[@name=\'birthday\' and @required]", $document);
-                $this->assertHTML("//*[@name=\'wake-up\' and not(@required)]", $document);
-
-                $user = factory(User::class)->create();
-
-                $document = $this->getDOMDocument($this->get($user->path() . \'/edit\'));
-
-                $this->assertHTML("//*[@name=\'name\' and @required]", $document);
-                $this->assertHTML("//*[@name=\'email\' and not(@required)]", $document);
-                $this->assertHTML("//*[@name=\'subscribed\' and not(@required)]", $document);
-                $this->assertHTML("//*[@name=\'birthday\' and @required]", $document);
-                $this->assertHTML("//*[@name=\'wake-up\' and not(@required)]", $document);
-            }
-        ', $code);
+        $this->assertEquals([
+            '$this->assertHTML("//*[@name=\'name\' and @required]", $document);',
+            '$this->assertHTML("//*[@name=\'pet\' and not(@required)]", $document);',
+            '$this->assertHTML("//*[@name=\'alive\' and not(@required)]", $document);',
+        ], $lines);
     }
 
     /** @test */
-    public function it_tests_the_creation_function()
+    public function it_tests_that_created_or_updated_models_equal_the_request_input_data()
     {
-        $code = $this->generator('users')->generate();
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'name' => ['type' => Type::STRING],
+                'birthday' => ['type' => Type::DATE],
+            ])
+        );
 
-        $this->assertCodeContains('
-            /** @test */
-            public function it_creates_users_when_asked_to()
-            {
-                $this->assertNull(User::find(1));
+        $lines = $generator->assertNewEqualsModel();
 
-                $new = factory(User::class)->raw();
-
-                $this->post(\'/users\', $new);
-
-                $this->assertNotNull($user = User::find(1));
-
-                $this->assertEquals($new[\'name\'], $user->name);
-                $this->assertEquals($new[\'email\'], $user->email);
-                $this->assertEquals($new[\'subscribed\'], $user->subscribed);
-                $this->assertEquals($new[\'birthday\'], $user->birthday->format(\'Y-m-d\'));
-                $this->assertEquals($new[\'wake_up\'], $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null);
-            }
-        ', $code);
-    }
-
-    /** @test */
-    public function it_tests_the_update_function()
-    {
-        $code = $this->generator('users')->generate();
-
-        $this->assertCodeContains('
-            /** @test */
-            public function it_updates_users_when_asked_to()
-            {
-                $user = factory(User::class)->create();
-
-                $new = factory(User::class)->raw();
-
-                $this->put($user->path(), $new);
-
-                $user = $user->fresh();
-
-                $this->assertEquals($new[\'name\'], $user->name);
-                $this->assertEquals($new[\'email\'], $user->email);
-                $this->assertEquals($new[\'subscribed\'], $user->subscribed);
-                $this->assertEquals($new[\'birthday\'], $user->birthday->format(\'Y-m-d\'));
-                $this->assertEquals($new[\'wake_up\'], $user->wake_up !== null ? $user->wake_up->format(\'H:i:s\') : null);
-            }
-        ', $code);
+        $this->assertEquals([
+            '$this->assertEquals($new[\'name\'], $student->name);',
+            '$this->assertEquals($new[\'birthday\'], $student->birthday->format(\'Y-m-d\'));',
+        ], $lines);
     }
 
     /** @test */
     public function it_tests_specific_field_values()
     {
-        $code = $this->generator('users')->generate();
+        $generator = $this->generator(
+            $this->mockTable('schools', [
+                'name' => ['unique' => 'true'],
+                'magical' => ['type' => Type::BOOLEAN, 'required' => false],
+                'foundation_year' => ['type' => Type::INTEGER],
+            ])
+        );
 
-        $this->assertCodeContains('
-            public function assertFields()
-            {
-                $this->withExceptionHandling();
+        $lines = $generator->assertFields();
 
-                // Create one user to test fields that should contain unique values
-                factory(User::class)->create([
-                    \'email\' => \'mail@example.com\',
-                ]);
-
-                $this->assertField(\'name\')
-                    ->accepts(\'John Doe\')
-                    ->accepts(\'Jane Doe\')
-                    ->rejects(null);
-
-                $this->assertField(\'email\')
-                    ->accepts(\'johndoe@example.com\')
-                    ->rejects(\'mail@example.com\') // Duplicate values must be rejected
-                    ->accepts(null);
-
-                $this->assertField(\'subscribed\')
-                    ->accepts(true)
-                    ->accepts(false)
-                    ->rejects(\'yes\')
-                    ->rejects(\'no\')
-                    ->rejects(\'2\')
-                    ->rejects(null);
-
-                $this->assertField(\'birthday\')
-                    ->accepts(\'2020-01-01\')
-                    ->accepts(\'2021-12-31\')
-                    ->rejects(\'2020-13-01\')
-                    ->rejects(\'2020-01-32\')
-                    ->rejects(\'not-a-date\')
-                    ->rejects(null);
-
-                $this->assertField(\'wake_up\')
-                    ->accepts(\'00:01:02\')
-                    ->accepts(\'23:59:59\')
-                    ->rejects(\'25:00:00\')
-                    ->rejects(\'00:61:00\')
-                    ->rejects(\'00:00:61\')
-                    ->rejects(\'not-a-time\')
-                    ->accepts(null);
-            }
-        ', $code);
+        $this->assertEquals([
+            '// Create one school to test fields that should contain unique values',
+            'factory(School::class)->create([',
+            '    \'name\' => \'John Doe\',',
+            ']);',
+            '',
+            '$this->assertField(\'name\')',
+            '    ->accepts(\'Jane Doe\')',
+            '    ->rejects(\'John Doe\') // Duplicate values must be rejected',
+            '    ->rejects(null);',
+            '',
+            '$this->assertField(\'magical\')',
+            '    ->accepts(true)',
+            '    ->accepts(false)',
+            '    ->rejects(\'yes\')',
+            '    ->rejects(\'no\')',
+            '    ->rejects(\'2\')',
+            '    ->accepts(null);',
+            '',
+            '$this->assertField(\'foundation_year\')',
+            '    ->accepts(0)',
+            '    ->accepts(10)',
+            '    ->accepts(-10)',
+            '    ->rejects(\'3.14\')',
+            '    ->rejects(\'not-a-number\')',
+            '    ->rejects(null);',
+        ], $lines);
     }
 }

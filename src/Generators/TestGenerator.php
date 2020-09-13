@@ -2,7 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Carbon\Carbon;
+use Exception;
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
@@ -51,6 +51,8 @@ class TestGenerator extends BaseGenerator
 
     protected function postProcess(string $code): string
     {
+        $this->files->put('invalid.php', $code);
+
         $placeholder = $this->tablenameSingular();
 
         $countDefaultFields = $this->fields()->filter(function ($column) {
@@ -61,11 +63,7 @@ class TestGenerator extends BaseGenerator
             $code = $this->removeTest("it_starts_the_${placeholder}_create_form_with_the_default_values", $code);
         }
 
-        $countRequiredFields = $this->fields()->filter(function ($column) {
-            return $this->table->required($column);
-        })->count();
-
-        if ($countRequiredFields === 0) {
+        if ($this->oneConstraintField === null) {
             $code = $this->removeTest("it_keeps_old_values_on_unsuccessful_${placeholder}_update", $code);
         }
 
@@ -108,7 +106,7 @@ class TestGenerator extends BaseGenerator
         return Str::singular(Str::camel($this->table->name()));
     }
 
-    private function assertSeeColumnValuesOnIndexOrShow()
+    public function assertSeeColumnValuesOnIndexOrShow()
     {
         return $this->fields()
             ->map(function ($column) {
@@ -137,39 +135,102 @@ class TestGenerator extends BaseGenerator
         )->simpleAccessorFormatted($column);
     }
 
-    private function assertHTMLOnForm()
+    /**
+     * Wrap the given XPath expression in an assertion:.
+     *
+     * ```php
+     * $xpath = "//input[@name='test']"
+     * $this->wrapXPath($xpath)
+     * // returns '$this->assertHTML("//input[@name=\'test\'])", $document);'
+     * ```
+     *
+     * @param string $xpath
+     * @param null|string[] $arguments
+     * @param string $document
+     *
+     * @return string
+     */
+    private function wrapXPath(string $xpath, array $arguments = null, string $document = '$document'): string
     {
-        return $this->fieldsExcept(['id'])
+        $expectedNumberOfArguments = substr_count($xpath, '%s');
+
+        if (
+            ($arguments === null && $expectedNumberOfArguments !== 0) ||
+            ($arguments !== null && count($arguments) !== $expectedNumberOfArguments)
+        ) {
+            throw new Exception('Wrong number of arguments');
+        }
+
+        if ($arguments === null) {
+            return "\$this->assertHTML(\"$xpath\", $document);";
+        }
+
+        $arguments = implode(', ', $arguments);
+
+        return "\$this->assertHTML(\$this->xpath(\"$xpath\", $arguments), $document);";
+    }
+
+    public function assertHTMLOnForm()
+    {
+        $selects = $this->fieldsExcept(['id'])
+            ->filter(function (string $column) {
+                return $this->table->type($column) === Type::ENUM;
+            })
+            ->flatMap(function (string $column) {
+                $name = $this->quoteName($column);
+
+                return collect($this->table->getEnumValid($column))
+                    ->map(function ($valid) use ($name) {
+                        $valid = e($valid);
+
+                        return $this->wrapXPath("//select[@name='$name']/option[@value='$valid']");
+                    })
+                    ->prepend(
+                        $this->wrapXPath("//select[@name='$name']")
+                    )
+                    ->all();
+            });
+
+        $other = $this->fieldsExcept(['id'])
+            ->filter(function (string $column) {
+                return $this->table->type($column) !== Type::ENUM;
+            })
             ->map(function ($column) {
                 $type = $this->table->type($column);
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
-                if ($type === Type::ENUM || $this->table->reference($column) !== null) {
-                    $xpath = "//select[@name='$name']";
-                } elseif ($type === Type::TEXT) {
-                    $xpath = "//textarea[@name='$name']";
-                } else {
-                    if ($column === 'email' && $type === Type::STRING) {
-                        $type = 'email';
-                    } elseif ($type === Type::DATE) {
-                        $type = 'date';
-                    } elseif ($type === Type::TIME) {
-                        $type = 'time';
-                    } elseif ($type === Type::DATETIME) {
-                        $type = 'datetime';
-                    } elseif ($type === Type::BOOLEAN) {
-                        $type = 'checkbox';
-                    } else {
-                        $type = 'text';
-                    }
-
-                    $xpath = "//input[@name='$name' and @type='$type']";
+                if ($type === Type::TEXT) {
+                    return $this->wrapXPath("//textarea[@name='$name']");
                 }
 
-                return '$this->assertHTML("' . $xpath . '", $document);';
-            })
-            ->all();
+                if ($column === 'email' && $type === Type::STRING) {
+                    $type = 'email';
+                } elseif ($type === Type::DATE) {
+                    $type = 'date';
+                } elseif ($type === Type::TIME) {
+                    $type = 'time';
+                } elseif ($type === Type::DATETIME) {
+                    $type = 'datetime';
+                } elseif ($type === Type::BOOLEAN) {
+                    $type = 'checkbox';
+                } else {
+                    $type = 'text';
+                }
+
+                return $this->wrapXPath("//input[@name='$name' and @type='$type']");
+            });
+
+        $result = $other;
+
+        if ($result->count() > 0 && $selects->count() > 0) {
+            // TODO: This is a block merging operation, which can be abstracted
+            // (some place else on the code uses this as well)
+            $result->push('');
+            $result = $result->merge($selects);
+        }
+
+        return $result->all();
     }
 
     public function assertDefaultValuesOnCreateForm()
@@ -177,48 +238,45 @@ class TestGenerator extends BaseGenerator
         $hasDates = false;
 
         $lines = $this->fieldsExcept(['id'])
+            ->filter(function ($column) {
+                return $this->table->hasDefault($column);
+            })
             ->map(function ($column) use (&$hasDates) {
-                if (! $this->table->hasDefault($column)) {
-                    return;
-                }
-
                 $type = $this->table->type($column);
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
                 $value = $this->table->default($column);
 
-                if ($type === Type::ENUM || $this->table->reference($column) !== null) {
-                    $xpath = "//select[@name='$name']/option[@name='$value' and @selected]";
+                if ($type === Type::ENUM) {
+                    return $this->wrapXPath("//select[@name='$name']/option[@name='$value' and @selected]");
                 } elseif ($type === Type::TEXT) {
-                    $xpath = "//textarea[@name='$name' and text()='$value']";
+                    return $this->wrapXPath("//textarea[@name='$name' and text()='$value']");
                 } elseif ($type === Type::BOOLEAN) {
                     $checked = $value ? '@checked' : 'not(@checked)';
 
-                    $xpath = "//input[@name='$name' and @type='checkbox' and $checked]";
-                } else {
-                    if ($column === 'email' && $type === Type::STRING) {
-                        $type = 'email';
-                    } elseif ($type === Type::DATE) {
-                        $type = 'date';
-                        $hasDates = true;
-                        $value = '2020-01-01';
-                    } elseif ($type === Type::TIME) {
-                        $type = 'time';
-                        $hasDates = true;
-                        $value = '01:02:03';
-                    } elseif ($type === Type::DATETIME) {
-                        $type = 'datetime';
-                        $hasDates = true;
-                        $value = '2020-01-01 01:02:03';
-                    } else {
-                        $type = 'text';
-                    }
-
-                    $xpath = "//input[@name='$name' and @type='$type' and @value='$value']";
+                    return $this->wrapXPath("//input[@name='$name' and @type='checkbox' and $checked]");
                 }
 
-                return '$this->assertHTML("' . $xpath . '", $document);';
+                if ($column === 'email' && $type === Type::STRING) {
+                    $type = 'email';
+                } elseif ($type === Type::DATE) {
+                    $type = 'date';
+                    $hasDates = true;
+                    $value = '2020-01-01';
+                } elseif ($type === Type::TIME) {
+                    $type = 'time';
+                    $hasDates = true;
+                    $value = '01:02:03';
+                } elseif ($type === Type::DATETIME) {
+                    $type = 'datetime';
+                    $hasDates = true;
+                    $value = '2020-01-01 01:02:03';
+                } else {
+                    $type = 'text';
+                }
+
+                return $this->wrapXPath("//input[@name='$name' and @type='$type' and @value='$value']");
             })
             ->filter()
             ->all();
@@ -236,7 +294,7 @@ class TestGenerator extends BaseGenerator
         return $lines;
     }
 
-    private function assertEditFormHasValues()
+    public function assertEditFormHasValues()
     {
         $groups = $this->fieldsExcept(['id'])->groupBy(function ($column) {
             $type = $this->table->type($column);
@@ -252,6 +310,8 @@ class TestGenerator extends BaseGenerator
             }
         });
 
+        // TODO: We could have a single instance of the AccessorBuilder class
+        // for this whole TestGenerator instance
         $builder = app(AccessorBuilder::class, [
             'table' => $this->table,
         ]);
@@ -267,9 +327,9 @@ class TestGenerator extends BaseGenerator
                     $value = $builder->formatAccessor($value, $column);
                 }
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
-                return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name' and @value='%s']\", $value), \$document);";
+                return $this->wrapXPath("//*[@name='$name' and @value='%s']", [$value]);
             });
 
         $checkboxInputs = $groups->get('checkbox', collect())
@@ -277,11 +337,11 @@ class TestGenerator extends BaseGenerator
                 $value = "\${$this->modelVariableSingular()}->$column";
                 $column = Str::camel($column);
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
                 return [
                     "\${$column}Checked = $value ? '@checked' : 'not(@checked)';",
-                    "\$this->assertHTML(\"//*[@name='$name' and \${$column}Checked]\", \$document);",
+                    $this->wrapXPath("//*[@name='$name' and \${$column}Checked]"),
                 ];
             });
 
@@ -289,18 +349,18 @@ class TestGenerator extends BaseGenerator
             ->map(function ($column) {
                 $value = "\${$this->modelVariableSingular()}->$column";
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
-                return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name']/option[@value='%s' and @selected]\", $value), \$document);";
+                return $this->wrapXPath("//*[@name='$name']/option[@value='%s' and @selected]", [$value]);
             });
 
         $textareaInputs = $groups->get('textarea', collect())
             ->map(function ($column) {
                 $value = "\${$this->modelVariableSingular()}->$column";
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
-                return "\$this->assertHTML(\$this->xpath(\"//*[@name='$name' and text()='%s']\", $value), \$document);";
+                return $this->wrapXPath("//*[@name='$name' and text()='%s']", [$value]);
             });
 
         $inputs = $regularInputs;
@@ -315,18 +375,8 @@ class TestGenerator extends BaseGenerator
         return $inputs->all();
     }
 
-    private function oneConstraintField()
+    public function oneConstraintField()
     {
-        // A constraint field is one that fits one of the following:
-        // - required without a default value
-        // - an integer
-        // - a boolean
-        // - a datetime, date, time
-        // - a decimal
-        // - an enum
-        // - a key to a foreign table
-        // - an email or UUID
-
         return $this->oneConstraintField = $this->fieldsExcept(['id'])->filter(function ($column) {
             static $constraintTypes = [
                 Type::INTEGER,
@@ -345,7 +395,7 @@ class TestGenerator extends BaseGenerator
         })->first();
     }
 
-    private function oneInvalidValue()
+    public function oneInvalidValue()
     {
         // Let's generate a value that is invalid for the constraint field.
         $column = $this->oneConstraintField;
@@ -357,8 +407,8 @@ class TestGenerator extends BaseGenerator
             return null;
         }
 
-        // If the field is required without a default value, just send an empty string
-        if ($this->table->required($column) && ! $this->table->hasDefault($column)) {
+        // If the field is not required, just send an empty string
+        if (! $this->table->required($column)) {
             return "''";
         }
 
@@ -380,7 +430,7 @@ class TestGenerator extends BaseGenerator
         return '"' . substr('"', '', collect($validValues)->join('')) . 'X' . '"';
     }
 
-    private function assertRequiredFields()
+    public function assertRequiredFields()
     {
         return $this->fieldsExcept(['id'])
             ->map(function ($column) {
@@ -389,14 +439,14 @@ class TestGenerator extends BaseGenerator
 
                 $required = $required ? '@required' : 'not(@required)';
 
-                $name = htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+                $name = $this->quoteName($column);
 
-                return "\$this->assertHTML(\"//*[@name='$name' and $required]\", \$document);";
+                return $this->wrapXPath("//*[@name='$name' and $required]");
             })
             ->all();
     }
 
-    private function assertNewEqualsModel()
+    public function assertNewEqualsModel()
     {
         return $this->fieldsExcept(['id'])
             ->map(function ($column) {
@@ -418,7 +468,7 @@ class TestGenerator extends BaseGenerator
             ->all();
     }
 
-    private function assertFields()
+    public function assertFields()
     {
         $result = [];
 
@@ -428,11 +478,12 @@ class TestGenerator extends BaseGenerator
 
         if ($uniqueColumns->count() > 0) {
             $model = str_replace('_', ' ', $this->tablenameSingular());
+            $modelClass = $this->modelClass();
 
             $result = array_merge(
                 [
                     "// Create one $model to test fields that should contain unique values",
-                    "factory({$this->modelClass()}::class)->create([",
+                    "factory($modelClass::class)->create([",
                 ],
                 $uniqueColumns->map(function ($column) {
                     $fake = $this->fakeForUnique($column);
@@ -661,6 +712,11 @@ class TestGenerator extends BaseGenerator
         for ($i = 0; $i < count($lines); $i++) {
             if (strpos($lines[$i], $testName) !== false) {
                 $start = $i - 1; // Remove the "/** @test */" line as well
+
+                // Also remove the line before the docblock, if it is empty.
+                if (trim($lines[$start - 1]) === '') {
+                    $start--;
+                }
             } elseif (isset($start) && $lines[$i] === '    }') {
                 $end = $i;
                 break;
@@ -668,11 +724,16 @@ class TestGenerator extends BaseGenerator
         }
 
         if (isset($start)) {
-            for ($i = $start; $i < $end; $i++) {
+            for ($i = $start; $i <= $end; $i++) {
                 unset($lines[$i]);
             }
         }
 
         return implode("\n", $lines);
+    }
+
+    private function quoteName(string $column)
+    {
+        return htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
     }
 }

@@ -51,7 +51,7 @@ class RuleGeneratorTest extends TestCase
     /** @test */
     public function it_knows_of_email_and_uuid_column_names()
     {
-        $table = $this->mockTable('students', [
+        $table = $this->mockTable('muggle_things', [
             'email' => [],
             'uuid' => [],
         ]);
