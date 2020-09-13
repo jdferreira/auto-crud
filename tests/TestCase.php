@@ -290,11 +290,9 @@ abstract class TestCase extends BaseTestCase
                     Arr::get($properties, 'hasDefault', false)
                 );
 
-                if (Arr::has($properties, 'default')) {
-                    $mock->shouldReceive('default')->with($column)->andReturn(
-                        Arr::get($properties, 'default')
-                    );
-                }
+                $mock->shouldReceive('default')->with($column)->andReturn(
+                    Arr::get($properties, 'default')
+                );
             }
 
             $mock->shouldReceive('name')->andReturn($tablename);

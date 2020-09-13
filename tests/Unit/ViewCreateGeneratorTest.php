@@ -10,38 +10,35 @@ use Ferreira\AutoCrud\Generators\ViewCreateGenerator;
 class ViewCreateGeneratorTest extends TestCase
 {
     /**
-     * The directory holding the migrations for these tests.
-     *
-     * @var string
-     */
-    protected $migrations = __DIR__ . '/../migrations';
-
-    /**
      * Create a generator that can be used to generate or save the expected file.
      *
-     * @param string $table
+     * @param TableInformation $table
      *
      * @return ViewCreateGenerator
      */
-    private function generator(string $table): ViewCreateGenerator
+    private function generator(TableInformation $table): ViewCreateGenerator
     {
         return app(ViewCreateGenerator::class, [
-            'table' => app(TableInformation::class, ['name' => $table]),
+            'table' => $table,
         ]);
     }
 
     /** @test */
     public function it_can_generate_a_view()
     {
-        $this->generator('users')->save();
+        $this->generator(
+            $this->mockTable('students')
+        )->save();
 
-        $this->assertFileExists(resource_path('views/users/create.blade.php'));
+        $this->assertFileExists(resource_path('views/students/create.blade.php'));
     }
 
     /** @test */
     public function it_shows_a_form()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
         $this->assertStringContainsString('<form method="POST">', $code);
         $this->assertStringContainsString('</form>', $code);
@@ -50,31 +47,46 @@ class ViewCreateGeneratorTest extends TestCase
     /** @test */
     public function it_is_titled_based_on_the_model_name()
     {
-        $code = $this->generator('users')->generate();
-        $this->assertStringContainsString('<h1>New user</h1>', $code);
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
-        $code = $this->generator('payment_methods')->generate();
-        $this->assertStringContainsString('<h1>New payment method</h1>', $code);
+        $this->assertStringContainsString('<h1>New student</h1>', $code);
+
+        $code = $this->generator(
+            $this->mockTable('staff_facilities')
+        )->generate();
+
+        $this->assertStringContainsString('<h1>New staff facility</h1>', $code);
     }
 
     /** @test */
     public function it_contains_a_label_for_each_field()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'id' => ['primaryKey' => true],
+                'name' => [], //
+                'house' => [], //
+            ])
+        )->generate();
 
         $this->assertStringContainsString('<label for="name">Name</label>', $code);
-        $this->assertStringContainsString('<label for="email">Email</label>', $code);
-        $this->assertStringContainsString('<label for="subscribed">Subscribed</label>', $code);
-        $this->assertStringContainsString('<label for="birthday">Birthday</label>', $code);
-        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
+        $this->assertStringContainsString('<label for="house">House</label>', $code);
+
+        $this->assertStringNotContainsString('<label for="id">', $code);
     }
 
     /** @test */
     public function it_converts_names_to_kebab_case()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'has_pet' => ['type' => Type::BOOLEAN],
+            ])
+        )->generate();
 
-        $this->assertStringContainsString('<label for="wake-up">Wake up</label>', $code);
+        $this->assertStringContainsString('<label for="has-pet">Has pet</label>', $code);
     }
 
     /** @test */
@@ -88,105 +100,80 @@ class ViewCreateGeneratorTest extends TestCase
         // - <input type="tel"> because I don't have a test for it; but I should
         //   add one in the future! TODO: Add this.
 
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'notes' => ['type' => Type::TEXT, 'required' => false],
+                'name' => ['type' => Type::STRING],
+                'birthday' => ['type' => Type::DATE],
+                'height' => ['type' => Type::DECIMAL],
+                'has_pet' => ['type' => Type::BOOLEAN],
+                'current_year' => ['type' => Type::INTEGER],
+                'letter_sent_at' => ['type' => Type::DATETIME],
+                'preferred_lunch_time' => ['type' => Type::TIME],
+                'house' => ['enum' => ['gryffindor', 'slytherin', 'ravenclaw', 'hufflepuff']],
+            ])
+        )->generate();
+
+        $this->assertStringContainsString('<textarea name="notes"></textarea>', $code);
         $this->assertStringContainsString('<input name="name" required type="text">', $code);
-        $this->assertStringContainsString('<input name="email" type="email">', $code);
         $this->assertStringContainsString('<input name="birthday" required type="date">', $code);
-        $this->assertStringContainsString('<input name="wake-up" type="time">', $code);
+        $this->assertStringContainsString('<input name="height" required type="text">', $code);
+        $this->assertStringContainsString('<input name="current-year" required type="text">', $code);
+        $this->assertStringContainsString('<input name="letter-sent-at" required type="datetime">', $code);
+        $this->assertStringContainsString('<input name="preferred-lunch-time" required type="time">', $code);
 
         // Boolean fields are a little different
-        $this->assertStringContainsString('<input name="subscribed" type="checkbox" value="1">', $code);
+        $this->assertStringContainsString('<input name="has-pet" type="checkbox" value="1">', $code);
 
-        $code = $this->generator('avatars')->generate();
-        $this->assertStringContainsString('<input name="user-id" required type="text">', $code);
-        $this->assertStringContainsString('<input name="file" required type="text">', $code);
-
-        $code = $this->generator('products')->generate();
+        // Dropdown for the enum fields
         $this->assertCodeContains('
-            <select name="type">
-                <option value="food">Food</option>
-                <option value="stationery">Stationery</option>
-                <option value="other">Other</option>
+            <select name="house" required>
+                <option value="gryffindor">Gryffindor</option>
+                <option value="slytherin">Slytherin</option>
+                <option value="ravenclaw">Ravenclaw</option>
+                <option value="hufflepuff">Hufflepuff</option>
             </select>
         ', $code);
-
-        $code = $this->generator('payment_methods')->generate();
-        $this->assertStringContainsString('<textarea name="primary" required></textarea>', $code);
     }
 
     /** @test */
     public function it_adds_a_hidden_field_with_value_0_for_checkboxes()
     {
-        $code = $this->generator('users')->generate();
-        $this->assertCodeContains('<input name="subscribed" type="checkbox" value="1">', $code);
-        $this->assertCodeContains('<input name="subscribed" type="hidden" value="0">', $code);
-    }
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'has_pet' => ['type' => Type::BOOLEAN],
+            ])
+        )->generate();
 
-    /** @test */
-    public function it_renders_numeric_fields_as_inputs_of_type_text()
-    {
-        $code = $this->generator('avatars')->generate();
-        $this->assertStringContainsString('<input name="user-id" required type="text">', $code);
-    }
-
-    /** @test */
-    public function it_renders_text_fields_named_email_as_inputs_of_type_email()
-    {
-        $code = $this->generator('users')->generate();
-        $this->assertStringContainsString('<input name="email" type="email">', $code);
+        $this->assertCodeContains('<input name="has-pet" type="checkbox" value="1">', $code);
+        $this->assertCodeContains('<input name="has-pet" type="hidden" value="0">', $code);
     }
 
     /** @test */
     public function it_fills_fields_with_default_values_with_that_value()
     {
-        $table = $this->mockTable('schools', [
-            'name' => [
-                'type' => Type::STRING,
-                'default' => 'Hogwarts',
-            ],
-            'motto' => [
-                'type' => Type::TEXT,
-                'default' => 'Draco dormiens nunquam titillandus',
-            ],
-            'magical' => [
-                'type' => Type::BOOLEAN,
-                'default' => true,
-            ],
-            'country' => [
-                'enum' => ['uk', 'fr', 'de'],
-                'default' => 'uk',
-            ],
-        ]);
+        $code = $this->generator(
+            $this->mockTable('schools', [
+                'name' => ['type' => Type::STRING, 'default' => 'Hogwarts'],
+                'motto' => ['type' => Type::TEXT, 'default' => 'Draco dormiens nunquam titillandus'],
+                'magical' => ['type' => Type::BOOLEAN, 'default' => true],
+                'country' => ['enum' => ['uk', 'fr', 'de'], 'default' => 'uk'],
+            ])
+        )->generate();
 
-        $code = app(ViewCreateGenerator::class, [
-            'table' => $table,
-        ])->generate();
-
-        $this->assertStringContainsString(
-            '<input name="name" required type="text" value="Hogwarts">',
-            $code
-        );
-
-        $this->assertStringContainsString(
-            '<textarea name="motto" required>Draco dormiens nunquam titillandus</textarea>',
-            $code
-        );
-
-        $this->assertStringContainsString(
-            '<input name="magical" type="checkbox" value="1" checked>',
-            $code
-        );
-
-        $this->assertStringContainsString(
-            '<option value="uk" selected>',
-            $code
-        );
+        $this->assertStringContainsString('<input name="name" required type="text" value="Hogwarts">', $code);
+        $this->assertStringContainsString('<textarea name="motto" required>Draco dormiens nunquam titillandus</textarea>', $code);
+        $this->assertStringContainsString('<input name="magical" type="checkbox" value="1" checked>', $code);
+        $this->assertStringContainsString('<option value="uk" selected>', $code);
     }
 
     /** @test */
     public function it_renders_submit_button()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
+
         $this->assertStringContainsString('<button type="submit">Submit</button>', $code);
     }
 }
