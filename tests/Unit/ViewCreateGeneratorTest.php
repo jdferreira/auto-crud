@@ -66,8 +66,8 @@ class ViewCreateGeneratorTest extends TestCase
         $code = $this->generator(
             $this->mockTable('students', [
                 'id' => ['primaryKey' => true],
-                'name' => [], //
-                'house' => [], //
+                'name' => [],
+                'house' => [],
             ])
         )->generate();
 

@@ -3,101 +3,100 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ViewShowGenerator;
 
 class ViewShowGeneratorTest extends TestCase
 {
     /**
-     * The directory holding the migrations for these tests.
-     *
-     * @var string
-     */
-    protected $migrations = __DIR__ . '/../migrations';
-
-    /**
      * Create a generator that can be used to generate or save the expected file.
      *
-     * @param string $table
+     * @param TableInformation $table
      *
      * @return ViewShowGenerator
      */
-    private function generator(string $table): ViewShowGenerator
+    private function generator(TableInformation $table): ViewShowGenerator
     {
         return app(ViewShowGenerator::class, [
-            'table' => app(TableInformation::class, ['name' => $table]),
+            'table' => $table,
         ]);
     }
 
     /** @test */
     public function it_can_generate_a_view()
     {
-        $this->generator('users')->save();
+        $this->generator(
+            $this->mockTable('students')
+        )->save();
 
-        $this->assertFileExists(resource_path('views/users/show.blade.php'));
+        $this->assertFileExists(resource_path('views/students/show.blade.php'));
     }
 
     /** @test */
     public function it_is_titled_based_on_the_model_name()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
-        $this->assertStringContainsString('<h1>User</h1>', $code);
+        $this->assertStringContainsString('<h1>Student</h1>', $code);
     }
 
     /** @test */
     public function it_contains_a_label_for_each_field()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'name' => [],
+                'house' => [],
+            ])
+        )->generate();
 
         $this->assertStringContainsString('<th>Name</th>', $code);
-        $this->assertStringContainsString('<th>Email</th>', $code);
-        $this->assertStringContainsString('<th>Subscribed</th>', $code);
-        $this->assertStringContainsString('<th>Birthday</th>', $code);
-        $this->assertStringContainsString('<th>Wake up</th>', $code);
+        $this->assertStringContainsString('<th>House</th>', $code);
     }
 
     /** @test */
-    public function it_renders_field_values_according_to_field_type()
+    public function it_formats_column_type()
     {
-        // TODO: These should have better tests that do not depend on the order
-        // of attributes, and such. For the time being, let's not worry about
-        // it, though.
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'birthday' => ['type' => Type::DATE],
+                'lunch' => ['type' => Type::TIME],
+                'letter_sent_at' => ['type' => Type::DATETIME],
+                'has_pet' => ['type' => Type::BOOLEAN],
+            ])
+        )->generate();
 
-        $code = $this->generator('users')->generate();
-
-        $this->assertStringContainsString('<td>{{ $user->name }}</td>', $code);
-        $this->assertStringContainsString('<td>{{ $user->email }}</td>', $code);
-        $this->assertStringContainsString("<td>{{ \$user->subscribed ? '&#10004;' : '&#10008;' }}</td>", $code);
-        $this->assertStringContainsString("<td>{{ \$user->birthday->format('Y-m-d') }}</td>", $code);
-        $this->assertStringContainsString("<td>{{ \$user->wake_up !== null ? \$user->wake_up->format('H:i:s') : null }}</td>", $code);
+        $this->assertStringContainsString('$student->birthday->format(\'Y-m-d\')', $code);
+        $this->assertStringContainsString('$student->lunch->format(\'H:i:s\')', $code);
+        $this->assertStringContainsString('$student->letter_sent_at->format(\'Y-m-d H:i:s\')', $code);
+        $this->assertStringContainsString('$student->has_pet ? \'&#10004;\' : \'&#10008;\'', $code);
     }
 
     /** @test */
     public function it_does_not_render_laravel_timestamps()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'created_at' => [],
+            ])
+        )->generate();
 
-        $this->assertStringNotContainsString('$user->created_at', $code);
-    }
-
-    /** @test */
-    public function it_does_not_render_binary_columns()
-    {
-        $code = $this->generator('avatars')->generate();
-
-        $this->assertStringNotContainsString('<th>Data</th>', $code);
-        $this->assertStringNotContainsString('$avatar->data', $code);
+        $this->assertStringNotContainsString('$student->created_at', $code);
     }
 
     /** @test */
     public function it_renders_delete_and_edit_buttons()
     {
-        $code = $this->generator('users')->generate();
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
 
         $this->assertCodeContains('
-            <a href="{{ route(\'users.edit\', [\'user\' => $user]) }}">Edit</a>
-            <form action="{{ route(\'users.destroy\', [\'user\' => $user]) }}" method="POST">
+            <a href="{{ route(\'students.edit\', [\'student\' => $student]) }}">Edit</a>
+            <form action="{{ route(\'students.destroy\', [\'student\' => $student]) }}" method="POST">
                 @method(\'DELETE\')
                 @csrf
                 <button type="submit">Delete</button>
@@ -106,13 +105,15 @@ class ViewShowGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_renders_action_route_names_with_the_tablename()
+    public function it_uses_correct_case_on_the_edit_and_delete_buttons()
     {
-        $code = $this->generator('payment_methods')->generate();
+        $code = $this->generator(
+            $this->mockTable('staff_facilities')
+        )->generate();
 
         $this->assertCodeContains('
-            <a href="{{ route(\'payment_methods.edit\', [\'payment_method\' => $paymentMethod]) }}">Edit</a>
-            <form action="{{ route(\'payment_methods.destroy\', [\'payment_method\' => $paymentMethod]) }}" method="POST">
+            <a href="{{ route(\'staff_facilities.edit\', [\'staff_facility\' => $staffFacility]) }}">Edit</a>
+            <form action="{{ route(\'staff_facilities.destroy\', [\'staff_facility\' => $staffFacility]) }}" method="POST">
                 @method(\'DELETE\')
                 @csrf
                 <button type="submit">Delete</button>
