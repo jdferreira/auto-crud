@@ -10,46 +10,42 @@ use Ferreira\AutoCrud\Generators\RequestGenerator;
 class RequestGeneratorTest extends TestCase
 {
     /**
-     * The directory holding the migrations for these tests.
-     *
-     * @var string
-     */
-    protected $migrations = __DIR__ . '/../migrations';
-
-    /**
      * Create a generator that can be used to generate or save the expected file.
      *
-     * @param string $table
-     * @param string $dir
+     * @param TableInformation $table
      *
      * @return RequestGenerator
      */
-    private function generator(string $table): RequestGenerator
+    private function generator(TableInformation $table): RequestGenerator
     {
-        return app(RequestGenerator::class, [
-            'table' => app(TableInformation::class, ['name' => $table]),
-        ]);
+        return app(RequestGenerator::class, ['table' => $table]);
     }
 
     /** @test */
     public function it_can_generate_a_request()
     {
-        $this->generator('users')->save();
+        $this->generator(
+            $this->mockTable('students')
+        )->save();
 
-        $this->assertFileExists(app_path('Http/Requests/UserRequest.php'));
+        $this->assertFileExists(app_path('Http/Requests/StudentRequest.php'));
     }
 
     /** @test */
     public function it_detects_model_namespace()
     {
-        // This test only works because the users table contains a unique
-        // column, and so the request generator needs to know how to get to that
-        // model.
+        // This test depends on the table containing a unique column, which
+        // makes the generated request class to need to know how to get to the
+        // model class
 
-        $code = $this->generator('users')->setModelDirectory('Models')->generate();
+        $code = $this->generator(
+            $this->mockTable('schools', [
+                'name' => ['unique' => true],
+            ])
+        )->generate();
 
         $this->assertStringContainsString(
-            'use App\Models\User;',
+            'use App\School;',
             $code
         );
     }
@@ -57,12 +53,12 @@ class RequestGeneratorTest extends TestCase
     /** @test */
     public function it_uses_the_tablename_to_name_the_request()
     {
-        $code = $this->generator('products')->generate();
+        $code = $this->generator(
+            $this->mockTable('student')
+        )->generate();
 
-        $this->assertStringContainsString(
-            'class ProductRequest extends FormRequest',
-            $code
-        );
+        $this->assertStringContainsString('use Illuminate\Foundation\Http\FormRequest;', $code);
+        $this->assertStringContainsString('class StudentRequest extends FormRequest', $code);
     }
 
     /** @test */
@@ -74,95 +70,10 @@ class RequestGeneratorTest extends TestCase
             });
         });
 
-        $this->generator('users')->generate();
-    }
-
-    /** @test */
-    public function it_generates_a_correct_validation_for_users()
-    {
-        $code = $this->generator('users')->generate();
-
-        $this->assertCodeContains("
-            \$model = \$this->route('user');
-
-            return [
-                'name' => 'required',
-                'email' => [
-                    'nullable',
-                    'email:rfc',
-                    Rule::unique('users')->ignore(\$model),
-                ],
-                'subscribed' => 'required|boolean',
-                'birthday' => 'required|date_format:Y-m-d',
-                'wake_up' => 'nullable|date_format:H:i:s',
-            ];
-        ", $code);
-    }
-
-    /** @test */
-    public function it_generates_a_correct_validation_for_avatars()
-    {
-        $code = $this->generator('avatars')->generate();
-
-        $this->assertCodeContains("
-            \$model = \$this->route('avatar');
-
-            return [
-                'user_id' => [
-                    'required',
-                    'integer',
-                    'exists:users,id',
-                    Rule::unique('avatars')->ignore(\$model),
-                ],
-                'file' => 'required',
-            ];
-        ", $code);
-    }
-
-    /** @test */
-    public function it_generates_a_correct_validation_for_products()
-    {
-        $code = $this->generator('products')->generate();
-
-        $this->assertCodeContains("
-            return [
-                'owner_id' => 'required|integer|exists:users,id',
-                'type' => 'nullable|in:food,stationery,other',
-                'value' => [
-                    'required',
-                    'regex:/^[+-]?(?:\d+\.?|\d*\.\d+)$/',
-                ],
-                'start_at' => 'required|date',
-            ];
-        ", $code);
-    }
-
-    /** @test */
-    public function it_generates_a_correct_validation_for_roles()
-    {
-        $code = $this->generator('roles')->generate();
-
-        $this->assertCodeContains("
-            return [
-                'name' => 'required',
-                'description' => 'required',
-            ];
-        ", $code);
-    }
-
-    // TODO: What about many-to-many relationhsips??
-
-    /** @test */
-    public function it_generates_a_correct_validation_for_sales()
-    {
-        $code = $this->generator('sales')->generate();
-
-        $this->assertCodeContains("
-            return [
-                'product_id' => 'required|integer|exists:products',
-                'amount' => 'required|integer',
-                'date' => 'required|date_format:Y-m-d',
-            ];
-        ", $code);
+        $this->generator(
+            $this->mockTable('students', [
+                'name' => [],
+            ])
+        )->generate();
     }
 }
