@@ -158,6 +158,7 @@ class ViewCreateGeneratorTest extends TestCase
                 'motto' => ['type' => Type::TEXT, 'default' => 'Draco dormiens nunquam titillandus'],
                 'magical' => ['type' => Type::BOOLEAN, 'default' => true],
                 'country' => ['enum' => ['uk', 'fr', 'de'], 'default' => 'uk'],
+                'start_of_next_year' => ['type' => Type::DATE, 'default' => 'CURRENT_TIMESTAMP'],
             ])
         )->generate();
 
@@ -165,6 +166,7 @@ class ViewCreateGeneratorTest extends TestCase
         $this->assertStringContainsString('<textarea name="motto" required>Draco dormiens nunquam titillandus</textarea>', $code);
         $this->assertStringContainsString('<input name="magical" type="checkbox" value="1" checked>', $code);
         $this->assertStringContainsString('<option value="uk" selected>', $code);
+        $this->assertStringContainsString('<input name="start-of-next-year" required type="date" value="{{ now() }}">', $code);
     }
 
     /** @test */

@@ -17,7 +17,7 @@ class TestGenerator extends BaseGenerator
     private $fakes = [];
 
     /** @var string[] */
-    private $otherModels = [];
+    private $otherUses = [];
 
     protected function stub(): string
     {
@@ -31,14 +31,15 @@ class TestGenerator extends BaseGenerator
 
     protected function replacements(): array
     {
-        // We need to generate the assertFields code first, because it tells us
-        // if we need to use additional models
+        // We need to generate a few blocks of code first, because they tell us
+        // if we need to use additional classes
         $assertFields = $this->assertFields();
+        $setTime = $this->setTime();
 
         return [
             'modelNamespace' => $this->modelNamespace(),
             'modelClass' => $this->modelClass(),
-            'useOtherModels' => $this->useOtherModels(),
+            'otherUses' => $this->otherUses(),
             'modelClassPlural' => $this->modelClassPlural(),
             'tablename' => $this->tablename(),
             'modelVariablePlural' => $this->modelVariablePlural(),
@@ -47,6 +48,7 @@ class TestGenerator extends BaseGenerator
             'tablenameSingularWithArticle' => $this->tablenameSingularWithArticle(),
             'tablenameSingular' => $this->tablenameSingular(),
             'assertHTMLOnForm' => $this->assertHTMLOnForm(),
+            'setTime' => $setTime,
             'assertDefaultValuesOnCreateForm' => $this->assertDefaultValuesOnCreateForm(),
             'assertEditFormHasValues' => $this->assertEditFormHasValues(),
             'oneConstraintField' => $this->oneConstraintField(),
@@ -76,13 +78,11 @@ class TestGenerator extends BaseGenerator
         return $code;
     }
 
-    public function useOtherModels()
+    public function otherUses()
     {
-        return collect($this->otherModels)
-            ->map(function ($classname) {
-                $namespace = $this->modelNamespace();
-
-                return "use $namespace\\$classname;";
+        return collect($this->otherUses)
+            ->map(function ($class) {
+                return "use $class;";
             })
             ->all();
     }
@@ -250,15 +250,34 @@ class TestGenerator extends BaseGenerator
         return $result->all();
     }
 
+    public function setTime()
+    {
+        // We need to set a test timestamp when there are date-like columns that
+        // have a default value of CURRENT_TIMESTAMP.
+
+        $needsCarbonSetTestNow = collect($this->table->columns())
+            ->filter(function ($column) {
+                return in_array($this->table->type($column), [Type::DATE, Type::TIME, Type::DATETIME])
+                    && $this->table->default($column) === 'CURRENT_TIMESTAMP';
+            })
+            ->count() > 0;
+
+        if ($needsCarbonSetTestNow) {
+            $this->otherUses[] = 'Carbon\\Carbon';
+
+            return 'Carbon::setTestNow(\'2020-01-01 01:02:03\');';
+        } else {
+            return;
+        }
+    }
+
     public function assertDefaultValuesOnCreateForm()
     {
-        $hasDates = false;
-
         $lines = $this->fieldsExcept(['id'])
             ->filter(function ($column) {
                 return $this->table->hasDefault($column);
             })
-            ->map(function ($column) use (&$hasDates) {
+            ->map(function ($column) {
                 $type = $this->table->type($column);
 
                 $name = $this->quoteName($column);
@@ -279,15 +298,12 @@ class TestGenerator extends BaseGenerator
                     $type = 'email';
                 } elseif ($type === Type::DATE) {
                     $type = 'date';
-                    $hasDates = true;
                     $value = '2020-01-01';
                 } elseif ($type === Type::TIME) {
                     $type = 'time';
-                    $hasDates = true;
                     $value = '01:02:03';
                 } elseif ($type === Type::DATETIME) {
                     $type = 'datetime';
-                    $hasDates = true;
                     $value = '2020-01-01 01:02:03';
                 } else {
                     $type = 'text';
@@ -297,16 +313,6 @@ class TestGenerator extends BaseGenerator
             })
             ->filter()
             ->all();
-
-        if ($hasDates) {
-            $lines = array_merge(
-                [
-                    '\Carbon\Carbon::setTestNow(\'2020-01-01 01:02:03\');',
-                    '',
-                ],
-                $lines
-            );
-        }
 
         return $lines;
     }
@@ -581,7 +587,7 @@ class TestGenerator extends BaseGenerator
     {
         $foreignClass = Str::studly(Str::singular($foreignTable));
 
-        $this->otherModels[] = $foreignClass;
+        $this->otherUses[] = $this->modelNamespace() . '\\' . $foreignClass;
 
         return [
             "    ->accepts(factory($foreignClass::class)->create()->$foreignColumn)",

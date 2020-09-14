@@ -3,12 +3,12 @@
 namespace Tests;
 
 use {{ modelNamespace }}\{{ modelClass }};
-{{ useOtherModels }}
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use Ferreira\AutoCrud\AssertsHTML;
 use Ferreira\AutoCrud\AssertsField;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+{{ otherUses }}
 
 class {{ modelClassPlural }}CrudTest extends TestCase
 {
@@ -56,6 +56,8 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_starts_the_{{ tablenameSingular }}_create_form_with_the_default_values()
     {
+        {{ setTime }}
+
         $document = $this->getDOMDocument(
             $this->get('/{{ tablename }}/create')
         );

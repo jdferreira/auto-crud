@@ -230,37 +230,6 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_handles_datetime_with_current_timestamp_as_default_value()
-    {
-        $generator = $this->generator(
-            $this->mockTable('tablename', [
-                'datetime' => [
-                    'default' => 'CURRENT_TIMESTAMP',
-                    'type' => Type::DATETIME,
-                ],
-                'date' => [
-                    'default' => 'CURRENT_TIMESTAMP',
-                    'type' => Type::DATE,
-                ],
-                'hour' => [
-                    'default' => 'CURRENT_TIMESTAMP',
-                    'type' => Type::TIME,
-                ],
-            ])
-        );
-
-        $lines = $generator->assertDefaultValuesOnCreateForm();
-
-        $this->assertEquals([
-            '\Carbon\Carbon::setTestNow(\'2020-01-01 01:02:03\');',
-            '',
-            '$this->assertHTML("//input[@name=\'datetime\' and @type=\'datetime\' and @value=\'2020-01-01 01:02:03\']", $document);',
-            '$this->assertHTML("//input[@name=\'date\' and @type=\'date\' and @value=\'2020-01-01\']", $document);',
-            '$this->assertHTML("//input[@name=\'hour\' and @type=\'time\' and @value=\'01:02:03\']", $document);',
-        ], $lines);
-    }
-
-    /** @test */
     public function it_does_not_test_default_values_on_the_create_form_when_the_table_has_none()
     {
         $code = $this->generator(
@@ -512,10 +481,38 @@ class TestGeneratorTest extends TestCase
         );
 
         $generator->assertFields(); // This finds the other models to use
-        $lines = $generator->useOtherModels();
+        $lines = $generator->otherUses();
 
         $this->assertEquals([
             'use App\Country;',
         ], $lines);
+    }
+
+    /** @test */
+    public function it_uses_carbon_and_sets_test_now_when_needed()
+    {
+        $generator = $this->generator(
+            $this->mockTable('schools', [
+                'start_of_next_year' => ['type' => Type::DATE, 'default' => 'CURRENT_TIMESTAMP'],
+            ])
+        );
+
+        $this->assertEquals(
+            'Carbon::setTestNow(\'2020-01-01 01:02:03\');',
+            $generator->setTime()
+        );
+
+        // Recreate the generator to ensure that the state of the otherUses is
+        // not kept between calls.
+        $generator = $this->generator(
+            $this->mockTable('schools', [
+                'start_of_next_year' => ['type' => Type::DATE, 'default' => 'CURRENT_TIMESTAMP'],
+            ])
+        );
+
+        $this->assertStringContainsString(
+            'use Carbon\Carbon;',
+            $generator->generate()
+        );
     }
 }

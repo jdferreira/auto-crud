@@ -162,7 +162,19 @@ class ViewCreateGenerator extends BaseGenerator
     protected function regularInput(string $column, string $inputType, string $attrs)
     {
         if ($this->table->hasDefault($column)) {
-            $default = ' value="' . $this->table->default($column) . '"';
+            $default = $this->table->default($column);
+
+            $timeColumn = in_array($this->table->type($column), [
+                Type::DATE,
+                Type::DATETIME,
+                Type::TIME,
+            ]);
+
+            if ($timeColumn && $default === 'CURRENT_TIMESTAMP') {
+                $default = '{{ now() }}';
+            }
+
+            $default = " value=\"$default\"";
         } else {
             $default = '';
         }
