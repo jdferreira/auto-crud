@@ -462,6 +462,7 @@ class TestGeneratorTest extends TestCase
                 'name' => ['unique' => 'true'],
                 'magical' => ['type' => Type::BOOLEAN, 'required' => false],
                 'foundation_year' => ['type' => Type::INTEGER],
+                'country' => ['type' => Type::INTEGER, 'reference' => ['countries', 'id']],
             ])
         );
 
@@ -493,6 +494,28 @@ class TestGeneratorTest extends TestCase
             '    ->rejects(\'3.14\')',
             '    ->rejects(\'not-a-number\')',
             '    ->rejects(null);',
+            '',
+            '$this->assertField(\'country\')',
+            '    ->accepts(factory(Country::class)->create()->id)',
+            '    ->rejects(Country::query()->orderBy(\'id\', \'desc\')->limit(1)->first()->id + 1)',
+            '    ->rejects(null);',
+        ], $lines);
+    }
+
+    /** @test */
+    public function it_uses_models_needed_for_validation()
+    {
+        $generator = $this->generator(
+            $this->mockTable('schools', [
+                'country' => ['type' => Type::INTEGER, 'reference' => ['countries', 'id']],
+            ])
+        );
+
+        $generator->assertFields(); // This finds the other models to use
+        $lines = $generator->useOtherModels();
+
+        $this->assertEquals([
+            'use App\Country;',
         ], $lines);
     }
 }

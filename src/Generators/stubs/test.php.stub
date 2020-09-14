@@ -3,6 +3,7 @@
 namespace Tests;
 
 use {{ modelNamespace }}\{{ modelClass }};
+{{ useOtherModels }}
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use Ferreira\AutoCrud\AssertsHTML;

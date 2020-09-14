@@ -16,6 +16,9 @@ class TestGenerator extends BaseGenerator
     /** @var string[] */
     private $fakes = [];
 
+    /** @var string[] */
+    private $otherModels = [];
+
     protected function stub(): string
     {
         return 'test.php.stub';
@@ -28,9 +31,14 @@ class TestGenerator extends BaseGenerator
 
     protected function replacements(): array
     {
+        // We need to generate the assertFields code first, because it tells us
+        // if we need to use additional models
+        $assertFields = $this->assertFields();
+
         return [
             'modelNamespace' => $this->modelNamespace(),
             'modelClass' => $this->modelClass(),
+            'useOtherModels' => $this->useOtherModels(),
             'modelClassPlural' => $this->modelClassPlural(),
             'tablename' => $this->tablename(),
             'modelVariablePlural' => $this->modelVariablePlural(),
@@ -45,7 +53,7 @@ class TestGenerator extends BaseGenerator
             'oneInvalidValue' => $this->oneInvalidValue(),
             'assertRequiredFields' => $this->assertRequiredFields(),
             'assertNewEqualsModel' => $this->assertNewEqualsModel(),
-            'assertFields' => $this->assertFields(),
+            'assertFields' => $assertFields,
         ];
     }
 
@@ -66,6 +74,17 @@ class TestGenerator extends BaseGenerator
         }
 
         return $code;
+    }
+
+    public function useOtherModels()
+    {
+        return collect($this->otherModels)
+            ->map(function ($classname) {
+                $namespace = $this->modelNamespace();
+
+                return "use $namespace\\$classname;";
+            })
+            ->all();
     }
 
     private function modelClassPlural()
@@ -523,23 +542,13 @@ class TestGenerator extends BaseGenerator
 
     private function assertField(string $column)
     {
-        $accepts = $this->fakeValid($column);
-        $rejects = $this->fakeInvalid($column);
-
-        if (array_key_exists($column, $this->fakes)) {
-            $duplicateValue = array_shift($accepts);
-
-            $rejects[] = [$duplicateValue, 'Duplicate values must be rejected'];
+        if (($reference = $this->table->reference($column)) !== null) {
+            $assertions = $this->assertionsForReference($reference[0], $reference[1]);
+        } else {
+            $assertions = $this->assertionsForRaw($column);
         }
 
-        $assertions = array_merge(
-            $this->stackFieldAssertion($accepts, 'accepts'),
-            $this->stackFieldAssertion($rejects, 'rejects')
-        );
-
-        $required = $this->table->required($column);
-
-        $assertions[] = $required
+        $assertions[] = $this->table->required($column)
             ? '    ->rejects(null);'
             : '    ->accepts(null);';
 
@@ -549,6 +558,35 @@ class TestGenerator extends BaseGenerator
             ],
             $assertions
         );
+    }
+
+    private function assertionsForRaw(string $column)
+    {
+        $accepts = $this->fakeValid($column);
+        $rejects = $this->fakeInvalid($column);
+
+        if (array_key_exists($column, $this->fakes)) {
+            $duplicateValue = array_shift($accepts);
+
+            $rejects[] = [$duplicateValue, 'Duplicate values must be rejected'];
+        }
+
+        return array_merge(
+            $this->stackFieldAssertion($accepts, 'accepts'),
+            $this->stackFieldAssertion($rejects, 'rejects')
+        );
+    }
+
+    private function assertionsForReference(string $foreignTable, string $foreignColumn)
+    {
+        $foreignClass = Str::studly(Str::singular($foreignTable));
+
+        $this->otherModels[] = $foreignClass;
+
+        return [
+            "    ->accepts(factory($foreignClass::class)->create()->$foreignColumn)",
+            "    ->rejects($foreignClass::query()->orderBy('$foreignColumn', 'desc')->limit(1)->first()->$foreignColumn + 1)",
+        ];
     }
 
     private function stackFieldAssertion($values, $method)
