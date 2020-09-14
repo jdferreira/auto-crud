@@ -249,7 +249,7 @@ class TestGenerator extends BaseGenerator
                 if ($type === Type::ENUM) {
                     return $this->wrapXPath("//select[@name='$name']/option[@name='$value' and @selected]");
                 } elseif ($type === Type::TEXT) {
-                    return $this->wrapXPath("//textarea[@name='$name' and text()='$value']");
+                    return $this->wrapXPath("//textarea[@name='$name' and .='$value']");
                 } elseif ($type === Type::BOOLEAN) {
                     $checked = $value ? '@checked' : 'not(@checked)';
 
@@ -358,7 +358,7 @@ class TestGenerator extends BaseGenerator
 
                 $name = $this->quoteName($column);
 
-                return $this->wrapXPath("//*[@name='$name' and text()='%s']", [$value]);
+                return $this->wrapXPath("//*[@name='$name' and .='%s']", [$value]);
             });
 
         $inputs = $regularInputs;

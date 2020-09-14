@@ -223,7 +223,7 @@ class TestGeneratorTest extends TestCase
 
         $this->assertEquals([
             '$this->assertHTML("//input[@name=\'name\' and @type=\'text\' and @value=\'Hogwarts\']", $document);',
-            '$this->assertHTML("//textarea[@name=\'motto\' and text()=\'Draco dormiens nunquam titillandus\']", $document);',
+            '$this->assertHTML("//textarea[@name=\'motto\' and .=\'Draco dormiens nunquam titillandus\']", $document);',
             '$this->assertHTML("//input[@name=\'magical\' and @type=\'checkbox\' and @checked]", $document);',
             '$this->assertHTML("//select[@name=\'country\']/option[@name=\'uk\' and @selected]", $document);',
         ], $lines);
@@ -319,7 +319,7 @@ class TestGeneratorTest extends TestCase
             '',
             '$this->assertHTML($this->xpath("//*[@name=\'gender\']/option[@value=\'%s\' and @selected]", $student->gender), $document);',
             '',
-            '$this->assertHTML($this->xpath("//*[@name=\'notes\' and text()=\'%s\']", $student->notes), $document);',
+            '$this->assertHTML($this->xpath("//*[@name=\'notes\' and .=\'%s\']", $student->notes), $document);',
         ], $lines);
     }
 
