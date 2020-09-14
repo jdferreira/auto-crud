@@ -386,7 +386,7 @@ class TestGenerator extends BaseGenerator
                 Type::ENUM,
             ];
 
-            return ($this->table->required($column) && ! $this->table->hasDefault($column))
+            return $this->table->required($column)
                 || in_array($this->table->type($column), $constraintTypes)
                 || in_array($column, ['email', 'uuid'])
                 || $this->table->reference($column) !== null;
@@ -405,8 +405,8 @@ class TestGenerator extends BaseGenerator
             return null;
         }
 
-        // If the field is not required, just send an empty string
-        if (! $this->table->required($column)) {
+        // If the field is required, the empty string is an invalid value
+        if ($this->table->required($column)) {
             return "''";
         }
 

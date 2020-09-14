@@ -341,22 +341,27 @@ class TestGeneratorTest extends TestCase
         // that column and that `$generator->oneInvalidValue()` returns the
         // expected invalid value.
         $specs = [
-            ['required' => false, 'expected' => null],
-            ['type' => Type::INTEGER, 'expected' => "'???'"],
-            ['type' => Type::BOOLEAN, 'expected' => "'???'"],
-            ['type' => Type::DATETIME, 'expected' => "'???'"],
-            ['type' => Type::DATE, 'expected' => "'???'"],
-            ['type' => Type::TIME, 'expected' => "'???'"],
-            ['type' => Type::DECIMAL, 'expected' => "'???'"],
-            ['enum' => ['red', 'green', 'blue'], 'expected' => "'???'"],
-            ['reference' => ['other', 'id'], 'expected' => "'???'"],
-            ['name' => 'email', 'expected' => "'???'"],
-            ['name' => 'uuid', 'expected' => "'???'"],
+            ['required' => true, 'type' => Type::STRING, 'invalid' => "''"],
+            ['required' => true, 'type' => Type::TEXT, 'invalid' => "''"],
+            ['required' => true, 'type' => Type::INTEGER, 'invalid' => "''"],
+            ['required' => true, 'name' => 'email', 'invalid' => "''"],
+            ['required' => false, 'type' => Type::STRING, 'invalid' => null],
+            ['required' => false, 'type' => Type::TEXT, 'invalid' => null],
+            ['required' => false, 'type' => Type::INTEGER, 'invalid' => "'???'"],
+            ['required' => false, 'type' => Type::BOOLEAN, 'invalid' => "'???'"],
+            ['required' => false, 'type' => Type::DATETIME, 'invalid' => "'???'"],
+            ['required' => false, 'type' => Type::DATE, 'invalid' => "'???'"],
+            ['required' => false, 'type' => Type::TIME, 'invalid' => "'???'"],
+            ['required' => false, 'type' => Type::DECIMAL, 'invalid' => "'???'"],
+            ['required' => false, 'enum' => ['red', 'green', 'blue'], 'invalid' => "'???'"],
+            ['required' => false, 'reference' => ['other', 'id'], 'invalid' => "'???'"],
+            ['required' => false, 'name' => 'email', 'invalid' => "'???'"],
+            ['required' => false, 'name' => 'uuid', 'invalid' => "'???'"],
         ];
 
         foreach ($specs as $spec) {
             $columnName = Arr::pull($spec, 'name', 'column');
-            $expectedInvalidValue = Arr::pull($spec, 'expected');
+            $expectedInvalidValue = Arr::pull($spec, 'invalid');
 
             $generator = $this->generator(
                 $this->mockTable('students', [
