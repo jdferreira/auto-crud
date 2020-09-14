@@ -89,34 +89,4 @@ class DatabaseInformationTest extends TestCase
 
         $this->assertSetsEqual($expected, $relationships);
     }
-
-    /** @test */
-    public function it_detects_unique_columns()
-    {
-        $this->assertTrue($this->db->unique('avatars', 'id'));
-        $this->assertTrue($this->db->unique('avatars', 'user_id'));
-
-        $this->assertNull($this->db->unique('avatars', 'non_existing_column'));
-        $this->assertNull($this->db->unique('non_existing_table', 'non_existing_column'));
-    }
-
-    /** @test */
-    public function it_detects_primary_keys()
-    {
-        $this->assertEquals($this->db->primaryKey('users'), 'id');
-        $this->assertEquals($this->db->primaryKey('products'), 'product_id');
-
-        $this->assertNull($this->db->primaryKey('non_existing_table'));
-    }
-
-    /** @test */
-    public function it_computes_expected_foreign_key_column_name_for_a_table()
-    {
-        $this->assertEquals($this->db->foreignKey('users'), 'user_id');
-        $this->assertEquals($this->db->foreignKey('products'), 'product_product_id');
-        $this->assertEquals($this->db->foreignKey('avatars'), 'avatar_id');
-        $this->assertEquals($this->db->foreignKey('sales'), 'sale_id');
-
-        $this->assertNull($this->db->foreignKey('non_existing_table'));
-    }
 }

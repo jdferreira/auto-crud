@@ -93,9 +93,9 @@ class SetsEqualConstraint extends Constraint
     protected function failureDescription($other): string
     {
         if ($this->missing !== null) {
-            return 'an array contains the value ' . $this->exporter->export($this->missing);
+            return 'an array contains the value ' . $this->exporter()->export($this->missing);
         } elseif ($this->extra !== null) {
-            return 'an array does not contain the value ' . $this->exporter->export($this->extra);
+            return 'an array does not contain the value ' . $this->exporter()->export($this->extra);
         } else {
             return 'an array ' . $this->toString();
         }

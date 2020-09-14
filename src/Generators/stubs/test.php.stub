@@ -22,44 +22,6 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         $this->withoutExceptionHandling();
     }
 
-    /** @not-a-test this will be deleted in the future */
-    public function regular_crud_routes_exist_for_{{ tablename }}()
-    {
-        factory({{ modelClass }}::class)->create();
-        $this->assertNotNull({{ modelClass }}::find(1));
-
-        $expectedRoutes = [
-            ['GET', '/{{ tablename }}'],
-            ['GET', '/{{ tablename }}/create'],
-            ['GET', '/{{ tablename }}/1'],
-            ['GET', '/{{ tablename }}/1/edit'],
-            ['POST', '/{{ tablename }}'],
-            ['PUT', '/{{ tablename }}/1'],
-            ['DELETE', '/{{ tablename }}/1'],
-        ];
-
-        foreach ($expectedRoutes as [$method, $path]) {
-            $method = Str::lower($method);
-
-            $this->$method($path)->assertOk();
-        }
-
-        $this->assertNull({{ modelClass }}::find(2));
-
-        $expectedFailingRoutes = [
-            ['GET', '/{{ tablename }}/2'],
-            ['GET', '/{{ tablename }}/2/edit'],
-            ['PUT', '/{{ tablename }}/2'],
-            ['DELETE', '/{{ tablename }}/2'],
-        ];
-
-        foreach ($expectedFailingRoutes as [$method, $path]) {
-            $method = Str::lower($method);
-
-            $this->{$method}($path)->assertNotFound();
-        }
-    }
-
     /** @test */
     public function it_shows_existing_{{ tablename }}_in_the_index()
     {

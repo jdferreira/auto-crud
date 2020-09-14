@@ -20,7 +20,7 @@ class TableInformation
      *
      * @var string
      */
-    private $name;
+    public $name;
 
     /**
      * @var \Doctrine\DBAL\Schema\Column[]
@@ -312,6 +312,17 @@ class TableInformation
     }
 
     /**
+     * Return the name that is expected for a column that has a foreign key
+     * constraint to this table.
+     *
+     * @return string
+     */
+    public function foreignKey(): ?string
+    {
+        return Str::snake(Str::singular($this->name())) . '_' . $this->primaryKey();
+    }
+
+    /**
      * Determine whether this table has a column named `deleted_at` whose type
      * is one of the possible types used by laravel for this column, which,
      * by laravel documentation means either `TIMESTAMP` or `TIMESTAMPTZ`.
@@ -345,7 +356,7 @@ class TableInformation
     public function isPivot(): bool
     {
         return
-            count($this->references) === 2 &&
+            count($this->allReferences()) === 2 &&
             count(array_diff($this->columns(), ['id', 'created_at', 'updated_at'])) === 2;
         // TODO: What about soft deletes?
     }

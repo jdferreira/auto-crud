@@ -51,8 +51,6 @@ class TestGenerator extends BaseGenerator
 
     protected function postProcess(string $code): string
     {
-        $this->files->put('invalid.php', $code);
-
         $placeholder = $this->tablenameSingular();
 
         $countDefaultFields = $this->fields()->filter(function ($column) {

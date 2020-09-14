@@ -36,7 +36,7 @@ $specs = [
     2 => ['pipe', 'w'],
 ];
 
-$pupunitProcess = proc_open('phpunit --exclude-group end-to-end', $specs, $pipes);
+$pupunitProcess = proc_open('phpunit --exclude-group end-to-end --color=always', $specs, $pipes);
 
 stream_copy_to_stream($pipes[1], STDOUT);
 fclose($pipes[1]);

@@ -161,82 +161,102 @@ class ModelGeneratorTest extends TestCase
         $this->assertStringNotContainsString('protected $casts', $code);
     }
 
-    /** @not-test TODO: Re-add this as a actual test */
+    /** @test */
     public function it_handles_one_to_one_relationships()
     {
-        $users = $this->generator('users')->generate();
-        $avatars = $this->generator('avatars')->generate();
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pets = $this->mockTable('pets', [
+            'owner_id' => ['reference' => ['students', 'id'], 'unique' => true],
+        ]);
+
+        $this->mockDatabase($students, $pets);
+
+        $students = $this->generator($students)->generate();
+        $pets = $this->generator($pets)->generate();
 
         $this->assertCodeContains('
-            public function avatar()
+            public function pet()
             {
-                return $this->hasOne(Avatar::class);
+                return $this->hasOne(Pet::class, \'owner_id\');
             }
-        ', $users);
+        ', $students);
 
         $this->assertCodeContains('
-            public function user()
-            {
-                return $this->belongsTo(User::class);
-            }
-        ', $avatars);
-    }
-
-    /** @not-test TODO: Re-add this as a actual test */
-    public function it_handles_one_to_many_relationships()
-    {
-        $users = $this->generator('users')->generate();
-        $products = $this->generator('products')->generate();
-        $sales = $this->generator('sales')->generate();
-
-        $this->assertCodeContains("
-            public function products()
-            {
-                return \$this->hasMany(Product::class, 'owner_id');
-            }
-        ", $users);
-
-        $this->assertCodeContains("
             public function owner()
             {
-                return \$this->belongsTo(User::class, 'owner_id');
+                return $this->belongsTo(Student::class, \'owner_id\');
             }
-        ", $products);
-
-        $this->assertCodeContains("
-            public function sales()
-            {
-                return \$this->hasMany(Sale::class, 'product_id');
-            }
-        ", $products);
-
-        $this->assertCodeContains("
-            public function product()
-            {
-                return \$this->belongsTo(Product::class, 'product_id');
-            }
-        ", $sales);
+        ', $pets);
     }
 
-    /** @not-test TODO: Re-add this as a actual test */
+    /** @test */
+    public function it_handles_one_to_many_relationships()
+    {
+        $houses = $this->mockTable('houses', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $students = $this->mockTable('students', [
+            'house_id' => ['reference' => ['houses', 'id']],
+        ]);
+
+        $this->mockDatabase($houses, $students);
+
+        $houses = $this->generator($houses)->generate();
+        $students = $this->generator($students)->generate();
+
+        $this->assertCodeContains('
+            public function students()
+            {
+                return $this->hasMany(Student::class);
+            }
+        ', $houses);
+
+        $this->assertCodeContains('
+            public function house()
+            {
+                return $this->belongsTo(House::class);
+            }
+        ', $students);
+    }
+
+    /** @test TODO: Re-add this as a actual test */
     public function it_handles_many_to_many_relationships()
     {
-        $users = $this->generator('users')->generate();
-        $roles = $this->generator('roles')->generate();
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $students = $this->generator($students)->generate();
+        $classes = $this->generator($classes)->generate();
 
         $this->assertCodeContains('
-            public function roles()
+            public function classes()
             {
-                return $this->belongsToMany(Role::class);
+                return $this->belongsToMany(Class::class);
             }
-        ', $users);
+        ', $students);
 
         $this->assertCodeContains('
-            public function users()
+            public function students()
             {
-                return $this->belongsToMany(User::class);
+                return $this->belongsToMany(Student::class);
             }
-        ', $roles);
+        ', $classes);
     }
 
     /** @test */

@@ -5,6 +5,7 @@ namespace Tests;
 use Exception;
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
+use Illuminate\Database\Connection;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
@@ -299,6 +300,17 @@ abstract class TestCase extends BaseTestCase
             $mock->shouldReceive('primaryKey')->andReturn($primaryKey);
             $mock->shouldReceive('columns')->andReturn(array_keys($columns));
             $mock->shouldReceive('softDeletes')->andReturn(Arr::has($columns, 'deleted_at'));
+
+            $mock->shouldReceive('allReferences')->andReturn(
+                collect($columns)
+                    ->mapWithKeys(function ($column, $key) {
+                        return [$key => Arr::get($column, 'reference')];
+                    })
+                    ->filter()
+                    ->all()
+                );
+
+            $mock->makePartial();
         });
 
         // We do not want to count the expectations of this mock as assertions
@@ -307,5 +319,24 @@ abstract class TestCase extends BaseTestCase
         $this->addToAssertionCount(-$mock->mockery_getExpectationCount());
 
         return $mock;
+    }
+
+    /**
+     * Mocks the DatabaseInformation class so that it consists of the set of
+     * tables described by the given TableInformation instances.
+     *
+     * @param \Ferreira\AutoCrud\Database\TableInformation ...$tables
+     */
+    protected function mockDatabase(TableInformation ...$tables)
+    {
+        $tables = collect($tables)->mapWithKeys(function ($table) {
+            return [$table->name() => $table];
+        });
+
+        $this->app->bind(DatabaseInformation::class, function () use ($tables) {
+            return $this->mock(DatabaseInformation::class, function ($mock) use ($tables) {
+                $mock->shouldReceive('tables')->andReturn($tables);
+            })->makePartial();
+        });
     }
 }

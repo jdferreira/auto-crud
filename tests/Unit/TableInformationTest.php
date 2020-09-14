@@ -224,4 +224,13 @@ class TableInformationTest extends TestCase
     }
 
     // TODO: Test that boolean columns with default values are never nullable
+
+    /** @test */
+    public function it_computes_expected_foreign_key_column_name()
+    {
+        $this->assertEquals((new TableInformation('users'))->foreignKey(), 'user_id');
+        $this->assertEquals((new TableInformation('products'))->foreignKey(), 'product_product_id');
+        $this->assertEquals((new TableInformation('avatars'))->foreignKey(), 'avatar_id');
+        $this->assertEquals((new TableInformation('sales'))->foreignKey(), 'sale_id');
+    }
 }

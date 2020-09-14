@@ -243,8 +243,8 @@ class ModelGenerator extends BaseGenerator
         ];
 
         $defaultValues = [
-            "'" . $this->db->foreignKey($relation->foreignTable) . "'",
-            "'" . $this->db->primaryKey($relation->foreignTable) . "'",
+            "'" . $this->db->table($relation->foreignTable)->foreignKey() . "'",
+            "'" . $this->db->table($relation->foreignTable)->primaryKey() . "'",
         ];
 
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
@@ -279,8 +279,8 @@ class ModelGenerator extends BaseGenerator
         ];
 
         $defaultValues = [
-            "'" . $this->db->foreignKey($relation->foreignTable) . "'",
-            "'" . $this->db->primaryKey($relation->foreignTable) . "'",
+            "'" . $this->db->table($relation->foreignTable)->foreignKey() . "'",
+            "'" . $this->db->table($relation->foreignTable)->primaryKey() . "'",
         ];
 
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
@@ -336,10 +336,10 @@ class ModelGenerator extends BaseGenerator
 
         $defaultValues = [
             "'" . $pivot . "'",
-            "'" . $this->db->foreignKey($other) . "'",
-            "'" . $this->db->foreignKey($me) . "'",
-            "'" . $this->db->primaryKey($other) . "'",
-            "'" . $this->db->primaryKey($me) . "'",
+            "'" . $this->db->table($other)->foreignKey() . "'",
+            "'" . $this->db->table($me)->foreignKey() . "'",
+            "'" . $this->db->table($other)->primaryKey() . "'",
+            "'" . $this->db->table($me)->primaryKey() . "'",
         ];
 
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
