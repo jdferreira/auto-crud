@@ -515,4 +515,16 @@ class TestGeneratorTest extends TestCase
             $generator->generate()
         );
     }
+
+    /** @test */
+    public function it_does_not_incude_primary_keys_on_fields()
+    {
+        $generator = $this->generator(
+            $this->mockTable('students', [
+                'student_code' => ['primaryKey' => true],
+            ])
+        );
+
+        $this->assertNotContains('student_code', $generator->fieldsExceptPrimary());
+    }
 }

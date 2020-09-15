@@ -139,9 +139,9 @@ class TestGenerator extends BaseGenerator
         return collect($this->table->columns())->diff($diff);
     }
 
-    private function fieldsExcept(array $diff): Collection
+    public function fieldsExceptPrimary(): Collection
     {
-        return collect($this->fields())->diff($diff);
+        return collect($this->fields())->diff($this->table->primaryKey());
     }
 
     private function castColumn(string $column)
@@ -189,7 +189,7 @@ class TestGenerator extends BaseGenerator
 
     public function assertHTMLOnForm()
     {
-        $selects = $this->fieldsExcept(['id'])
+        $selects = $this->fieldsExceptPrimary()
             ->filter(function (string $column) {
                 return $this->table->type($column) === Type::ENUM;
             })
@@ -208,7 +208,7 @@ class TestGenerator extends BaseGenerator
                     ->all();
             });
 
-        $other = $this->fieldsExcept(['id'])
+        $other = $this->fieldsExceptPrimary()
             ->filter(function (string $column) {
                 return $this->table->type($column) !== Type::ENUM;
             })
@@ -273,7 +273,7 @@ class TestGenerator extends BaseGenerator
 
     public function assertDefaultValuesOnCreateForm()
     {
-        $lines = $this->fieldsExcept(['id'])
+        $lines = $this->fieldsExceptPrimary()
             ->filter(function ($column) {
                 return $this->table->hasDefault($column);
             })
@@ -319,7 +319,7 @@ class TestGenerator extends BaseGenerator
 
     public function assertEditFormHasValues()
     {
-        $groups = $this->fieldsExcept(['id'])->groupBy(function ($column) {
+        $groups = $this->fieldsExceptPrimary()->groupBy(function ($column) {
             $type = $this->table->type($column);
 
             if ($type === Type::BOOLEAN) {
@@ -400,7 +400,7 @@ class TestGenerator extends BaseGenerator
 
     public function oneConstraintField()
     {
-        return $this->oneConstraintField = $this->fieldsExcept(['id'])->filter(function ($column) {
+        return $this->oneConstraintField = $this->fieldsExceptPrimary()->filter(function ($column) {
             static $constraintTypes = [
                 Type::INTEGER,
                 Type::BOOLEAN,
@@ -455,7 +455,7 @@ class TestGenerator extends BaseGenerator
 
     public function assertRequiredFields()
     {
-        return $this->fieldsExcept(['id'])
+        return $this->fieldsExceptPrimary()
             ->map(function ($column) {
                 $required = $this->table->required($column)
                     && $this->table->type($column) !== Type::BOOLEAN;
@@ -471,7 +471,7 @@ class TestGenerator extends BaseGenerator
 
     public function assertNewEqualsModel()
     {
-        return $this->fieldsExcept(['id'])
+        return $this->fieldsExceptPrimary()
             ->map(function ($column) {
                 $expected = "\$new['$column']";
                 $retrieved = "\${$this->modelVariableSingular()}->$column";
@@ -495,7 +495,7 @@ class TestGenerator extends BaseGenerator
     {
         $result = [];
 
-        $uniqueColumns = $this->fieldsExcept(['id'])->filter(function ($column) {
+        $uniqueColumns = $this->fieldsExceptPrimary()->filter(function ($column) {
             return $this->table->unique($column);
         });
 
@@ -522,7 +522,7 @@ class TestGenerator extends BaseGenerator
 
         $first = true;
 
-        foreach ($this->fieldsExcept(['id']) as $column) {
+        foreach ($this->fieldsExceptPrimary() as $column) {
             if (! $first) {
                 $result = array_merge($result, ['']);
             }
