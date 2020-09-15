@@ -40,14 +40,14 @@ class EndToEndTest extends TestCase
         } else {
             $this->files->put(static::RUNNING, '');
 
-            // Let the developer look at the generated files
-            fwrite(STDOUT, 'Press ENTER when you are done inspecting the generated files' . PHP_EOL);
+            echo 'Press ENTER to continue';
             fgets(STDIN);
 
-            // Remove all but the migrations
+            // Remove all but the migrations and phpunit outputs
             shell_exec('git add database/migrations');
+            shell_exec('git add phpunit.*.txt');
             shell_exec('git clean -fd');
-            shell_exec('git checkout -- $(git status --porcelain | \grep -P "^ M" | cut -c4-)');
+            shell_exec('git checkout -- $(git status --porcelain | \grep -P "^ M" | cut -c4- | grep -v phpunit)');
         }
     }
 
@@ -128,8 +128,6 @@ class EndToEndTest extends TestCase
 
     private function assertPhpunitSucceeds()
     {
-        $this->assertTrue(false); // TODO: Remove! This is just to ensure that PHPUnit actually does not run
-
         $specs = [
             1 => ['file', 'phpunit.stdout.txt', 'w'],
             2 => ['file', 'phpunit.stderr.txt', 'w'],
@@ -137,14 +135,9 @@ class EndToEndTest extends TestCase
 
         $process = proc_open('vendor/bin/phpunit --colors=never', $specs, $pipes);
 
-        if (is_resource($process)) {
-            // Close inner pipes before calling closing the process to avoid
-            // deadlock
+        $this->assertTrue(is_resource($process), 'Cannot instantiate the phpunit process');
 
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            $phpunitStatus = proc_close($process);
-        }
+        $phpunitStatus = proc_close($process);
 
         $this->assertEquals(0, $phpunitStatus);
     }
