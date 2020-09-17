@@ -58,6 +58,7 @@ class RequestGenerator extends BaseGenerator
 
         if ($timeColumns->count() === 0) {
             $code = $this->removeMethod('prepareForValidation', $code);
+            $code = $this->removeMethod('normalizeTime', $code);
         }
 
         return $code;
@@ -138,7 +139,7 @@ class RequestGenerator extends BaseGenerator
 
         foreach ($this->table->columns() as $column) {
             if ($this->table->type($column) === Type::TIME) {
-                $lines[] = "    '$column' => date('H:i:s', strtotime(\$this->$column)),";
+                $lines[] = "    '$column' => \$this->normalizeTime(\$this->$column),";
             }
         }
 

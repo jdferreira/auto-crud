@@ -18,6 +18,13 @@ class {{ modelClass }}Request extends FormRequest
         {{ prepareTimeFields }}
     }
 
+    private function normalizeTime($value)
+    {
+        return (($time = strtotime($value)) !== -1)
+            ? date('H:i:s', $time)
+            : $value;
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

@@ -238,6 +238,8 @@ abstract class BaseGenerator
                     do {
                         $start--;
                     } while (preg_match('/^\s*\/\*\*/', $lines[$start]) === 0);
+                } else {
+                    $start = $i;
                 }
 
                 // Also remove the line before the method, if it is empty.

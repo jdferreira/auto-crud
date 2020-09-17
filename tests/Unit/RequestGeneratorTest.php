@@ -91,7 +91,7 @@ class RequestGeneratorTest extends TestCase
             protected function prepareForValidation()
             {
                 \$this->merge([
-                    'lunch_time' => date('H:i:s', strtotime(\$this->lunch_time)),
+                    'lunch_time' => \$this->normalizeTime(\$this->lunch_time),
                 ]);
             }
         ", $code);
