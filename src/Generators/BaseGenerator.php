@@ -220,4 +220,42 @@ abstract class BaseGenerator
     {
         return $code;
     }
+
+    protected function removeMethod(string $methodName, string $code): string
+    {
+        // TODO: Not thoroughly tested (just indirectly)
+
+        $lines = explode("\n", $code);
+
+        for ($i = 0; $i < count($lines); $i++) {
+            if (strpos($lines[$i], $methodName) !== false) {
+                // Remove possible php doc blocks
+                if (preg_match('/^\s*\/\*\*.*\*\/\s*$/', $lines[$i - 1])) {
+                    $start = $i - 1;
+                } elseif (preg_match('/\*\/\s*$/', $lines[$i - 1])) {
+                    $start = $i - 1;
+
+                    do {
+                        $start--;
+                    } while (preg_match('/^\s*\/\*\*/', $lines[$start]) === 0);
+                }
+
+                // Also remove the line before the method, if it is empty.
+                if (trim($lines[$start - 1]) === '') {
+                    $start--;
+                }
+            } elseif (isset($start) && $lines[$i] === '    }') {
+                $end = $i;
+                break;
+            }
+        }
+
+        if (isset($start)) {
+            for ($i = $start; $i <= $end; $i++) {
+                unset($lines[$i]);
+            }
+        }
+
+        return implode("\n", $lines);
+    }
 }

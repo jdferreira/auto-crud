@@ -68,11 +68,11 @@ class TestGenerator extends BaseGenerator
         })->count();
 
         if ($countDefaultFields === 0) {
-            $code = $this->removeTest("it_starts_the_${placeholder}_create_form_with_the_default_values", $code);
+            $code = $this->removeMethod("it_starts_the_${placeholder}_create_form_with_the_default_values", $code);
         }
 
         if ($this->oneConstraintField === null) {
-            $code = $this->removeTest("it_keeps_old_values_on_unsuccessful_${placeholder}_update", $code);
+            $code = $this->removeMethod("it_keeps_old_values_on_unsuccessful_${placeholder}_update", $code);
         }
 
         return $code;
@@ -745,33 +745,6 @@ class TestGenerator extends BaseGenerator
 
             return "'$value'";
         }
-    }
-
-    private function removeTest(string $testName, string $code): string
-    {
-        $lines = explode("\n", $code);
-
-        for ($i = 0; $i < count($lines); $i++) {
-            if (strpos($lines[$i], $testName) !== false) {
-                $start = $i - 1; // Remove the "/** @test */" line as well
-
-                // Also remove the line before the docblock, if it is empty.
-                if (trim($lines[$start - 1]) === '') {
-                    $start--;
-                }
-            } elseif (isset($start) && $lines[$i] === '    }') {
-                $end = $i;
-                break;
-            }
-        }
-
-        if (isset($start)) {
-            for ($i = $start; $i <= $end; $i++) {
-                unset($lines[$i]);
-            }
-        }
-
-        return implode("\n", $lines);
     }
 
     private function quoteName(string $column)
