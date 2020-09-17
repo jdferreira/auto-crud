@@ -137,24 +137,34 @@ class ModelGeneratorTest extends TestCase
                 'has_pet' => ['type' => Type::BOOLEAN],
                 'current_year' => ['type' => Type::INTEGER],
                 'letter_sent_at' => ['type' => Type::DATETIME],
-                'preferred_lunch_time' => ['type' => Type::TIME],
             ])
         )->generate();
 
         $this->assertCodeContains("
             protected \$casts = [
-                'birthday' => 'date',
+                'birthday' => 'datetime:Y-m-d',
                 'height' => 'decimal:2',
                 'has_pet' => 'boolean',
                 'current_year' => 'integer',
                 'letter_sent_at' => 'datetime',
-                'preferred_lunch_time' => 'datetime',
             ];
         ", $code);
 
         $code = $this->generator(
             $this->mockTable('students', [
                 'name' => ['type' => Type::STRING],
+            ])
+        )->generate();
+
+        $this->assertStringNotContainsString('protected $casts', $code);
+    }
+
+    /** @test */
+    public function it_does_not_cast_time_columns()
+    {
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'preferred_lunch_time' => ['type' => Type::TIME],
             ])
         )->generate();
 

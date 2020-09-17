@@ -167,7 +167,7 @@ class ViewEditGeneratorTest extends TestCase
         $this->assertStringContainsString('old(\'has-pet\') ?? $student->has_pet', $code);
         $this->assertStringContainsString('old(\'current-year\') ?? $student->current_year }}', $code);
         $this->assertStringContainsString('old(\'letter-sent-at\') ?? $student->letter_sent_at->format(\'Y-m-d H:i:s\')', $code);
-        $this->assertStringContainsString('old(\'preferred-lunch-time\') ?? $student->preferred_lunch_time->format(\'H:i:s\')', $code);
+        $this->assertStringContainsString('old(\'preferred-lunch-time\') ?? $student->preferred_lunch_time', $code);
         $this->assertStringContainsString('old(\'house\') ?? $student->house', $code);
     }
 

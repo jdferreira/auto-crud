@@ -110,12 +110,13 @@ class ModelGenerator extends BaseGenerator
             Type::INTEGER => 'integer',
             Type::BOOLEAN => 'boolean',
             Type::DATETIME => 'datetime',
-            Type::DATE => 'date',
-            // For the next line, laravel does not have a 'time' cast; so cast
-            // to datetime and format appropriately when needed
-            Type::TIME => 'datetime',
+            Type::DATE => 'datetime:Y-m-d',
             Type::DECIMAL => 'decimal:2',
         ];
+
+        // Laravel does does not have a 'time' model cast; as such, we use the
+        // raw string. To make everything work out, we must validate in the
+        // requests that the given values are in an expected time format
 
         $casts = [];
 

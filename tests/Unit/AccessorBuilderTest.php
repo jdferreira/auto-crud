@@ -146,7 +146,7 @@ class AccessorBuilderTest extends TestCase
     }
 
     /** @test */
-    public function it_formats_accessors_in_views()
+    public function it_formats_date_accessors_in_views()
     {
         $builder = new AccessorBuilder($this->mockTable('players', [
             'date' => ['type' => Type::DATE],
@@ -155,7 +155,7 @@ class AccessorBuilderTest extends TestCase
         ]));
 
         $this->assertEquals("{{ \$player->date->format('Y-m-d') }}", $builder->viewAccessor('date'));
-        $this->assertEquals("{{ \$player->time->format('H:i:s') }}", $builder->viewAccessor('time'));
+        $this->assertEquals('{{ $player->time }}', $builder->viewAccessor('time'));
         $this->assertEquals("{{ \$player->when->format('Y-m-d H:i:s') }}", $builder->viewAccessor('when'));
     }
 
@@ -342,7 +342,7 @@ class AccessorBuilderTest extends TestCase
         ]));
 
         $this->assertEquals("\$player->date->format('Y-m-d')", $builder->simpleAccessorFormatted('date'));
-        $this->assertEquals("\$player->time->format('H:i:s')", $builder->simpleAccessorFormatted('time'));
+        $this->assertEquals('$player->time', $builder->simpleAccessorFormatted('time'));
         $this->assertEquals("\$player->when->format('Y-m-d H:i:s')", $builder->simpleAccessorFormatted('when'));
         $this->assertEquals("\$player->is_good ? '&#10004;' : '&#10008;'", $builder->simpleAccessorFormatted('is_good'));
     }

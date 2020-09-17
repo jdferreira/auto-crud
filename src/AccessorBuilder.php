@@ -176,26 +176,18 @@ class AccessorBuilder
         $type = $this->table->type($column);
         $required = $this->table->required($column);
 
-        switch ($type) {
-            case Type::BOOLEAN:
-                return $required
-                    ? "$accessor ? '&#10004;' : '&#10008;'"
-                    : "$accessor !== null ? ($accessor ? '&#10004;' : '&#10008;') : null";
-
-            case Type::DATETIME:
-            case Type::DATE:
-            case Type::TIME:
-                $format = Type::dateTimeFormat($type);
-
-                return $required
-                    ? "${accessor}->format($format)"
-                    : "$accessor !== null ? ${accessor}->format($format) : null";
-
-            case Type::TEXT:
-                return "\Illuminate\Support\Str::limit(${accessor}, 30)";
-
-            default:
-                return $accessor;
+        if ($type === Type::BOOLEAN) {
+            return $required
+                ? "$accessor ? '&#10004;' : '&#10008;'"
+                : "$accessor !== null ? ($accessor ? '&#10004;' : '&#10008;') : null";
+        } elseif (($format = Type::dateTimeFormat($type)) !== null) {
+            return $required
+                ? "${accessor}->format($format)"
+                : "$accessor !== null ? ${accessor}->format($format) : null";
+        } elseif ($type === Type::TEXT) {
+            return "\Illuminate\Support\Str::limit(${accessor}, 30)";
+        } else {
+            return $accessor;
         }
     }
 }

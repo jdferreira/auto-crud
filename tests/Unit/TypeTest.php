@@ -12,8 +12,8 @@ class TypeTest extends TestCase
     {
         $this->assertEquals("'Y-m-d H:i:s'", Type::dateTimeFormat(Type::DATETIME));
         $this->assertEquals("'Y-m-d'", Type::dateTimeFormat(Type::DATE));
-        $this->assertEquals("'H:i:s'", Type::dateTimeFormat(Type::TIME));
 
+        $this->assertEquals(null, Type::dateTimeFormat(Type::TIME));
         $this->assertEquals(null, Type::dateTimeFormat(Type::INTEGER));
         $this->assertEquals(null, Type::dateTimeFormat('not-a-type'));
     }

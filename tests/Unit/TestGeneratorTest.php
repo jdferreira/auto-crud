@@ -277,7 +277,7 @@ class TestGeneratorTest extends TestCase
             // TODO: I want again to group checkboxes and not checkboxes, and
             // not group all different types of input in their own block.
 
-            '$this->assertHTML($this->xpath("//*[@name=\'lunch\' and @value=\'%s\']", $student->lunch->format(\'H:i:s\')), $document);',
+            '$this->assertHTML($this->xpath("//*[@name=\'lunch\' and @value=\'%s\']", $student->lunch), $document);',
             '$this->assertHTML($this->xpath("//*[@name=\'year\' and @value=\'%s\']", $student->year), $document);',
             '$this->assertHTML($this->xpath("//*[@name=\'birthday\' and @value=\'%s\']", $student->birthday->format(\'Y-m-d\')), $document);',
             '$this->assertHTML($this->xpath("//*[@name=\'height\' and @value=\'%s\']", $student->height), $document);',

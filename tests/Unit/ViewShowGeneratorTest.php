@@ -70,7 +70,7 @@ class ViewShowGeneratorTest extends TestCase
         )->generate();
 
         $this->assertStringContainsString('$student->birthday->format(\'Y-m-d\')', $code);
-        $this->assertStringContainsString('$student->lunch->format(\'H:i:s\')', $code);
+        $this->assertStringContainsString('$student->lunch', $code);
         $this->assertStringContainsString('$student->letter_sent_at->format(\'Y-m-d H:i:s\')', $code);
         $this->assertStringContainsString('$student->has_pet ? \'&#10004;\' : \'&#10008;\'', $code);
     }

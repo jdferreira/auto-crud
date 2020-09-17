@@ -23,8 +23,6 @@ class Type
             return "'Y-m-d H:i:s'";
         } elseif ($type === self::DATE) {
             return "'Y-m-d'";
-        } elseif ($type === self::TIME) {
-            return "'H:i:s'";
         } else {
             return null;
         }
