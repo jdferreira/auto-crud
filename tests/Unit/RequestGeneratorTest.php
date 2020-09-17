@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\RequestGenerator;
@@ -75,5 +76,39 @@ class RequestGeneratorTest extends TestCase
                 'name' => [],
             ])
         )->generate();
+    }
+
+    /** @test */
+    public function it_normalizes_time_columns()
+    {
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'lunch_time' => ['type' => Type::TIME],
+            ])
+        )->generate();
+
+        $this->assertCodeContains("
+            protected function prepareForValidation()
+            {
+                \$this->merge([
+                    'lunch_time' => date('H:i:s', strtotime(\$this->lunch_time)),
+                ]);
+            }
+        ", $code);
+
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'current_year' => ['type' => Type::INTEGER],
+                'has_pet' => ['type' => Type::BOOLEAN],
+                'letter_sent_at' => ['type' => Type::DATETIME],
+                'birthday' => ['type' => Type::DATE],
+                'height' => ['type' => Type::DECIMAL],
+                'name' => ['type' => Type::STRING],
+                'motto' => ['type' => Type::TEXT],
+                'house' => ['enum' => ['gryffindor', 'slytherin', 'ravenclaw', 'hufflepuff']],
+            ])
+        )->generate();
+
+        $this->assertStringNotContainsString('function prepareForValidation()', $code);
     }
 }

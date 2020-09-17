@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Str;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
 
@@ -40,11 +41,26 @@ class RequestGenerator extends BaseGenerator
             'modelClass' => $this->modelClass(),
             'rules' => $this->rules(),
             'useModel' => $this->useModel(),
+            'prepareTimeFields' => $this->prepareTimeFields(),
         ];
 
         // Notice that the 'useModel' placeholder must be computed after the
         // 'rules', because to determine whether we need it, we must first
         // actually generate the rules.
+    }
+
+    protected function postProcess(string $code): string
+    {
+        $timeColumns = collect($this->table->columns())
+            ->filter(function ($column) {
+                return $this->table->type($column) === Type::TIME;
+            });
+
+        if ($timeColumns->count() === 0) {
+            $code = $this->removeMethod('prepareForValidation', $code);
+        }
+
+        return $code;
     }
 
     private function rules()
@@ -112,5 +128,22 @@ class RequestGenerator extends BaseGenerator
         $classname = $this->modelNamespace() . '\\' . $this->modelClass();
 
         return "use $classname;";
+    }
+
+    private function prepareTimeFields()
+    {
+        $lines = [
+            '$this->merge([',
+        ];
+
+        foreach ($this->table->columns() as $column) {
+            if ($this->table->type($column) === Type::TIME) {
+                $lines[] = "    '$column' => date('H:i:s', strtotime(\$this->$column)),";
+            }
+        }
+
+        $lines[] = ']);';
+
+        return $lines;
     }
 }

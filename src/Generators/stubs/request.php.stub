@@ -9,6 +9,16 @@ use Illuminate\Foundation\Http\FormRequest;
 class {{ modelClass }}Request extends FormRequest
 {
     /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        {{ prepareTimeFields }}
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
