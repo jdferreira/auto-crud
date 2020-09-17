@@ -55,6 +55,7 @@ class ColumnFaker
             'ignoredColumns',
             'enumFaker',
             'referencesFaker',
+            'dateFakers',
             'knownFakerFormatters',
             'default',
         ];
@@ -105,13 +106,9 @@ class ColumnFaker
         static $map = [
             Type::INTEGER => 'numberBetween(0, 10000)',
             Type::BOOLEAN => 'boolean',
-            Type::DATETIME => 'dateTimeBetween(\'-10 years\', \'now\')->format(\'Y-m-d H:i:s\')',
-            Type::DATE => 'date',
-            Type::TIME => 'time',
             Type::DECIMAL => 'numerify(\'%##.##\')',
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
-            // Type::ENUM was already processed before this `default` method was called
         ];
 
         if (($type = $this->table->type($this->column)) !== null) {
@@ -144,6 +141,19 @@ class ColumnFaker
                 "    return factory($model::class)->create()->$foreignColumn;",
                 '}',
             ]);
+        }
+    }
+
+    private function dateFakers()
+    {
+        static $map = [
+            Type::DATETIME => 'dateTimeBetween(\'-10 years\', \'now\')->format(\'Y-m-d H:i:s\')',
+            Type::DATE => 'date',
+            Type::TIME => 'time',
+        ];
+
+        if (($type = $this->table->type($this->column)) !== null) {
+            return Arr::get($map, $type);
         }
     }
 

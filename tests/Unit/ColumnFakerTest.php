@@ -119,6 +119,10 @@ class ColumnFakerTest extends TestCase
 
         // Prefix 'random'
         $this->assertFakerPropertyIsUsed('digit', 'randomDigit');
+
+        // TODO: This test (and the following method) could probably be
+        // refactored to be use a single mocked table and construct the fakers
+        // for each column.
     }
 
     private function assertFakerPropertyIsUsed(string $column, string $fakerProperty)
@@ -126,12 +130,37 @@ class ColumnFakerTest extends TestCase
         $this->assertNotNull(\Faker\Factory::create()->getFormatter($fakerProperty));
 
         $table = $this->mockTable('tablename', [
-            $column => ['name' => $column],
+            $column => [],
         ]);
 
         $faker = new ColumnFaker($table, $column);
 
         $this->assertEquals("\$faker->$fakerProperty", $faker->fake());
+    }
+
+    /** @test */
+    public function it_prioritizes_date_types_over_column_names()
+    {
+        $table = $this->mockTable('students', [
+            'name' => ['type' => Type::TIME],
+            'mac_address' => ['type' => Type::DATE],
+            'password' => ['type' => Type::DATETIME],
+        ]);
+
+        $this->assertEquals(
+            '$faker->time',
+            (new ColumnFaker($table, 'name'))->fake()
+        );
+
+        $this->assertEquals(
+            '$faker->date',
+            (new ColumnFaker($table, 'mac_address'))->fake()
+        );
+
+        $this->assertEquals(
+            "\$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s')",
+            (new ColumnFaker($table, 'password'))->fake()
+        );
     }
 
     /** @test */
@@ -147,6 +176,12 @@ class ColumnFakerTest extends TestCase
             '$faker->optional(0.9)->sentence',
             $faker->fake()
         );
+    }
+
+    /** @test */
+    public function it_fakes_null_on_nullable_foreign_keys_sometimes()
+    {
+        $this->markTestSkipped('To implement');
     }
 
     /** @test */
