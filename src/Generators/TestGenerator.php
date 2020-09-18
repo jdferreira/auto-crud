@@ -496,17 +496,18 @@ class TestGenerator extends BaseGenerator
         $result = [];
 
         $uniqueColumns = $this->fieldsExceptPrimary()->filter(function ($column) {
-            return $this->table->unique($column);
+            return $this->table->unique($column) && $this->table->reference($column) === null;
         });
 
         if ($uniqueColumns->count() > 0) {
             $model = str_replace('_', ' ', $this->tablenameSingular());
             $modelClass = $this->modelClass();
+            $modelVariable = Str::camel($this->modelClass());
 
             $result = array_merge(
                 [
                     "// Create one $model to test fields that should contain unique values",
-                    "factory($modelClass::class)->create([",
+                    "\$$modelVariable = factory($modelClass::class)->state('full_model')->create([",
                 ],
                 $uniqueColumns->map(function ($column) {
                     $fake = $this->fakeForUnique($column);
@@ -549,7 +550,7 @@ class TestGenerator extends BaseGenerator
     private function assertField(string $column)
     {
         if (($reference = $this->table->reference($column)) !== null) {
-            $assertions = $this->assertionsForReference($reference[0], $reference[1]);
+            $assertions = $this->assertionsForReference($column, $reference[0], $reference[1]);
         } else {
             $assertions = $this->assertionsForRaw($column);
         }
@@ -583,16 +584,26 @@ class TestGenerator extends BaseGenerator
         );
     }
 
-    private function assertionsForReference(string $foreignTable, string $foreignColumn)
+    private function assertionsForReference(string $column, string $foreignTable, string $foreignColumn)
     {
         $foreignClass = Str::studly(Str::singular($foreignTable));
 
         $this->otherUses[] = $this->modelNamespace() . '\\' . $foreignClass;
 
-        return [
+        $result = [
             "    ->accepts(factory($foreignClass::class)->create()->$foreignColumn)",
-            "    ->rejects($foreignClass::query()->orderBy('$foreignColumn', 'desc')->limit(1)->first()->$foreignColumn + 1)",
+            "    ->rejects($foreignClass::max('$foreignColumn') + 1)",
         ];
+
+        if ($this->table->unique($column)) {
+            $modelVariable = Str::camel($this->modelClass());
+
+            $result = array_merge($result, [
+                "    ->rejects(\$$modelVariable->$column)",
+            ]);
+        }
+
+        return $result;
     }
 
     private function stackFieldAssertion($values, $method)

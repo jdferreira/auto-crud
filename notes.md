@@ -1,6 +1,6 @@
 - [x] Fakers for nullable columns that have foreign keys are currently always generating a non-null value, but sometimes they should fake a null!
 
-- [ ] When generating a model to test uniqueness, we should:
+- [x] When generating a model to test uniqueness, we should:
   - use the full_model state
   - not generate custom values for columns with foreign keys (let the factory generate the necessary models for us)
 

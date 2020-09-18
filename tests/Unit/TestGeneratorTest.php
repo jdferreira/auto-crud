@@ -428,10 +428,65 @@ class TestGeneratorTest extends TestCase
     {
         $generator = $this->generator(
             $this->mockTable('schools', [
-                'name' => ['unique' => 'true'],
-                'magical' => ['type' => Type::BOOLEAN, 'required' => false],
-                'foundation_year' => ['type' => Type::INTEGER],
-                'country' => ['type' => Type::INTEGER, 'reference' => ['countries', 'id']],
+                'name' => [],
+                'magical' => [
+                    'type' => Type::BOOLEAN,
+                    'required' => false,
+                ],
+                'foundation_year' => [
+                    'type' => Type::INTEGER,
+                ],
+                'country_id' => [
+                    'type' => Type::INTEGER,
+                    'reference' => ['countries', 'id'],
+                ],
+            ])
+        );
+
+        $lines = $generator->assertFields();
+
+        $this->assertEquals([
+            "\$this->assertField('name')",
+            "    ->accepts('John Doe')",
+            "    ->accepts('Jane Doe')",
+            '    ->rejects(null);',
+            '',
+            "\$this->assertField('magical')",
+            '    ->accepts(true)',
+            '    ->accepts(false)',
+            "    ->rejects('yes')",
+            "    ->rejects('no')",
+            "    ->rejects('2')",
+            '    ->accepts(null);',
+            '',
+            "\$this->assertField('foundation_year')",
+            '    ->accepts(0)',
+            '    ->accepts(10)',
+            '    ->accepts(-10)',
+            "    ->rejects('3.14')",
+            "    ->rejects('not-a-number')",
+            '    ->rejects(null);',
+            '',
+            "\$this->assertField('country_id')",
+            '    ->accepts(factory(Country::class)->create()->id)',
+            "    ->rejects(Country::max('id') + 1)",
+            '    ->rejects(null);',
+        ], $lines);
+    }
+
+    /** @test */
+    public function it_rejects_duplicate_values_on_unique_fields()
+    {
+        $generator = $this->generator(
+            $this->mockTable('schools', [
+                'name' => [
+                    'unique' => true,
+                ],
+                'country_id' => [
+                    'type' => Type::INTEGER,
+                    'reference' => ['countries', 'id'],
+                    'unique' => true,
+                ],
             ])
         );
 
@@ -439,34 +494,19 @@ class TestGeneratorTest extends TestCase
 
         $this->assertEquals([
             '// Create one school to test fields that should contain unique values',
-            'factory(School::class)->create([',
-            '    \'name\' => \'John Doe\',',
+            "\$school = factory(School::class)->state('full_model')->create([",
+            "    'name' => 'John Doe',",
             ']);',
             '',
-            '$this->assertField(\'name\')',
-            '    ->accepts(\'Jane Doe\')',
-            '    ->rejects(\'John Doe\') // Duplicate values must be rejected',
+            "\$this->assertField('name')",
+            "    ->accepts('Jane Doe')",
+            "    ->rejects('John Doe') // Duplicate values must be rejected",
             '    ->rejects(null);',
             '',
-            '$this->assertField(\'magical\')',
-            '    ->accepts(true)',
-            '    ->accepts(false)',
-            '    ->rejects(\'yes\')',
-            '    ->rejects(\'no\')',
-            '    ->rejects(\'2\')',
-            '    ->accepts(null);',
-            '',
-            '$this->assertField(\'foundation_year\')',
-            '    ->accepts(0)',
-            '    ->accepts(10)',
-            '    ->accepts(-10)',
-            '    ->rejects(\'3.14\')',
-            '    ->rejects(\'not-a-number\')',
-            '    ->rejects(null);',
-            '',
-            '$this->assertField(\'country\')',
+            "\$this->assertField('country_id')",
             '    ->accepts(factory(Country::class)->create()->id)',
-            '    ->rejects(Country::query()->orderBy(\'id\', \'desc\')->limit(1)->first()->id + 1)',
+            "    ->rejects(Country::max('id') + 1)",
+            '    ->rejects($school->country_id)',
             '    ->rejects(null);',
         ], $lines);
     }
