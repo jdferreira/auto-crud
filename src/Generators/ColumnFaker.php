@@ -79,7 +79,9 @@ class ColumnFaker
         $nullable = ! $this->table->required($this->column) && ! $this->forceRequired;
 
         if ($unique) {
-            $fake = $this->addModifier('unique()', $fake);
+            if ($this->table->reference($this->column) === null) {
+                $fake = $this->addModifier('unique()', $fake);
+            }
 
             if ($nullable) {
                 // If the column is both unique and nullable, we want to apply

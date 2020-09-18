@@ -11,3 +11,7 @@
 - [x] Column fakers for types other than string or text should not use custom faker methods, but always the one for that type
 
 - [ ] In the migration generator, foreign key columns cannot have a default value. This should be an error when reading the database.
+
+- [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
+
+- [x] On factories that need to generate a model on a unique column, there is no need to specify the unique identifier, as the value in the column will always be unique because we are already creating and persisting the child model.

@@ -258,6 +258,25 @@ class ColumnFakerTest extends TestCase
     }
 
     /** @test */
+    public function it_does_away_with_the_unique_modifier_on_unique_columns_with_a_foreign_key()
+    {
+        $table = $this->mockTable('tablename', [
+            'user_id' => ['unique' => true, 'reference' => ['users', 'id']],
+        ]);
+
+        $faker = new ColumnFaker($table, 'user_id');
+
+        $this->assertEquals(
+            implode("\n", [
+                'function () {',
+                '    return factory(User::class)->create()->id;',
+                '}',
+            ]),
+            $faker->fake()
+        );
+    }
+
+    /** @test */
     public function it_knows_that_the_column_references_another_table_after_faking()
     {
         $table = $this->mockTable('users', [
