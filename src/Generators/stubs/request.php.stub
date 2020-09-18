@@ -20,7 +20,7 @@ class {{ modelClass }}Request extends FormRequest
 
     private function normalizeTime($value)
     {
-        return (($time = strtotime($value)) !== -1)
+        return (($time = strtotime($value)) !== false)
             ? date('H:i:s', $time)
             : $value;
     }
