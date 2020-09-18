@@ -139,28 +139,28 @@ class ColumnFakerTest extends TestCase
     }
 
     /** @test */
-    public function it_prioritizes_date_types_over_column_names()
+    public function it_prioritizes_specific_types_over_column_names()
     {
-        $table = $this->mockTable('students', [
-            'name' => ['type' => Type::TIME],
-            'mac_address' => ['type' => Type::DATE],
-            'password' => ['type' => Type::DATETIME],
-        ]);
+        $specificTypes = [
+            Type::INTEGER,
+            Type::BOOLEAN,
+            Type::DATETIME,
+            Type::DATE,
+            Type::TIME,
+            Type::DECIMAL,
+        ];
 
-        $this->assertEquals(
-            '$faker->time',
-            (new ColumnFaker($table, 'name'))->fake()
-        );
+        foreach ($specificTypes as $type) {
+            $table = $this->mockTable('tablename', [
+                'name' => ['type' => $type],
+            ]);
 
-        $this->assertEquals(
-            '$faker->date',
-            (new ColumnFaker($table, 'mac_address'))->fake()
-        );
-
-        $this->assertEquals(
-            "\$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s')",
-            (new ColumnFaker($table, 'password'))->fake()
-        );
+            $this->assertNotEquals(
+                '$faker->name',
+                (new ColumnFaker($table, 'name'))->fake(),
+                "Column of type $type produced the wrong faker."
+            );
+        }
     }
 
     /** @test */

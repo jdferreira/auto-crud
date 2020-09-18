@@ -8,4 +8,4 @@
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted...
 
-- [ ] Column fakers for types other than string or text should not use custom faker methods, but always the one for that type
+- [x] Column fakers for types other than string or text should not use custom faker methods, but always the one for that type

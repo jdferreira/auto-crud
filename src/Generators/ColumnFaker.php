@@ -55,7 +55,7 @@ class ColumnFaker
             'ignoredColumns',
             'enumFaker',
             'referencesFaker',
-            'dateFakers',
+            'specificTypeFakers',
             'knownFakerFormatters',
             'default',
         ];
@@ -104,9 +104,6 @@ class ColumnFaker
     private function default()
     {
         static $map = [
-            Type::INTEGER => 'numberBetween(0, 10000)',
-            Type::BOOLEAN => 'boolean',
-            Type::DECIMAL => 'numerify(\'%##.##\')',
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
         ];
@@ -144,9 +141,12 @@ class ColumnFaker
         }
     }
 
-    private function dateFakers()
+    private function specificTypeFakers()
     {
         static $map = [
+            Type::INTEGER => 'numberBetween(0, 10000)',
+            Type::BOOLEAN => 'boolean',
+            Type::DECIMAL => 'numerify(\'%##.##\')',
             Type::DATETIME => 'dateTimeBetween(\'-10 years\', \'now\')->format(\'Y-m-d H:i:s\')',
             Type::DATE => 'date',
             Type::TIME => 'time',
