@@ -1,4 +1,4 @@
-- [ ] Fakers for nullable columns that have foreign keys are currently always generating a non-null value, but sometimes they should fake a null!
+- [x] Fakers for nullable columns that have foreign keys are currently always generating a non-null value, but sometimes they should fake a null!
 
 - [ ] When generating a model to test uniqueness, we should:
   - use the full_model state

@@ -75,30 +75,41 @@ class ColumnFaker
             return $fake;
         }
 
-        if (Str::startsWith($fake, 'function')) {
-            return $fake;
-        }
-
         $unique = $this->table->unique($this->column);
         $nullable = ! $this->table->required($this->column) && ! $this->forceRequired;
 
-        if ($unique && $nullable) {
-            // If the column is both unique and nullable, we want to apply both
-            // `unique()` and `optional(0.9)`. However, since Faker is not
-            // prepared to handle both modifiers simultaneously, we must roll
-            // out the potential for null ourselves.
-            return "\$faker->randomFloat() <= 0.9 ? \$faker->unique()->$fake : null";
-        } elseif ($nullable) {
-            if (strpos($fake, '->') !== false) {
-                return "\$faker->optional(0.9)->passthrough(\$faker->$fake)";
+        if ($unique) {
+            $fake = $this->addModifier('unique()', $fake);
+
+            if ($nullable) {
+                // If the column is both unique and nullable, we want to apply
+                // both `unique()` and `optional(0.9)`. However, since Faker is
+                // not prepared to handle both modifiers simultaneously, we must
+                // roll out the potential for null ourselves.
+                return "\$faker->randomFloat() <= 0.9 ? $fake : null";
             } else {
-                return "\$faker->optional(0.9)->$fake";
+                return $fake;
             }
-        } elseif ($unique) {
-            return "\$faker->unique()->$fake";
-        } else {
-            return "\$faker->$fake";
         }
+
+        if ($nullable) {
+            return $this->addModifier('optional(0.9)', $fake);
+        }
+
+        return $fake;
+    }
+
+    private function addModifier(string $modifier, string $fake)
+    {
+        if (Str::startsWith($fake, '$faker->')) {
+            $partial = Str::substr($fake, Str::length('$faker->'));
+
+            if (! Str::contains($partial, '->')) {
+                return "\$faker->{$modifier}->$partial";
+            }
+        }
+
+        return "\$faker->{$modifier}->passthrough($fake)";
     }
 
     private function default()
@@ -108,8 +119,8 @@ class ColumnFaker
             Type::TEXT => 'text',
         ];
 
-        if (($type = $this->table->type($this->column)) !== null) {
-            return Arr::get($map, $type);
+        if (($fake = Arr::get($map, $this->table->type($this->column))) !== null) {
+            return "\$faker->$fake";
         }
     }
 
@@ -120,7 +131,7 @@ class ColumnFaker
                 return '\'' . str_replace('\'', '\\\'', str_replace('\\', '\\\\', $value)) . '\'';
             })->join(', ');
 
-            return 'randomElement([' . $choices . '])';
+            return '$faker->randomElement([' . $choices . '])';
         }
     }
 
@@ -152,8 +163,8 @@ class ColumnFaker
             Type::TIME => 'time',
         ];
 
-        if (($type = $this->table->type($this->column)) !== null) {
-            return Arr::get($map, $type);
+        if (($fake = Arr::get($map, $this->table->type($this->column))) !== null) {
+            return "\$faker->$fake";
         }
     }
 
@@ -168,7 +179,7 @@ class ColumnFaker
 
         foreach ($potential as $name) {
             if ($this->fakerHasFormatter($name)) {
-                return $name;
+                return "\$faker->$name";
             }
         }
     }

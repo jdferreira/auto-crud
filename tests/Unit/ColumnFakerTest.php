@@ -71,7 +71,6 @@ class ColumnFakerTest extends TestCase
             Type::DECIMAL => "numerify('%##.##')",
             Type::STRING => 'sentence',
             Type::TEXT => 'text',
-            // Type::ENUM uses a different mechanism
         ];
 
         foreach ($fakes as $type => $fake) {
@@ -181,7 +180,17 @@ class ColumnFakerTest extends TestCase
     /** @test */
     public function it_fakes_null_on_nullable_foreign_keys_sometimes()
     {
-        $this->markTestSkipped('To implement');
+        $table = $this->mockTable('student', [
+            'pet' => ['required' => false, 'reference' => ['pets', 'id']],
+        ]);
+
+        $faker = new ColumnFaker($table, 'pet');
+
+        $this->assertCodeContains('
+            $faker->optional(0.9)->passthrough(function () {
+                return factory(Pet::class)->create()->id;
+            })
+        ', $faker->fake());
     }
 
     /** @test */
