@@ -95,6 +95,29 @@ class FactoryGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function full_model_states_are_transitive()
+    {
+        $code = $this->generator(
+            $this->mockTable('students', [
+                'pet_id' => [
+                    'reference' => ['pets', 'id'],
+                    'required' => false,
+                ],
+            ])
+        )->generate();
+
+        $this->assertCodeContains("
+            \$factory->state(Student::class, 'full_model', function (Faker \$faker) {
+                return [
+                    'pet_id' => function () {
+                        return factory(Pet::class)->state('full_model')->create()->id;
+                    },
+                ];
+            });
+        ", $code);
+    }
+
+    /** @test */
     public function it_ignores_deleted_at_columns()
     {
         $code = $this->generator(

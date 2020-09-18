@@ -144,9 +144,13 @@ class ColumnFaker
 
             $model = Str::studly(Str::singular($foreignTable));
 
+            $state = $this->forceRequired
+                ? "->state('full_model')"
+                : '';
+
             return implode("\n", [
                 'function () {',
-                "    return factory($model::class)->create()->$foreignColumn;",
+                "    return factory($model::class){$state}->create()->$foreignColumn;",
                 '}',
             ]);
         }

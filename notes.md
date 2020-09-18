@@ -4,7 +4,7 @@
   - use the full_model state
   - not generate custom values for columns with foreign keys (let the factory generate the necessary models for us)
 
-- [ ] On factories, the full_model state should generate foreign models also in the full_model state
+- [x] On factories, the full_model state should generate foreign models also in the full_model state
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
 
