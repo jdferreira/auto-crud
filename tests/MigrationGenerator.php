@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Ferreira\AutoCrud\Stub\StubRenderer;
@@ -64,7 +65,7 @@ class MigrationGenerator
 
     private function tablenameStudly()
     {
-        return Str::ucfirst(Str::studly($this->tablename));
+        return Word::classPlural($this->tablename);
     }
 
     private function schema()

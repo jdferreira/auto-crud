@@ -2,7 +2,7 @@
 
 namespace Ferreira\AutoCrud\Injectors;
 
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
@@ -99,7 +99,7 @@ class RouteInjector
         $lines = [];
 
         foreach ($this->tables as $table) {
-            $controller = Str::studly(Str::singular($table)) . 'Controller';
+            $controller = Word::class($table) . 'Controller';
             $lines[] = "Route::resource('/$table', '$controller');";
         }
 
@@ -111,7 +111,7 @@ class RouteInjector
         $lines = [];
 
         foreach ($this->tables as $table) {
-            $controller = Str::studly(Str::singular($table)) . 'Controller';
+            $controller = Word::class($table) . 'Controller';
             $lines[] = "Route::apiResource('/$table', '$controller');";
         }
 

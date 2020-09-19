@@ -15,3 +15,7 @@
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
 
 - [x] On factories that need to generate a model on a unique column, there is no need to specify the unique identifier, as the value in the column will always be unique because we are already creating and persisting the child model.
+
+- [ ] On stub replacement, see if we can replace with a multi-line string, which must necessarily be correctly indented
+
+- [ ] Primary keys that span multiple columns should be an error when reading the database

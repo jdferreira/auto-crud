@@ -12,9 +12,9 @@ class {{ modelClass }}Controller extends Controller
         return view('{{ tablename }}.index', ['{{ modelPlural }}' => {{ modelClass }}::paginate()]);
     }
 
-    public function show({{ modelClass }} ${{ modelSingular }})
+    public function show({{ modelClass }} {{ modelSingular }})
     {
-        return view('{{ tablename }}.show', compact('{{ modelSingular }}'));
+        return view('{{ tablename }}.show', compact('{{ modelSingularNoDollar }}'));
     }
 
     public function create()
@@ -24,26 +24,26 @@ class {{ modelClass }}Controller extends Controller
 
     public function store({{ modelClass }}Request $request)
     {
-        ${{ modelSingular }} = {{ modelClass }}::create($request->validated());
+        {{ modelSingular }} = {{ modelClass }}::create($request->validated());
 
-        return redirect(${{ modelSingular }}->path());
+        return redirect({{ modelSingular }}->path());
     }
 
-    public function edit({{ modelClass }} ${{ modelSingular }})
+    public function edit({{ modelClass }} {{ modelSingular }})
     {
-        return view('{{ tablename }}.edit', compact('{{ modelSingular }}'));
+        return view('{{ tablename }}.edit', compact('{{ modelSingularNoDollar }}'));
     }
 
-    public function update({{ modelClass }} ${{ modelSingular }}, {{ modelClass }}Request $request)
+    public function update({{ modelClass }} {{ modelSingular }}, {{ modelClass }}Request $request)
     {
-        ${{ modelSingular }}->update($request->validated());
+        {{ modelSingular }}->update($request->validated());
 
-        return redirect(${{ modelSingular }}->path());
+        return redirect({{ modelSingular }}->path());
     }
 
-    public function destroy({{ modelClass }} ${{ modelSingular }})
+    public function destroy({{ modelClass }} {{ modelSingular }})
     {
-        ${{ modelSingular }}->delete();
+        {{ modelSingular }}->delete();
 
         return redirect(route('{{ tablename }}.index'));
     }

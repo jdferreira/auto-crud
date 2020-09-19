@@ -8,12 +8,12 @@
         {{ labels }}
     </tr>
 
-    @foreach (${{ modelPlural }} as ${{ modelSingular }})
+    @foreach ({{ modelPlural }} as {{ modelSingular }})
         <tr>
             {{ values }}
         </tr>
     @endforeach
 </table>
 
-{{{ ${{ modelPlural }}->links() }}
+{{{ {{ modelPlural }}->links() }}
 @endsection

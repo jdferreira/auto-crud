@@ -2,7 +2,6 @@
 
 namespace Ferreira\AutoCrud;
 
-use Illuminate\Support\Str;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
@@ -27,24 +26,12 @@ class AccessorBuilder
 
     public function label(string $column): string
     {
-        if ($this->refersTo($column) !== null) {
-            return Str::ucfirst(str_replace(
-                '_',
-                ' ',
-                Str::endsWith($column, '_id') ? Str::replaceLast('_id', '', $column) : $column
-            ));
-        } else {
-            return preg_replace(
-                '/\b[iI]d$/',
-                'ID',
-                Str::ucfirst(str_replace('_', ' ', $column))
-            );
-        }
+        return Word::labelUpper($column, $this->refersTo($column) !== null);
     }
 
     private function modelSingular()
     {
-        return Str::camel(Str::singular($this->table->name()));
+        return Word::variableSingular($this->table->name());
     }
 
     /**
@@ -85,17 +72,13 @@ class AccessorBuilder
      */
     public function simpleAccessor(string $column, string $model = null): string
     {
-        $model = $model ?? '$' . $this->modelSingular();
+        $model = $model ?? $this->modelSingular();
 
         if (($foreignTable = $this->refersTo($column)) !== null) {
             $foreignLabelColumn = $this->db->table($foreignTable)->labelColumn();
 
             if ($foreignLabelColumn !== null) {
-                $relation = Str::camel(Str::singular(
-                    Str::endsWith($column, '_id')
-                        ? substr($column, 0, -3)
-                        : $foreignTable
-                ));
+                $relation = Word::method($column);
 
                 return "$model->$relation->$foreignLabelColumn";
             }
@@ -133,26 +116,26 @@ class AccessorBuilder
      *
      * @return string
      */
-    public function viewAccessor(string $column): string
+    public function viewAccessor(string $column, string $model = null): string
     {
-        $simple = $this->simpleAccessor($column);
+        $simple = $this->simpleAccessor($column, $model);
+
+        $model = $model ?? $this->modelSingular();
 
         if (($foreignTable = $this->refersTo($column)) !== null) {
-            $routeParameter = Str::singular($foreignTable);
+            $routeParameter = Word::snakeSingular($foreignTable);
 
-            $idAccessor = '$' . $this->modelSingular() . "->$column";
+            $idAccessor = "$model->$column";
 
             $route = "{{ route('$foreignTable.show', ['$routeParameter' => $idAccessor]) }}";
 
             if ($this->db->table($foreignTable)->labelColumn() !== null) {
-                return '<a href="' . $route . '">{{ ' . $simple . ' }}</a>';
+                $linkText = "{{ $simple }}";
             } else {
-                $foreignLabel = Str::ucfirst(
-                    str_replace('_', ' ', Str::singular($foreignTable))
-                );
-
-                return '<a href="' . $route . '">' . $foreignLabel . ' #{{ ' . $simple . ' }}</a>';
+                $linkText = Word::labelUpperSingular($foreignTable, true) . " #{{ $simple }}";
             }
+
+            return "<a href=\"$route\">$linkText</a>";
         } else {
             $formatted = $this->formatAccessor($simple, $column);
 

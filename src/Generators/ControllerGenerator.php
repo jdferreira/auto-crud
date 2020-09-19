@@ -2,7 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 
 class ControllerGenerator extends BaseGenerator
 {
@@ -34,16 +34,22 @@ class ControllerGenerator extends BaseGenerator
             'modelClass' => $this->modelClass(),
             'modelSingular' => $this->modelSingular(),
             'modelPlural' => $this->modelPlural(),
+            'modelSingularNoDollar' => $this->modelSingularNoDollar(),
         ];
     }
 
     protected function modelSingular()
     {
-        return Str::camel(Str::singular($this->table->name()));
+        return Word::variableSingular($this->table->name());
     }
 
     protected function modelPlural()
     {
-        return Str::camel(Str::plural($this->table->name()));
+        return Word::variablePlural($this->table->name(), false);
+    }
+
+    protected function modelSingularNoDollar()
+    {
+        return Word::variableSingular($this->table->name(), false);
     }
 }

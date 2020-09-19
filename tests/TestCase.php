@@ -310,6 +310,17 @@ abstract class TestCase extends BaseTestCase
                     ->all()
                 );
 
+            $stringColumns = collect($columns)
+                ->mapWithKeys(function ($column, $key) {
+                    return [$key => Arr::get($column, 'type', Type::STRING) === Type::STRING];
+                })
+                ->filter()
+                ->keys();
+
+            $mock->shouldReceive('labelColumn')->andReturn(
+                $stringColumns->contains('name') ? 'name' : $stringColumns->first()
+            );
+
             $mock->makePartial();
         });
 

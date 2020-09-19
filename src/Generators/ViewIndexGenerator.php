@@ -2,8 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Ferreira\AutoCrud\Type;
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 use Ferreira\AutoCrud\AccessorBuilder;
 
 class ViewIndexGenerator extends BaseGenerator
@@ -26,7 +25,8 @@ class ViewIndexGenerator extends BaseGenerator
     protected function filename(): string
     {
         return resource_path(
-            'views/' . Str::snake(Str::plural($this->table->name())) . '/index.blade.php'
+            // 'views/' . Str::snake(Str::plural($this->table->name())) . '/index.blade.php'
+            'views/' . $this->table->name() . '/index.blade.php'
         );
     }
 
@@ -50,17 +50,17 @@ class ViewIndexGenerator extends BaseGenerator
 
     protected function modelSingular()
     {
-        return Str::camel(Str::singular($this->table->name()));
+        return Word::variableSingular($this->table->name());
     }
 
     protected function modelPlural()
     {
-        return Str::camel(Str::plural($this->table->name()));
+        return Word::variablePlural($this->table->name());
     }
 
     protected function modelPluralCapitalized()
     {
-        return ucwords(Str::snake(Str::plural($this->table->name()), ' '));
+        return Word::labelUpperPlural($this->table->name());
     }
 
     protected function visibleColumns()
@@ -79,7 +79,7 @@ class ViewIndexGenerator extends BaseGenerator
             $builder = app(AccessorBuilder::class, ['table' => $this->table]);
 
             $labels[] = '<th>' . $builder->label($column) . '</th>';
-            $values[] = '<td>' . $builder->viewAccessor($column) . '</td>';
+            $values[] = '<td>' . $builder->viewAccessor($column, $this->modelSingular()) . '</td>';
         }
 
         return [$labels, $values];

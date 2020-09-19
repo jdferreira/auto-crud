@@ -3,6 +3,7 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Str;
 use Ferreira\AutoCrud\AccessorBuilder;
 
@@ -26,7 +27,7 @@ class ViewShowGenerator extends BaseGenerator
     protected function filename(): string
     {
         return resource_path(
-            'views/' . Str::snake(Str::plural($this->table->name())) . '/show.blade.php'
+            'views/' . $this->table->name() . '/show.blade.php'
         );
     }
 
@@ -46,7 +47,7 @@ class ViewShowGenerator extends BaseGenerator
 
     protected function modelSingularCapitalized()
     {
-        return Str::ucfirst(Str::camel(Str::singular($this->table->name())));
+        return Word::labelUpperSingular($this->table->name());
     }
 
     private function values()
@@ -75,12 +76,12 @@ class ViewShowGenerator extends BaseGenerator
     private function buttons()
     {
         $tablename = $this->table->name();
-        $routeParam = Str::singular($tablename);
-        $model = Str::camel(Str::singular($tablename));
+        $routeParam = Word::snakeSingular($tablename);
+        $model = Word::variableSingular($tablename);
 
         return [
-            "<a href=\"{{ route('$tablename.edit', ['$routeParam' => \$$model]) }}\">Edit</a>",
-            "<form action=\"{{ route('$tablename.destroy', ['$routeParam' => \$$model]) }}\" method=\"POST\">",
+            "<a href=\"{{ route('$tablename.edit', ['$routeParam' => $model]) }}\">Edit</a>",
+            "<form action=\"{{ route('$tablename.destroy', ['$routeParam' => $model]) }}\" method=\"POST\">",
             '    @method(\'DELETE\')',
             '    @csrf',
             '    <button type="submit">Delete</button>',

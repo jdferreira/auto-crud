@@ -3,7 +3,7 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
 
 class RequestGenerator extends BaseGenerator
@@ -92,7 +92,7 @@ class RequestGenerator extends BaseGenerator
         $lines[] = '];';
 
         if ($this->needsModel) {
-            $param = Str::singular($this->table->name());
+            $param = Word::snakeSingular($this->table->name());
 
             $lines = array_merge([
                 "\$model = \$this->route('$param');",

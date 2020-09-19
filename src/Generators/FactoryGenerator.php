@@ -2,7 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 
 class FactoryGenerator extends BaseGenerator
 {
@@ -95,7 +95,7 @@ class FactoryGenerator extends BaseGenerator
         $result = [];
 
         foreach ($this->referencedTables as $table) {
-            $classname = $this->modelNamespace() . '\\' . Str::studly(Str::singular($table));
+            $classname = $this->modelNamespace() . '\\' . Word::class($table);
 
             $result[] = "use $classname;";
         }

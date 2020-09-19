@@ -74,7 +74,7 @@ class AutoCrudCommandTest extends TestCase
 
         foreach ($tablenames as $tablename) {
             $singular = Str::singular($tablename);
-            $model = Str::ucfirst(Str::camel($singular));
+            $model = Str::studly($singular);
             $modelPlural = Str::plural($model);
 
             $this->assertFileExists(app_path("${model}.php"));

@@ -4,8 +4,10 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
+use Illuminate\Support\Str;
 use Ferreira\AutoCrud\AccessorBuilder;
 use Ferreira\AutoCrud\Database\TableInformation;
+use Ferreira\AutoCrud\Generators\ModelGenerator;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class AccessorBuilderTest extends TestCase
@@ -345,5 +347,41 @@ class AccessorBuilderTest extends TestCase
         $this->assertEquals('$player->time', $builder->simpleAccessorFormatted('time'));
         $this->assertEquals("\$player->when->format('Y-m-d H:i:s')", $builder->simpleAccessorFormatted('when'));
         $this->assertEquals("\$player->is_good ? '&#10004;' : '&#10008;'", $builder->simpleAccessorFormatted('is_good'));
+    }
+
+    /** @test */
+    public function model_relationships_and_simple_accessors_are_always_in_sync()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+            'name' => [],
+        ]);
+        $pets = $this->mockTable('pets', [
+            'human_owner' => ['reference' => ['students', 'id']],
+        ]);
+        $this->mockDatabase($students, $pets);
+
+        $builder = new AccessorBuilder($pets);
+        $accessor = $builder->simpleAccessor('human_owner');
+        $expectedRelationshipName = Str::between($accessor, '$pet->', '->name');
+
+        $petsGenerator = app(ModelGenerator::class, ['table' => $pets]);
+        $code = $petsGenerator->generate();
+        $this->assertCodeContains("
+            public function $expectedRelationshipName()
+            {
+                return \$this->belongsTo(Student::class, 'human_owner');
+            }
+        ", $code);
+    }
+
+    /** @test */
+    public function it_labels_id_columns_in_all_upper_case()
+    {
+        $builder = new AccessorBuilder($this->mockTable('students', [
+            'id' => [],
+        ]));
+
+        $this->assertEquals('ID', $builder->label('id'));
     }
 }

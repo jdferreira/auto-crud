@@ -3,6 +3,7 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -144,7 +145,7 @@ class ColumnFaker
 
             $this->referencedTable = $foreignTable;
 
-            $model = Str::studly(Str::singular($foreignTable));
+            $modelClass = Word::class($foreignTable, true);
 
             $state = $this->forceRequired
                 ? "->state('full_model')"
@@ -152,7 +153,7 @@ class ColumnFaker
 
             return implode("\n", [
                 'function () {',
-                "    return factory($model::class){$state}->create()->$foreignColumn;",
+                "    return factory($modelClass){$state}->create()->$foreignColumn;",
                 '}',
             ]);
         }

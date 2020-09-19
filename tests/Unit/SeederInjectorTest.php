@@ -14,6 +14,13 @@ class SeederInjectorTest extends TestCase
      */
     protected $migrations = __DIR__ . '/../migrations';
 
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->files->delete(database_path('seeds/DatabaseSeeder.php'));
+    }
+
     private function injector($tables): SeederInjector
     {
         return app(SeederInjector::class, [
@@ -57,8 +64,8 @@ class SeederInjectorTest extends TestCase
 
         $seeder = $this->files->get(database_path('seeds/DatabaseSeeder.php'));
 
-        $this->assertStringContainsString('$this->call(UserSeeder::class);', $seeder);
-        $this->assertStringContainsString('$this->call(RoleSeeder::class);', $seeder);
+        $this->assertCodeContains('$this->call(UserSeeder::class);', $seeder);
+        $this->assertCodeContains('$this->call(RoleSeeder::class);', $seeder);
     }
 
     /** @test */
@@ -68,7 +75,7 @@ class SeederInjectorTest extends TestCase
 
         $seeder = $this->files->get(database_path('seeds/DatabaseSeeder.php'));
 
-        $this->assertStringContainsString('$this->call(RoleUserSeeder::class);', $seeder);
+        $this->assertCodeContains('$this->call(RoleUserSeeder::class);', $seeder);
     }
 
     /** @test */

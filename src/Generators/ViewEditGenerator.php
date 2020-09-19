@@ -3,7 +3,7 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 use Ferreira\AutoCrud\AccessorBuilder;
 use Ferreira\AutoCrud\Database\TableInformation;
 
@@ -31,18 +31,13 @@ class ViewEditGenerator extends ViewCreateGenerator
     protected function filename(): string
     {
         return resource_path(
-            'views/' . Str::snake(Str::plural($this->table->name())) . '/edit.blade.php'
+            'views/' . $this->table->name() . '/edit.blade.php'
         );
     }
 
     protected function verb()
     {
         return 'Edit';
-    }
-
-    protected function model()
-    {
-        return Str::camel(Str::singular($this->table->name()));
     }
 
     protected function regularInput(string $column, string $inputType, string $attrs)
@@ -74,18 +69,18 @@ class ViewEditGenerator extends ViewCreateGenerator
 
     protected function optionItem(string $column, string $value)
     {
-        $label = Str::ucfirst(str_replace('_', ' ', $value));
+        $label = Word::labelUpper($value);
 
-        $model = $this->model();
+        $model = Word::variableSingular($this->table->name());
 
-        $selected = "{{ (old('$column') ?? \$$model->$column) === '$value' ? 'selected' : '' }}";
+        $selected = "{{ (old('$column') ?? $model->$column) === '$value' ? 'selected' : '' }}";
 
         return "<option value=\"$value\" $selected>$label</option>";
     }
 
     private function value($column)
     {
-        $old = 'old(\'' . str_replace('_', '-', $column) . '\')';
+        $old = 'old(\'' . Word::kebab($column) . '\')';
 
         $bound = $this->builder->simpleAccessor($column);
 

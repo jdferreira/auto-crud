@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud\Injectors;
 
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
@@ -24,7 +25,7 @@ class SeederInjector
     private $files;
 
     /**
-     * Construct an injector to add calls to seeder files on the mian database
+     * Construct an injector to add calls to seeder files on the main database
      * seeder class.
      *
      * @param string[] $tables
@@ -54,20 +55,23 @@ class SeederInjector
     {
         $injection = $this->generateSeederCalls();
 
-        $parts = preg_split('/(^    public function run\(\)\n\s+\{\n)(.*)(\n^    \})/sm', $code, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = preg_split('/(^    public function run\(\)\n\s+\{\n)(.*?)(\n^    \})/sm', $code, -1, PREG_SPLIT_DELIM_CAPTURE);
 
-        if (Str::endsWith($parts[2], '//')) {
-            $parts[2] = substr($parts[2], 0, -2);
+        $parts[2] = preg_replace('/\s*\/\/$/s', '', $parts[2], -1, $count);
+
+        if ($count > 0) {
+            // Remove existing new lines from the previous part
+            $parts[1] = rtrim($parts[1], "\n");
+        } else {
+            $injection = "\n$injection";
         }
-
-        $parts[2] = rtrim($parts[2], " \t");
 
         return $parts[0] . $parts[1] . $parts[2] . $injection . $parts[3] . $parts[4];
     }
 
     private function generateSeederCalls(): string
     {
-        $lines = [];
+        $lines = ['', '        // Seeder code injected by autocrud.'];
 
         foreach ($this->getSeederClasses() as $class) {
             $lines[] = "        \$this->call($class::class);";
@@ -90,14 +94,14 @@ class SeederInjector
         $result = [];
 
         foreach ($this->tables as $table) {
-            $result[] = Str::studly(Str::singular($table)) . 'Seeder';
+            $result[] = Word::class($table) . 'Seeder';
         }
 
         foreach ($this->db->pivots() as $pivot) {
             [$fk1, $fk2] = array_values($this->db->table($pivot)->allReferences());
 
             if (in_array($fk1[0], $this->tables) && in_array($fk2[0], $this->tables)) {
-                $result[] = Str::studly(Str::singular($pivot)) . 'Seeder';
+                $result[] = Word::class($pivot) . 'Seeder';
             }
         }
 

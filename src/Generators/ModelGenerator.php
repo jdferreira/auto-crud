@@ -3,8 +3,8 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Ferreira\AutoCrud\Database\OneToOne;
 use Ferreira\AutoCrud\Database\OneToMany;
 use Ferreira\AutoCrud\Database\ManyToMany;
@@ -230,15 +230,15 @@ class ModelGenerator extends BaseGenerator
     protected function hasOneOrMany(OneToOneOrMany $relation): array
     {
         $modelMethod = $relation instanceof OneToOne
-            ? Str::camel(Str::singular($relation->table))
-            : Str::camel(Str::plural($relation->table));
+            ? Word::methodSingular($relation->table)
+            : Word::method($relation->table);
 
         $eloquentMethod = $relation instanceof OneToOne
             ? 'hasOne'
             : 'hasMany';
 
         $args = [
-            Str::studly(Str::singular($relation->table)) . '::class',
+            Word::class($relation->table, true),
             "'" . $relation->column . "'",
             "'" . $relation->foreignColumn . "'",
         ];
@@ -251,10 +251,10 @@ class ModelGenerator extends BaseGenerator
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
 
         $other = $relation instanceof OneToOne
-            ? str_replace('_', ' ', Str::singular($relation->table))
-            : str_replace('_', ' ', Str::plural($relation->table));
+            ? Word::labelSingular($relation->table)
+            : Word::label($relation->table);
 
-        $self = str_replace('_', ' ', Str::singular($relation->foreignTable));
+        $self = Word::labelSingular($relation->foreignTable);
 
         return [
             '/**',
@@ -269,12 +269,10 @@ class ModelGenerator extends BaseGenerator
 
     protected function belongsTo(OneToOneOrMany $relation): array
     {
-        $modelMethod = substr($relation->column, -3) === '_id'
-            ? Str::camel(Str::singular(substr($relation->column, 0, -3)))
-            : Str::camel(Str::singular($relation->foreignTable));
+        $modelMethod = Word::method($relation->column);
 
         $args = [
-            Str::studly(Str::singular($relation->foreignTable)) . '::class',
+            Word::class($relation->foreignTable, true),
             "'" . $relation->column . "'",
             "'" . $relation->foreignColumn . "'",
         ];
@@ -286,19 +284,13 @@ class ModelGenerator extends BaseGenerator
 
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
 
-        $self = str_replace('_', ' ', Str::singular($relation->table));
+        $self = Word::labelSingular($relation->table);
 
-        if (substr($relation->column, -3) === '_id') {
-            $other = str_replace('_', ' ', Str::singular(substr($relation->column, 0, -3)));
-            $docblock = "Retrieve the $other of this $self.";
-        } else {
-            $other = str_replace('_', ' ', Str::singular($relation->foreignTable));
-            $docblock = "Retrieve the $other this $self belongs to.";
-        }
+        $other = Word::label($relation->column, true);
 
         return [
             '/**',
-            " * $docblock",
+            " * Retrieve the $other of this $self.",
             ' */',
             "public function $modelMethod()",
             '{',
@@ -317,11 +309,11 @@ class ModelGenerator extends BaseGenerator
             [$other, $otherPivotCol, $otherCol] = [$relation->foreignOne, $relation->pivotColumnOne, $relation->foreignOneColumn];
         }
 
-        $modelMethod = Str::camel(Str::plural($other));
+        $modelMethod = Word::method($other);
         $eloquentMethod = 'belongsToMany';
 
         $args = [
-            Str::studly(Str::singular($other)) . '::class',
+            Word::class($other, true),
             "'" . $relation->pivot . "'",
             "'" . $otherPivotCol . "'",
             "'" . $myPivotCol . "'",
@@ -330,9 +322,9 @@ class ModelGenerator extends BaseGenerator
         ];
 
         if ($me < $other) {
-            $pivot = Str::singular($me) . '_' . Str::singular($other);
+            $pivot = Word::snakeSingular($me) . '_' . Word::snakeSingular($other);
         } else {
-            $pivot = Str::singular($other) . '_' . Str::singular($me);
+            $pivot = Word::snakeSingular($other) . '_' . Word::snakeSingular($me);
         }
 
         $defaultValues = [
@@ -345,9 +337,9 @@ class ModelGenerator extends BaseGenerator
 
         $args = BaseGenerator::removeDefaults($args, $defaultValues);
 
-        $other = str_replace('_', ' ', Str::plural($other));
+        $other = Word::label($other);
 
-        $self = str_replace('_', ' ', $me);
+        $self = Word::labelSingular($me);
 
         return [
             '/**',
@@ -366,7 +358,7 @@ class ModelGenerator extends BaseGenerator
 
         $id = $this->table->primaryKey();
 
-        $model = str_replace('_', ' ', Str::singular($tablename));
+        $model = Word::labelSingular($tablename);
 
         return [
             '/**',

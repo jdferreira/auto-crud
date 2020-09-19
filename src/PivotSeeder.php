@@ -2,9 +2,7 @@
 
 namespace Ferreira\AutoCrud;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class PivotSeeder
@@ -58,11 +56,8 @@ class PivotSeeder
 
     private function ids(string $tablename)
     {
-        $modelClass = 'App\\' . Str::studly(Str::singular($tablename)); // TODO: What about when the models live elsewhere?
+        $modelClass = 'App\\' . Word::class($tablename); // TODO: What about when the models live elsewhere?
 
-        /**
-         * @var Model
-         */
         $model = new $modelClass;
 
         return $model->newQuery()->pluck($model->getKeyName());

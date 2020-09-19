@@ -2,7 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Illuminate\Support\Str;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\Stub\StubRenderer;
 use Ferreira\AutoCrud\Database\TableInformation;
@@ -182,7 +182,7 @@ abstract class BaseGenerator
 
     public function modelClass()
     {
-        return Str::studly(Str::singular($this->table->name()));
+        return Word::class($this->table->name());
     }
 
     /**

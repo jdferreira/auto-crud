@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud\Generators;
 
 use Exception;
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Ferreira\AutoCrud\AccessorBuilder;
@@ -26,7 +27,7 @@ class TestGenerator extends BaseGenerator
 
     protected function filename(): string
     {
-        return base_path('tests/Feature/' . Str::studly($this->table->name()) . 'CrudTest.php');
+        return base_path('tests/Feature/' . Word::classPlural($this->table->name()) . 'CrudTest.php');
     }
 
     protected function replacements(): array
@@ -89,7 +90,7 @@ class TestGenerator extends BaseGenerator
 
     private function modelClassPlural()
     {
-        return Str::studly($this->table->name());
+        return Word::classPlural($this->table->name());
     }
 
     private function tablename()
@@ -99,7 +100,7 @@ class TestGenerator extends BaseGenerator
 
     private function tablenameSingular()
     {
-        return Str::singular($this->table->name());
+        return Word::snakeSingular($this->table->name());
     }
 
     private function tablenameSingularWithArticle()
@@ -110,17 +111,17 @@ class TestGenerator extends BaseGenerator
             ? 'an'
             : 'a';
 
-        return $article . '_' . Str::singular($tablename);
+        return $article . '_' . Word::snakeSingular($tablename);
     }
 
     private function modelVariablePlural()
     {
-        return Str::camel($this->table->name());
+        return Word::variable($this->table->name(), false);
     }
 
     private function modelVariableSingular()
     {
-        return Str::singular(Str::camel($this->table->name()));
+        return Word::variableSingular($this->table->name(), false);
     }
 
     public function assertSeeColumnValuesOnIndexOrShow()
@@ -358,7 +359,7 @@ class TestGenerator extends BaseGenerator
         $checkboxInputs = $groups->get('checkbox', collect())
             ->flatMap(function ($column) {
                 $value = "\${$this->modelVariableSingular()}->$column";
-                $column = Str::camel($column);
+                $column = Word::variable($column, false);
 
                 $name = $this->quoteName($column);
 
@@ -501,8 +502,8 @@ class TestGenerator extends BaseGenerator
 
         if ($uniqueColumns->count() > 0) {
             $model = str_replace('_', ' ', $this->tablenameSingular());
-            $modelClass = $this->modelClass();
-            $modelVariable = Str::camel($this->modelClass());
+            $modelClass = Word::class($this->table->name());
+            $modelVariable = Word::variableSingular($this->table->name(), false);
 
             $result = array_merge(
                 [
@@ -586,7 +587,7 @@ class TestGenerator extends BaseGenerator
 
     private function assertionsForReference(string $column, string $foreignTable, string $foreignColumn)
     {
-        $foreignClass = Str::studly(Str::singular($foreignTable));
+        $foreignClass = Word::class($foreignTable);
 
         $this->otherUses[] = $this->modelNamespace() . '\\' . $foreignClass;
 
@@ -596,7 +597,7 @@ class TestGenerator extends BaseGenerator
         ];
 
         if ($this->table->unique($column)) {
-            $modelVariable = Str::camel($this->modelClass());
+            $modelVariable = Word::variableSingular($this->table->name(), false);
 
             $result = array_merge($result, [
                 "    ->rejects(\$$modelVariable->$column)",

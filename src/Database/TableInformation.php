@@ -3,6 +3,7 @@
 namespace Ferreira\AutoCrud\Database;
 
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Doctrine\DBAL\Schema\Column;
@@ -319,7 +320,7 @@ class TableInformation
      */
     public function foreignKey(): ?string
     {
-        return Str::snake(Str::singular($this->name())) . '_' . $this->primaryKey();
+        return Word::snakeSingular($this->name()) . '_' . $this->primaryKey();
     }
 
     /**

@@ -3,8 +3,8 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class ViewCreateGenerator extends BaseGenerator
 {
@@ -26,7 +26,8 @@ class ViewCreateGenerator extends BaseGenerator
     protected function filename(): string
     {
         return resource_path(
-            'views/' . Str::snake(Str::plural($this->table->name())) . '/create.blade.php'
+            // 'views/' . Str::snake(Str::plural($this->table->name())) . '/create.blade.php'
+            'views/' . $this->table->name() . '/create.blade.php'
         );
     }
 
@@ -52,7 +53,7 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function modelSingular()
     {
-        return str_replace('_', ' ', Str::singular($this->table->name()));
+        return Word::labelSingular($this->table->name());
     }
 
     public function fields()
@@ -83,9 +84,9 @@ class ViewCreateGenerator extends BaseGenerator
             return;
         }
 
-        $for = str_replace('_', '-', $column);
+        $for = Word::kebab($column);
 
-        $label = Str::ucfirst(str_replace('_', ' ', $column));
+        $label = Word::labelUpper($column);
 
         $input = collect($this->input($column))->map(function ($arg) {
             return "    $arg";
@@ -105,7 +106,7 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function attributes(string $column)
     {
-        $name = str_replace('_', '-', $column);
+        $name = Word::kebab($column);
 
         $required = $this->required($column) ? ' required' : '';
 
@@ -228,7 +229,7 @@ class ViewCreateGenerator extends BaseGenerator
 
     protected function optionItem(string $column, string $value)
     {
-        $label = Str::ucfirst(str_replace('_', ' ', $value));
+        $label = Word::labelUpper($value);
 
         $selected = $this->table->default($column) === $value ? ' selected' : '';
 
