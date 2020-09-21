@@ -45,7 +45,7 @@ class ControllerGenerator extends BaseGenerator
 
     protected function modelPlural()
     {
-        return Word::variablePlural($this->table->name(), false);
+        return Word::variable($this->table->name(), false);
     }
 
     protected function modelSingularNoDollar()

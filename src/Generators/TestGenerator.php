@@ -116,12 +116,12 @@ class TestGenerator extends BaseGenerator
 
     private function modelVariablePlural()
     {
-        return Word::variable($this->table->name(), false);
+        return Word::variable($this->table->name());
     }
 
     private function modelVariableSingular()
     {
-        return Word::variableSingular($this->table->name(), false);
+        return Word::variableSingular($this->table->name());
     }
 
     public function assertSeeColumnValuesOnIndexOrShow()
@@ -344,7 +344,7 @@ class TestGenerator extends BaseGenerator
             ->map(function ($column) use ($builder) {
                 $value = $builder->simpleAccessor(
                     $column,
-                    '$' . $this->modelVariableSingular()
+                    $this->modelVariableSingular()
                 );
 
                 if (Type::dateTimeFormat($this->table->type($column)) !== null) {
@@ -358,20 +358,20 @@ class TestGenerator extends BaseGenerator
 
         $checkboxInputs = $groups->get('checkbox', collect())
             ->flatMap(function ($column) {
-                $value = "\${$this->modelVariableSingular()}->$column";
-                $column = Word::variable($column, false);
-
+                $value = "{$this->modelVariableSingular()}->$column";
                 $name = $this->quoteName($column);
 
+                $columnChecked = Word::variable($column) . 'Checked';
+
                 return [
-                    "\${$column}Checked = $value ? '@checked' : 'not(@checked)';",
-                    $this->wrapXPath("//*[@name='$name' and \${$column}Checked]"),
+                    "$columnChecked = $value ? '@checked' : 'not(@checked)';",
+                    $this->wrapXPath("//*[@name='$name' and $columnChecked]"),
                 ];
             });
 
         $selectInputs = $groups->get('select', collect())
             ->map(function ($column) {
-                $value = "\${$this->modelVariableSingular()}->$column";
+                $value = "{$this->modelVariableSingular()}->$column";
 
                 $name = $this->quoteName($column);
 
@@ -380,7 +380,7 @@ class TestGenerator extends BaseGenerator
 
         $textareaInputs = $groups->get('textarea', collect())
             ->map(function ($column) {
-                $value = "\${$this->modelVariableSingular()}->$column";
+                $value = "{$this->modelVariableSingular()}->$column";
 
                 $name = $this->quoteName($column);
 
@@ -475,7 +475,7 @@ class TestGenerator extends BaseGenerator
         return $this->fieldsExceptPrimary()
             ->map(function ($column) {
                 $expected = "\$new['$column']";
-                $retrieved = "\${$this->modelVariableSingular()}->$column";
+                $retrieved = "{$this->modelVariableSingular()}->$column";
 
                 $type = $this->table->type($column);
 
@@ -503,12 +503,12 @@ class TestGenerator extends BaseGenerator
         if ($uniqueColumns->count() > 0) {
             $model = str_replace('_', ' ', $this->tablenameSingular());
             $modelClass = Word::class($this->table->name());
-            $modelVariable = Word::variableSingular($this->table->name(), false);
+            $modelVariable = Word::variableSingular($this->table->name());
 
             $result = array_merge(
                 [
                     "// Create one $model to test fields that should contain unique values",
-                    "\$$modelVariable = factory($modelClass::class)->state('full_model')->create([",
+                    "$modelVariable = factory($modelClass::class)->state('full_model')->create([",
                 ],
                 $uniqueColumns->map(function ($column) {
                     $fake = $this->fakeForUnique($column);
@@ -597,10 +597,10 @@ class TestGenerator extends BaseGenerator
         ];
 
         if ($this->table->unique($column)) {
-            $modelVariable = Word::variableSingular($this->table->name(), false);
+            $modelVariable = Word::variableSingular($this->table->name());
 
             $result = array_merge($result, [
-                "    ->rejects(\$$modelVariable->$column)",
+                "    ->rejects($modelVariable->$column)",
             ]);
         }
 

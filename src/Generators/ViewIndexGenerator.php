@@ -55,7 +55,7 @@ class ViewIndexGenerator extends BaseGenerator
 
     protected function modelPlural()
     {
-        return Word::variablePlural($this->table->name());
+        return Word::variable($this->table->name());
     }
 
     protected function modelPluralCapitalized()

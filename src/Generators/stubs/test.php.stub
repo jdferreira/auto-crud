@@ -26,9 +26,9 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_shows_existing_{{ tablename }}_in_the_index()
     {
-        ${{ modelVariablePlural }} = factory({{ modelClass }}::class, 2)->states('full_model')->create();
+        {{ modelVariablePlural }} = factory({{ modelClass }}::class, 2)->states('full_model')->create();
 
-        foreach (${{ modelVariablePlural }} as ${{ modelVariableSingular }}) {
+        foreach ({{ modelVariablePlural }} as {{ modelVariableSingular }}) {
             $this->get('/{{ tablename }}')
                 {{ assertSeeColumnValuesOnIndexOrShow }};
         }
@@ -37,9 +37,9 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_shows_the_values_of_{{ tablenameSingularWithArticle }}_in_the_show_view()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
 
-        $this->get(${{ modelVariableSingular }}->path())
+        $this->get({{ modelVariableSingular }}->path())
             {{ assertSeeColumnValuesOnIndexOrShow }};
     }
 
@@ -68,10 +68,10 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_asks_for_all_columns_on_the_edit_form_of_{{ tablenameSingularWithArticle }}()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
 
         $document = $this->getDOMDocument(
-            $this->get(${{ modelVariableSingular }}->path() . '/edit')
+            $this->get({{ modelVariableSingular }}->path() . '/edit')
         );
 
         {{ assertHTMLOnForm }}
@@ -80,10 +80,10 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_starts_the_edit_form_with_the_{{ tablenameSingular }}_current_values()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
 
         $document = $this->getDOMDocument(
-            $this->get(${{ modelVariableSingular }}->path() . '/edit')
+            $this->get({{ modelVariableSingular }}->path() . '/edit')
         );
 
         {{ assertEditFormHasValues }}
@@ -92,14 +92,14 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_keeps_old_values_on_unsuccessful_{{ tablenameSingular }}_update()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
 
-        $updated = ${{ modelVariableSingular }}->toArray();
+        $updated = {{ modelVariableSingular }}->toArray();
         $updated['{{ oneConstraintField }}'] = {{ oneInvalidValue }};
 
         $this->withExceptionHandling();
 
-        $response = $this->put(${{ modelVariableSingular }}->path(), $updated);
+        $response = $this->put({{ modelVariableSingular }}->path(), $updated);
 
         $response->assertSessionHasInput('{{ oneConstraintField }}', {{ oneInvalidValue }});
     }
@@ -111,9 +111,9 @@ class {{ modelClassPlural }}CrudTest extends TestCase
 
         {{ assertRequiredFields }}
 
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
 
-        $document = $this->getDOMDocument($this->get(${{ modelVariableSingular }}->path() . '/edit'));
+        $document = $this->getDOMDocument($this->get({{ modelVariableSingular }}->path() . '/edit'));
 
         {{ assertRequiredFields }}
     }
@@ -135,7 +135,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
 
         $this->post('/{{ tablename }}', $new);
 
-        $this->assertNotNull(${{ modelVariableSingular }} = {{ modelClass }}::find(1));
+        $this->assertNotNull({{ modelVariableSingular }} = {{ modelClass }}::find(1));
 
         {{ assertNewEqualsModel }}
     }
@@ -145,22 +145,22 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     {
         $new = factory({{ modelClass }}::class)->raw();
 
-        ${{ modelVariableSingular }} = new {{ modelClass }}($new);
-        ${{ modelVariableSingular }}->save();
+        {{ modelVariableSingular }} = new {{ modelClass }}($new);
+        {{ modelVariableSingular }}->save();
 
-        $this->beginAssertFields('PUT', ${{ modelVariableSingular }}->path(), $new)->assertFields();
+        $this->beginAssertFields('PUT', {{ modelVariableSingular }}->path(), $new)->assertFields();
     }
 
     /** @test */
     public function it_updates_{{ tablename }}_when_asked_to()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
 
         $new = factory({{ modelClass }}::class)->raw();
 
-        $this->put(${{ modelVariableSingular }}->path(), $new);
+        $this->put({{ modelVariableSingular }}->path(), $new);
 
-        ${{ modelVariableSingular }} = ${{ modelVariableSingular }}->fresh();
+        {{ modelVariableSingular }} = {{ modelVariableSingular }}->fresh();
 
         {{ assertNewEqualsModel }}
     }
@@ -168,11 +168,11 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_deletes_{{ tablename }}_when_asked_to()
     {
-        ${{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
 
-        $this->delete(${{ modelVariableSingular }}->path());
+        $this->delete({{ modelVariableSingular }}->path());
 
-        $this->assertNull({{ modelClass }}::find(${{ modelVariableSingular }}->id));
+        $this->assertNull({{ modelClass }}::find({{ modelVariableSingular }}->id));
     }
 
     public function assertFields()
