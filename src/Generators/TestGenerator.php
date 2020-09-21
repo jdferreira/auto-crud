@@ -494,33 +494,7 @@ class TestGenerator extends BaseGenerator
 
     public function assertFields()
     {
-        $result = [];
-
-        $uniqueColumns = $this->fieldsExceptPrimary()->filter(function ($column) {
-            return $this->table->unique($column) && $this->table->reference($column) === null;
-        });
-
-        if ($uniqueColumns->count() > 0) {
-            $model = str_replace('_', ' ', $this->tablenameSingular());
-            $modelClass = Word::class($this->table->name());
-            $modelVariable = Word::variableSingular($this->table->name());
-
-            $result = array_merge(
-                [
-                    "// Create one $model to test fields that should contain unique values",
-                    "$modelVariable = factory($modelClass::class)->state('full_model')->create([",
-                ],
-                $uniqueColumns->map(function ($column) {
-                    $fake = $this->fakeForUnique($column);
-
-                    return "    '$column' => $fake,";
-                })->all(),
-                [
-                    ']);',
-                    '',
-                ]
-            );
-        }
+        $result = $this->generateInitialModelForUniqueChecks();
 
         $first = true;
 
@@ -535,6 +509,53 @@ class TestGenerator extends BaseGenerator
         }
 
         return $result;
+    }
+
+    private function generateInitialModelForUniqueChecks()
+    {
+        $uniqueColumns = $this->fieldsExceptPrimary()->filter(function ($column) {
+            return $this->table->unique($column);
+        });
+
+        if ($uniqueColumns->count() === 0) {
+            return [];
+        }
+
+        $initialState = $uniqueColumns
+            ->filter(function ($column) {
+                // Fake only columns that do not have foreign keys on them
+                return $this->table->reference($column) === null;
+            })
+            ->map(function ($column) {
+                $fake = $this->fakeForUnique($column);
+
+                return "    '$column' => $fake,";
+            })
+            ->all();
+
+        $model = str_replace('_', ' ', $this->tablenameSingular());
+        $modelClass = Word::class($this->table->name());
+        $modelVariable = Word::variableSingular($this->table->name());
+
+        if (count($initialState) > 0) {
+            return array_merge(
+                [
+                    "// Create one $model to test fields that should contain unique values",
+                    "$modelVariable = factory($modelClass::class)->state('full_model')->create([",
+                ],
+                $initialState,
+                [
+                    ']);',
+                    '',
+                ]
+            );
+        } else {
+            return [
+                "// Create one $model to test fields that should contain unique values",
+                "$modelVariable = factory($modelClass::class)->state('full_model')->create();",
+                '',
+            ];
+        }
     }
 
     private function fakeForUnique($column)

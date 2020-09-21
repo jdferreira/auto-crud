@@ -30,3 +30,11 @@
 - [x] Generated pivot tables must not have unique/nullable modifiers.
 
 - [x] Improve the way to generate migrations and to run the autocrud commands in the testing environment
+
+- [ ] On generated migrations, do not allow "weird" relationships. For example, table A, column X refers to id of table B, and then there is a pivot for tables A and B...
+
+- [ ] When asserting fields, if the model has a unique constraint on a boolean column, the method `beginAssertFields` must explicitly use the boolean value `false` associated with that column since the model created to check for uniqueness will already have the value `true`.
+
+- [ ] On generated migrations, date-like columns should sometimes have a default value other than `CURRENT_TIMESTAMP`
+
+- [x] Fix model not being created in the `assertFields` method when the only UNIQUE columns are foreign keys

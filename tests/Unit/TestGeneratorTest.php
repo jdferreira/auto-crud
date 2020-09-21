@@ -512,6 +512,27 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_creates_a_model_even_if_all_the_unique_fields_are_foreign_keys()
+    {
+        $generator = $this->generator(
+            $this->mockTable('schools', [
+                'country_id' => [
+                    'type' => Type::INTEGER,
+                    'reference' => ['countries', 'id'],
+                    'unique' => true,
+                ],
+            ])
+        );
+
+        $lines = $generator->assertFields();
+
+        $this->assertEquals([
+            '// Create one school to test fields that should contain unique values',
+            "\$school = factory(School::class)->state('full_model')->create();",
+        ], array_slice($lines, 0, 2));
+    }
+
+    /** @test */
     public function it_uses_models_needed_for_validation()
     {
         $generator = $this->generator(
