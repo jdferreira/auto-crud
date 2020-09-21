@@ -1,0 +1,170 @@
+<?php
+
+use Illuminate\Filesystem\Filesystem;
+use Tests\MigrationSetGenerator;
+
+require __DIR__ . '/vendor/autoload.php';
+
+class SetupEmptyLaravel
+{
+    public function run()
+    {
+        exec('composer create-project laravel/laravel --prefer-dist . "7.*"');
+
+        $this->initialize();
+
+        exec('git init');
+        exec('git add .');
+
+        exec('git config user.email "email@example.com"');
+        exec('git config user.name "No Name"');
+        exec('git commit -m "Empty laravel project prepared for autocrud tests"');
+    }
+
+    private function initialize()
+    {
+        $this->useSqliteDatabase();
+        $this->requireAutocrudPackage();
+    }
+
+    private function useSqliteDatabase()
+    {
+        $this->changeEnvFile();
+
+        $this->changePhpunitXml();
+
+        exec('touch database/db');
+    }
+
+    private function changeEnvFile()
+    {
+        $contents = file_get_contents('.env');
+
+        $contents = preg_replace('/^DB_.*\n*/m', '', $contents);
+        $contents .= implode("\n", [
+            '',
+            'DB_CONNECTION=sqlite',
+            'DB_DATABASE=database/db',
+            'DB_FOREIGN_KEYS=true',
+        ]);
+
+        file_put_contents('.env', $contents);
+    }
+
+    private function changePhpunitXml()
+    {
+        $contents = file_get_contents('phpunit.xml');
+
+        $contents = preg_replace(
+            [
+                '/<!-- (<server name="DB_CONNECTION" value="sqlite"\/>) -->/',
+                '/<!-- (<server name="DB_DATABASE" value=":memory:"\/>) -->/',
+            ],
+            '$1',
+            $contents
+        );
+
+        file_put_contents('phpunit.xml', $contents);
+    }
+
+    private function requireAutocrudPackage()
+    {
+        $composer = json_decode(file_get_contents('composer.json'), true);
+
+        $composer['require-dev']['jdferreira/autocrud'] = '@dev';
+        $composer['repositories'][] = ['type' => 'path', 'url' => '/var/www'];
+
+        file_put_contents('composer.json', json_encode($composer));
+
+        exec('composer update');
+    }
+
+    public function revert()
+    {
+        error('You cannot revert setting up an empty laravel project');
+    }
+}
+
+class GenerateMigrations
+{
+    public function run()
+    {
+        $dir = implode(DIRECTORY_SEPARATOR, [
+            'database',
+            'migrations',
+        ]);
+
+        (new Filesystem())->cleanDirectory($dir);
+
+        (new MigrationSetGenerator($dir))->save();
+    }
+
+    public function revert()
+    {
+        exec('git clean -fd');
+        exec('git reset --hard');
+    }
+}
+
+class AutocrudMaker
+{
+    public function run()
+    {
+        // Run the migrations and then the autocrud:make command
+        exec('php artisan migrate');
+        exec('php artisan autocrud:make');
+    }
+
+    public function revert()
+    {
+        // Stage the changes to the migration files (removing the default
+        // laravel migrations and generating the random ones) so that we can
+        // easily clean the repository but keep these migration files
+        exec('git add database/migrations');
+
+        // Remove all changes to the repository except the migrations
+        exec('git clean -fd');
+        exec('git checkout -- .');
+
+        // Un-stage the migration changes back into the index
+        exec('git reset');
+
+        // Reset the database
+        exec('php artisan migrate:reset');
+    }
+}
+
+
+function error($message)
+{
+    echo "\033[31m";
+    echo $message;
+    echo "\033[m";
+    echo PHP_EOL;
+
+    die;
+}
+
+chdir('/empty-laravel');
+
+if (!array_key_exists(1, $argv)) {
+    error('Missing command: expecting one of { setup | migrations | autocrud }');
+} elseif ($argv[1] === 'setup') {
+    $obj = new SetupEmptyLaravel();
+} elseif ($argv[1] === 'migrations') {
+    $obj = new GenerateMigrations();
+} elseif ($argv[1] === 'autocrud') {
+    $obj = new AutocrudMaker();
+} else {
+    error('Cannot understand command ' . $argv[1]);
+}
+
+if (!array_key_exists(2, $argv)) {
+    error('Missing action: expecting one of { run | revert }');
+} elseif ($argv[2] === 'run') {
+    $obj->run();
+} elseif ($argv[2] === 'revert') {
+    $obj->revert();
+} else {
+    error('Cannot understand action ' . $argv[2]);
+}
