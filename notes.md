@@ -10,7 +10,8 @@
 
 - [x] Column fakers for types other than string or text should not use custom faker methods, but always the one for that type
 
-- [ ] In the migration generator, foreign key columns cannot have a default value. This should be an error when reading the database.
+- [x] In the migration generator, foreign key columns cannot have a default value
+  - [ ] this should be an error when reading the database.
 
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
 
@@ -26,6 +27,6 @@
 
 - [ ] Pivot tables should mean that one of the models has a dropdown for the other model
 
-- [ ] Generated pivot tables must not have unique/nullable modifiers.
+- [x] Generated pivot tables must not have unique/nullable modifiers.
 
-- [ ] Improve the way to generate migrations and to run the autocrud commands in the testing environment
+- [x] Improve the way to generate migrations and to run the autocrud commands in the testing environment

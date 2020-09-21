@@ -123,6 +123,8 @@ class MigrationGenerator
 
                 $column = Helper::$idColumns[$foreignType];
                 $type = 'simple';
+
+                $foreignKey = true;
             } else {
                 $column = Arr::random(array_keys(Helper::$columnTypes));
                 $type = Helper::$columnTypes[$column];
@@ -136,6 +138,8 @@ class MigrationGenerator
                         $name = Str::plural($name);
                     }
                 } while (in_array($name, $namesUsed));
+
+                $foreignKey = false;
             }
 
             if ($type === 'simple') {
@@ -155,17 +159,17 @@ class MigrationGenerator
             }
 
             // 20% probability of nullable
-            if (random_int(1, 100) <= 20) {
+            if (! $this->pivot && random_int(1, 100) <= 20) {
                 $method .= '->nullable()';
             }
 
             // 20% probability of unique
-            if (random_int(1, 100) <= 20) {
+            if (! $this->pivot && random_int(1, 100) <= 20) {
                 $method .= '->unique()';
             }
 
-            // 10% probability of a default value
-            if (random_int(1, 100) <= 10) {
+            // If not a foreign key, 10% probability of a default value
+            if (! $foreignKey && random_int(1, 100) <= 10) {
                 if (in_array($column, Helper::$dateLikeCollumns)) {
                     $method .= '->useCurrent()';
                 } else {
