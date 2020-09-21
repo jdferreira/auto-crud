@@ -20,7 +20,7 @@
 
 - [ ] Primary keys that span multiple columns should be an error when reading the database
 
-- [ ] Do not create views for pivot tables
+- [x] Do not create views for pivot tables (the problem was that we had a wrong definition of pivot and were generating pivots with soft deletes.)
 
 - [ ] Columns with foreign keys should be dropdown boxes in the create/edit views
 

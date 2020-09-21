@@ -190,7 +190,7 @@ class MigrationGenerator
         }
 
         // 50% probability of soft deletes
-        if (random_int(1, 100) <= 50) {
+        if (! $this->pivot && random_int(1, 100) <= 50) {
             $schema[] = '$table->softDeletes();';
         }
 
