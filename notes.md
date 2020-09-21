@@ -19,3 +19,13 @@
 - [ ] On stub replacement, see if we can replace with a multi-line string, which must necessarily be correctly indented
 
 - [ ] Primary keys that span multiple columns should be an error when reading the database
+
+- [ ] Do not create views for pivot tables
+
+- [ ] Columns with foreign keys should be dropdown boxes in the create/edit views
+
+- [ ] Pivot tables should mean that one of the models has a dropdown for the other model
+
+- [ ] Generated pivot tables must not have unique/nullable modifiers.
+
+- [ ] Improve the way to generate migrations and to run the autocrud commands in the testing environment
