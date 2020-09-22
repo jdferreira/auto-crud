@@ -256,4 +256,24 @@ class StubRendererTest extends TestCase
             }
         ', $code);
     }
+
+    /** @test */
+    public function it_dedents_multiple_line_strings_before_replacing()
+    {
+        $stub = '$obj->method({{ arg }});';
+
+        $code = StubRenderer::render($stub, [
+            'arg' => '
+                [
+                    0,
+                ]
+            ',
+        ]);
+
+        $this->assertEquals(implode("\n", [
+            '$obj->method([',
+            '    0,',
+            ']);',
+        ]), $code);
+    }
 }

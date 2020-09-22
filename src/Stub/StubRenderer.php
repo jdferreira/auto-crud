@@ -57,8 +57,14 @@ class StubRenderer
             } elseif ($part->isPlaceholder()) {
                 $replacement = Arr::get($replacements, $part->getPayload(), '');
 
-                if (! is_array($replacement)) {
-                    $replacement = explode("\n", $replacement);
+                if (is_string($replacement)) {
+                    $replacement = $this->explodeString($replacement);
+                } elseif ($replacement === null) {
+                    $replacement = [];
+                } elseif (! is_array($replacement)) {
+                    $payload = $part->getPayload();
+
+                    throw new StubRenderingException("Replacement for $payload is not valid");
                 }
 
                 $first = true;
@@ -102,6 +108,75 @@ class StubRenderer
         // }
 
         return $rendered;
+    }
+
+    /**
+     * Converts a multiple line string into an array of strings, exploded by the
+     * new line character. Additionally, the longest common whitespace prefix
+     * (spaces and tabs) is removed from all lines.
+     *
+     * @param string $string
+     *
+     * @return string[]
+     */
+    private function explodeString(string $string): array
+    {
+        $lines = explode("\n", $string);
+
+        // Remove heading and trailing empty lines
+        $count = count($lines);
+
+        for ($i = 0; $i < $count; $i++) {
+            if (preg_match('/^[ \t]*$/', $lines[$i])) {
+                unset($lines[$i]);
+            } else {
+                break;
+            }
+        }
+
+        $lines = array_values($lines);
+
+        for ($i = count($lines) - 1; $i >= 0; $i--) {
+            if (preg_match('/^[ \t]*$/', $lines[$i])) {
+                unset($lines[$i]);
+            } else {
+                break;
+            }
+        }
+
+        $longestPrefix = null;
+
+        foreach ($lines as $line) {
+            preg_match('/^[ \t]*/', $line, $matches);
+            $prefix = $matches[0];
+
+            if ($longestPrefix === null) {
+                $longestPrefix = $prefix;
+            } else {
+                $longestPrefix = $this->commonPrefix($longestPrefix, $prefix);
+            }
+        }
+
+        $dedentAmount = Str::length($longestPrefix);
+
+        foreach ($lines as &$line) {
+            $line = Str::substr($line, $dedentAmount);
+        }
+
+        return $lines;
+    }
+
+    private function commonPrefix(string $one, string $two): string
+    {
+        $max = min(Str::length($one), Str::length($two));
+
+        for ($i = 0; $i < $max; $i++) {
+            if ($one[$i] !== $two[$i]) {
+                return Str::substr($one, 0, $i);
+            }
+        }
+
+        return $one;
     }
 
     /**
