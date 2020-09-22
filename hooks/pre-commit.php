@@ -6,13 +6,22 @@ exec(
     'git stash push -m precommit-verification --keep-index --include-untracked'
 );
 
+echo "\033[32m"; // Green text
+echo 'Checking PHP code style ... ';
+echo "\033[m";
+
 // If the code is not properly formatted, stop the commit process. In that case,
 // let the user know and pop the stash.
 exec('php-cs-fixer fix --dry-run >/dev/null 2>&1', $_, $exitCode);
 
-if ($exitCode !== 0) {
+if ($exitCode === 0) {
+    echo "\033[32m"; // Green text
+    echo 'OK';
+    echo "\033[m";
+    echo PHP_EOL;
+} else {
     echo "\033[33m"; // Yellow text
-    echo 'Code style fixes are required: the commit has been aborted';
+    echo 'failed';
     echo "\033[m";
     echo PHP_EOL;
 
