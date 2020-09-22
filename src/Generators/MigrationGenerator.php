@@ -1,14 +1,16 @@
 <?php
 
-namespace Tests;
+namespace Ferreira\AutoCrud\Generators;
 
+use Exception;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Ferreira\AutoCrud\Stub\StubRenderer;
-use Tests\MigrationGeneratorHelper as Helper;
+use Illuminate\Filesystem\Filesystem;
+use Ferreira\AutoCrud\Generators\PhpGenerator;
+use Ferreira\AutoCrud\Generators\MigrationGeneratorHelper as Helper;
 
-class MigrationGenerator
+class MigrationGenerator extends PhpGenerator
 {
     /** @var bool */
     private $pivot;
@@ -17,72 +19,57 @@ class MigrationGenerator
     private $tablename;
 
     /** @var string[] */
-    private $existing;
-
-    /** @var string[] */
     private $specs;
 
-    /** @var string */
-    private $code;
+    /** @var string[] */
+    private $schema;
 
-    public function __construct($existing = [])
+    /** @var string[] */
+    private $existing;
+
+    /** @var null|string */
+    private $dir;
+
+    /** @var null|int */
+    private $order;
+
+    /** @var string[] */
+    private $columnNames;
+
+    /** @var string[][] */
+    private $foreignReferences;
+
+    public function __construct(Filesystem $files, $existing = [])
     {
+        parent::__construct($files);
+
         $this->existing = $existing;
+        $this->dir = null;
+        $this->order = null;
+        $this->columnNames = [];
+        $this->foreignReferences = [];
 
         // 2% probability of this being a pivot table, if possible
         $this->pivot = count($existing) >= 2 && Helper::rand() <= 0.2;
 
-        $this->specs = [];
-
-        $schema = $this->schema();
-
-        $this->code = StubRenderer::render(
-            file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'migration.php.stub'),
-            [
-                'tablenameStudly' => $this->tablenameStudly(),
-                'tablename' => $this->tablename(),
-                'schema' => $schema,
-            ]
-        );
+        $this->schema = $this->buildSchema();
     }
 
-    public function code()
+    private function buildSchema()
     {
-        return $this->code;
-    }
-
-    public function save(string $dir, $order)
-    {
-        $order = sprintf('%06d', $order);
-
-        $filename = implode(DIRECTORY_SEPARATOR, [
-            $dir,
-            date('Y_m_d') . "_{$order}_create_{$this->tablename}_table.php",
-        ]);
-
-        file_put_contents($filename, $this->code);
-    }
-
-    private function tablenameStudly()
-    {
-        return Word::classPlural($this->tablename);
-    }
-
-    private function schema()
-    {
-        $schema = [];
+        $result = [];
 
         if (! $this->pivot) {
             $this->tablename = Str::plural(Helper::sqlName(1, 2));
         }
 
-        $foreignReferences = [];
-        $namesUsed = [];
         $totalColumns = $this->pivot ? 2 : Helper::rand(2, 12);
 
-        while (count($namesUsed) < $totalColumns) {
+        while (count($this->columnNames) < $totalColumns) {
             // 5% probability of this being a foreign key column
-            if ($this->pivot || (count($this->existing) > 0 && Helper::rand() <= 0.05)) {
+            $foreignKey = $this->pivot || (count($this->existing) > 0 && Helper::rand() <= 0.05);
+
+            if ($foreignKey) {
                 // Randomly select a previously existing table. Notice that we
                 // do not want repeating references, so we remove the selected
                 // element from the local copy of the array specifying the
@@ -105,26 +92,24 @@ class MigrationGenerator
                     } else {
                         $name = Helper::sqlName(Helper::rand() <= 0.1 ? 2 : 1);
                     }
-                } while (in_array($name, $namesUsed));
+                } while ($this->columnNameExists($name));
 
-                $foreignReferences[] = [
+                $this->foreignReferences[] = [
                     $name,
                     $foreignId,
                     $foreignTable,
                 ];
 
-                if ($this->pivot && count($foreignReferences) === 2) {
-                    if (strcmp($foreignReferences[0][2], $foreignReferences[1][2]) < 0) {
-                        $this->tablename = "{$foreignReferences[0][2]}_{$foreignReferences[1][2]}";
-                    } else {
-                        $this->tablename = "{$foreignReferences[1][2]}_{$foreignReferences[0][2]}";
-                    }
-                }
-
                 $column = Helper::$idColumns[$foreignType];
                 $type = 'simple';
 
-                $foreignKey = true;
+                if ($this->pivot && count($this->foreignReferences) === 2) {
+                    if (strcmp($this->foreignReferences[0][2], $this->foreignReferences[1][2]) < 0) {
+                        $this->tablename = "{$this->foreignReferences[0][2]}_{$this->foreignReferences[1][2]}";
+                    } else {
+                        $this->tablename = "{$this->foreignReferences[1][2]}_{$this->foreignReferences[0][2]}";
+                    }
+                }
             } else {
                 $column = Arr::random(array_keys(Helper::$columnTypes));
                 $type = Helper::$columnTypes[$column];
@@ -137,9 +122,7 @@ class MigrationGenerator
                     if (in_array($column, Helper::$countColumns) && Helper::rand() <= 0.5) {
                         $name = Str::plural($name);
                     }
-                } while (in_array($name, $namesUsed));
-
-                $foreignKey = false;
+                } while ($this->columnNameExists($name));
             }
 
             if ($type === 'simple') {
@@ -183,27 +166,27 @@ class MigrationGenerator
                 }
             }
 
-            $schema[] = "\$table->$method;";
+            $result[] = "\$table->$method;";
 
-            $namesUsed[] = $name;
+            $this->columnNames[] = $name;
         }
 
         // 90% probability of timestamp
         if (random_int(1, 100) <= 90) {
-            $schema[] = '$table->timestamps();';
+            $result[] = '$table->timestamps();';
         }
 
         // 50% probability of soft deletes
         if (! $this->pivot && random_int(1, 100) <= 50) {
-            $schema[] = '$table->softDeletes();';
+            $result[] = '$table->softDeletes();';
         }
 
-        foreach ($foreignReferences as [
+        foreach ($this->foreignReferences as [
             $name,
             $foreignId,
             $foreignTable,
         ]) {
-            $schema = array_merge($schema, [
+            $result = array_merge($result, [
                 '',
                 '$table',
                 "    ->foreign('$name')",
@@ -217,40 +200,85 @@ class MigrationGenerator
         // table.
         $column = Arr::random(array_keys(Helper::$idColumns));
 
-        // 80% probability of being called 'id'
-        // 10% of being called 'tablename_id'
-        // 10% of a single word
-        $rand = Helper::rand();
+        do {
+            // 80% probability of being called 'id'
+            // 10% of being called 'tablename_id'
+            // 10% of a single word
+            $rand = Helper::rand();
 
-        if ($rand <= 0.8) {
-            $name = 'id';
-        } elseif ($rand <= 0.9) {
-            $name = Str::singular($this->tablename) . '_id';
-        } else {
-            $name = Helper::sqlName();
-        }
+            if ($rand <= 0.8) {
+                $name = 'id';
+            } elseif ($rand <= 0.9) {
+                $name = Str::singular($this->tablename) . '_id';
+            } else {
+                $name = Helper::sqlName();
+            }
+        } while ($this->columnNameExists($name));
 
-        // Only non-pivot tables can be used as reference to other tables
-        if (! $this->pivot) {
-            $this->specs = [$this->tablename, $name, $column];
-        }
-
-        $schema = array_merge(
+        $result = array_merge(
             [
                 "\$table->$column('$name');",
             ],
-            $schema
+            $result
         );
+
+        // Only non-pivot tables can be used as reference to other tables
+        $this->specs = $this->pivot
+            ? []
+            : [$this->tablename, $name, $column];
 
         // TODO: Add columns `json`/`jsonb`, `set` and `year`.
 
-        return $schema;
-        // TODO: Ensure no duplicate names
+        return $result;
+    }
+
+    private function columnNameExists($name): bool
+    {
+        return in_array($name, $this->columnNames);
+    }
+
+    private function tablenameStudly()
+    {
+        return Word::classPlural($this->tablename);
     }
 
     private function randomSet()
     {
         return Helper::words(random_int(3, 8));
+    }
+
+    protected function stub(): string
+    {
+        return 'migration.php.stub';
+    }
+
+    protected function replacements(): array
+    {
+        return [
+            'tablenameStudly' => $this->tablenameStudly(),
+            'tablename' => $this->tablename(),
+            'schema' => $this->schema,
+        ];
+    }
+
+    protected function filename(): string
+    {
+        if ($this->dir === null || $this->order === null) {
+            throw new Exception('Call `setSaveDetails` first.');
+        }
+
+        $order = sprintf('%06d', $this->order);
+
+        return implode(DIRECTORY_SEPARATOR, [
+            $this->dir,
+            date('Y_m_d') . "_{$order}_create_{$this->tablename}_table.php",
+        ]);
+    }
+
+    public function setSaveDetails(string $dir, int $order)
+    {
+        $this->dir = $dir;
+        $this->order = $order;
     }
 
     public function tablename()

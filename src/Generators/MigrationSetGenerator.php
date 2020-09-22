@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Ferreira\AutoCrud\Generators;
 
 class MigrationSetGenerator
 {
@@ -19,13 +19,16 @@ class MigrationSetGenerator
         $existing = [];
 
         while (count($tablenames) < $totalTables) {
-            $migration = new MigrationGenerator($existing);
+            $migration = app(MigrationGenerator::class, [
+                'existing' => $existing,
+            ]);
 
             if (in_array($migration->tablename(), $tablenames)) {
                 continue;
             }
 
-            $migration->save($this->dir, count($tablenames));
+            $migration->setSaveDetails($this->dir, count($tablenames));
+            $migration->save();
 
             if (count($specs = $migration->specs()) > 0) {
                 $existing[] = $specs;

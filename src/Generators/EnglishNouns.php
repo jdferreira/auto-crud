@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Ferreira\AutoCrud\Generators;
 
 use Faker\Generator;
 use Faker\Provider\Base;
@@ -14,7 +14,7 @@ class EnglishNouns extends Base
     {
         parent::__construct($generator);
 
-        $this->words = explode("\n", file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'words.txt'));
+        $this->words = explode("\n", file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'words/nouns.txt'));
     }
 
     public function word(): string

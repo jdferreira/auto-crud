@@ -3,17 +3,16 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Tests\MigrationGenerator;
-use Tests\MigrationSetGenerator;
 use Illuminate\Support\Facades\Artisan;
-use PHPUnit\Framework\ExpectationFailedException;
+use Ferreira\AutoCrud\Generators\MigrationGenerator;
+use Ferreira\AutoCrud\Generators\MigrationSetGenerator;
 
 class MigrationGeneratorTest extends TestCase
 {
     /** @test */
     public function it_generates_valid_PHP_code()
     {
-        $code = (new MigrationGenerator())->code();
+        $code = app(MigrationGenerator::class)->generate();
 
         $cmd = 'php -l';
         $specs = [

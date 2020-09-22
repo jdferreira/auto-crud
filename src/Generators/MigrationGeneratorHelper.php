@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Ferreira\AutoCrud\Generators;
 
 use Faker\Generator;
 use Faker\Factory as Faker;
@@ -102,7 +102,7 @@ class MigrationGeneratorHelper
     /** @var Generator */
     public static $faker;
 
-    public static function sqlName()
+    public static function sqlName(): string
     {
         return static::$faker->sqlName(...func_get_args());
     }
