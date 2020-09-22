@@ -5,33 +5,14 @@ namespace Ferreira\AutoCrud\Generators;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\Stub\StubRenderer;
-use Ferreira\AutoCrud\Database\TableInformation;
-use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 /**
  * Abstract class used by all the generator commands in this package.
  */
-abstract class BaseGenerator
+abstract class PhpGenerator
 {
-    /**
-     * @var Filesystem
-     */
+    /** @var Filesystem */
     protected $files;
-
-    /**
-     * @var DatabaseInformation
-     */
-    protected $db;
-
-    /**
-     * @var TableInformation
-     */
-    protected $table;
-
-    /**
-     * @var string
-     */
-    protected $dir;
 
     /**
      * Whether to force the generation of the file. If false, and the output
@@ -40,40 +21,32 @@ abstract class BaseGenerator
      *
      * @var bool
      */
-    protected $force;
+    protected $force = false;
 
     /**
-     * Create a new generator, responsible for generating the CRUD files for a certain table.
+     * Whether to format the resulting PHP code.
+     *
+     * @var bool
+     */
+    protected $format = false;
+
+    /**
+     * Create a new generator, responsible for generating some PHP code.
      *
      * @param TableInformation $table
      */
-    public function __construct(TableInformation $table)
+    public function __construct(Filesystem $files)
     {
-        $this->files = app(Filesystem::class);
-        $this->db = app(DatabaseInformation::class);
-
-        $this->table = $table;
-
-        // Default values. Use the setters to change them
-        $this->dir = '';
-        $this->force = false;
+        $this->files = $files;
     }
 
     /**
-     * Set the directory where models are saved, relative to the base path of
-     * the laravel application (usually `app/`). If not provided, this defaults
-     * to the empty string. Forward slashes are translated to the systems's
-     * directory separator character before assignment.
-     *
-     * @param string $dir
-     *
-     * @return $this
+     * This is where subclasses can specify an initialization procedure. By
+     * default this method does nothing.
      */
-    public function setModelDirectory(string $dir): self
+    protected function initialize()
     {
-        $this->dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
-
-        return $this;
+        //
     }
 
     /**
@@ -85,9 +58,22 @@ abstract class BaseGenerator
      */
     public function setForce(bool $force): self
     {
-        // TODO: Missing tests
-
         $this->force = $force;
+
+        return $this;
+    }
+
+    /**
+     * Set whether to format the generated PHP code according to php-cs-fixer
+     * format rules.
+     *
+     * @param bool $force
+     *
+     * @return $this
+     */
+    public function setFormat(bool $format): self
+    {
+        $this->format = $format;
 
         return $this;
     }
@@ -99,10 +85,14 @@ abstract class BaseGenerator
      */
     public function generate(): string
     {
-        return $this->postProcess(StubRenderer::render(
+        $code = StubRenderer::render(
             $this->readStub(),
             $this->replacements()
-        ));
+        );
+
+        $code = $this->postProcess($code);
+
+        return $code;
     }
 
     /**
@@ -116,33 +106,11 @@ abstract class BaseGenerator
             $this->ensureDirectory($filename);
 
             $this->files->put($filename, $this->generate());
+
+            if ($this->format) {
+                $this->formatCode();
+            }
         }
-    }
-
-    /**
-     * For a given array of arguments and an expected array of arguments, return a string
-     * that represents the arguments (appropriately comma-separated) such that default
-     * values are not included in the final returned value, to emulates human code.
-     *
-     * @param string[] $args
-     * @param string[] $defaultValues
-     *
-     * @return string
-     */
-    public static function removeDefaults(array $args, array $defaultValues): string
-    {
-        $argsCount = count($args);
-        $defaultsCount = count($defaultValues);
-
-        while (
-            $argsCount > 0 && $defaultsCount > 0 &&
-            $args[$argsCount - 1] === $defaultValues[$defaultsCount - 1]
-        ) {
-            $argsCount--;
-            $defaultsCount--;
-        }
-
-        return implode(', ', array_slice($args, 0, $argsCount));
     }
 
     /**
@@ -169,20 +137,6 @@ abstract class BaseGenerator
         if (! $this->files->exists($dir)) {
             $this->files->makeDirectory($dir, 0755, true);
         }
-    }
-
-    public function modelNamespace()
-    {
-        if ($this->dir === '') {
-            return 'App';
-        } else {
-            return 'App\\' . str_replace(DIRECTORY_SEPARATOR, '\\', $this->dir);
-        }
-    }
-
-    public function modelClass()
-    {
-        return Word::class($this->table->name());
     }
 
     /**
@@ -221,7 +175,17 @@ abstract class BaseGenerator
         return $code;
     }
 
-    protected function removeMethod(string $methodName, string $code): string
+    private function formatCode()
+    {
+        // We need to make sure that there is a php-cs-fixer accessible from the
+        // current working directory. We do it by looking into vendor/bin/
+
+        if ($this->files->exists('vendor/bin/php-cs-fixer')) {
+            exec('vendor/bin/php-cs-fixer fix ' . $this->filename());
+        }
+    }
+
+    public static function removeMethod(string $methodName, string $code): string
     {
         // TODO: Not thoroughly tested (just indirectly)
 
@@ -259,5 +223,31 @@ abstract class BaseGenerator
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * For a given array of arguments and an expected array of arguments, return a string
+     * that represents the arguments (appropriately comma-separated) such that default
+     * values are not included in the final returned value, to emulates human code.
+     *
+     * @param string[] $args
+     * @param string[] $defaultValues
+     *
+     * @return string
+     */
+    public static function removeDefaults(array $args, array $defaultValues): string
+    {
+        $argsCount = count($args);
+        $defaultsCount = count($defaultValues);
+
+        while (
+            $argsCount > 0 && $defaultsCount > 0 &&
+            $args[$argsCount - 1] === $defaultValues[$defaultsCount - 1]
+        ) {
+            $argsCount--;
+            $defaultsCount--;
+        }
+
+        return implode(', ', array_slice($args, 0, $argsCount));
     }
 }

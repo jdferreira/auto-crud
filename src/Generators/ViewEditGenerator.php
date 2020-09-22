@@ -14,12 +14,10 @@ class ViewEditGenerator extends ViewCreateGenerator
      */
     private $builder;
 
-    public function __construct(TableInformation $table)
+    public function initialize()
     {
-        parent::__construct($table);
-
         $this->builder = app(AccessorBuilder::class, [
-            'table' => $table,
+            'table' => $this->table,
         ]);
     }
 

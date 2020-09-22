@@ -4,7 +4,7 @@ namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Word;
 
-class ControllerGenerator extends BaseGenerator
+class ControllerGenerator extends TableBasedGenerator
 {
     /**
      * Get the stub filename.

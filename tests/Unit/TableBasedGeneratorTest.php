@@ -3,45 +3,26 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Ferreira\AutoCrud\Generators\BaseGenerator;
+use Ferreira\AutoCrud\Database\DatabaseInformation;
+use Ferreira\AutoCrud\Generators\TableBasedGenerator;
 
-class BaseGeneratorTest extends TestCase
+class TableBasedGeneratorTest extends TestCase
 {
-    /** @test */
-    public function it_does_not_emit_arguments_equal_to_their_default()
-    {
-        $args = [
-            'Product::class',
-            "'owner_id'",
-            "'id'",
-        ];
-
-        $defaults = [
-            "'user_id'",
-            "'id'",
-        ];
-
-        $this->assertEquals(
-            "Product::class, 'owner_id'",
-            BaseGenerator::removeDefaults($args, $defaults)
-        );
-    }
-
     /** @test */
     public function it_detects_model_namespace()
     {
         $table = $this->mockTable('players');
 
         $stub = $this->getMockForAbstractClass(
-            BaseGenerator::class,
-            [$table]
+            TableBasedGenerator::class,
+            [$this->files, app(DatabaseInformation::class), $table]
         );
 
         $this->assertEquals('App', $stub->modelNamespace());
 
         $stub = $this->getMockForAbstractClass(
-            BaseGenerator::class,
-            [$table]
+            TableBasedGenerator::class,
+            [$this->files, app(DatabaseInformation::class), $table]
         )->setModelDirectory('Models');
 
         $this->assertEquals('App\\Models', $stub->modelNamespace());
@@ -53,8 +34,8 @@ class BaseGeneratorTest extends TestCase
         $table = $this->mockTable('players');
 
         $stub = $this->getMockForAbstractClass(
-            BaseGenerator::class,
-            [$table]
+            TableBasedGenerator::class,
+            [$this->files, app(DatabaseInformation::class), $table]
         );
 
         $this->assertEquals('Player', $stub->modelClass());

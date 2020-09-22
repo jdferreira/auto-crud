@@ -4,7 +4,7 @@ namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Word;
 
-class FactoryGenerator extends BaseGenerator
+class FactoryGenerator extends TableBasedGenerator
 {
     /** @var string[] */
     private $referencedTables = [];

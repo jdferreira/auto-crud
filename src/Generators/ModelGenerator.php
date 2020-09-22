@@ -10,7 +10,7 @@ use Ferreira\AutoCrud\Database\OneToMany;
 use Ferreira\AutoCrud\Database\ManyToMany;
 use Ferreira\AutoCrud\Database\OneToOneOrMany;
 
-class ModelGenerator extends BaseGenerator
+class ModelGenerator extends TableBasedGenerator
 {
     /**
      * Get the stub filename.
@@ -248,7 +248,7 @@ class ModelGenerator extends BaseGenerator
             "'" . $this->db->table($relation->foreignTable)->primaryKey() . "'",
         ];
 
-        $args = BaseGenerator::removeDefaults($args, $defaultValues);
+        $args = PhpGenerator::removeDefaults($args, $defaultValues);
 
         $other = $relation instanceof OneToOne
             ? Word::labelSingular($relation->table)
@@ -282,7 +282,7 @@ class ModelGenerator extends BaseGenerator
             "'" . $this->db->table($relation->foreignTable)->primaryKey() . "'",
         ];
 
-        $args = BaseGenerator::removeDefaults($args, $defaultValues);
+        $args = PhpGenerator::removeDefaults($args, $defaultValues);
 
         $self = Word::labelSingular($relation->table);
 
@@ -335,7 +335,7 @@ class ModelGenerator extends BaseGenerator
             "'" . $this->db->table($me)->primaryKey() . "'",
         ];
 
-        $args = BaseGenerator::removeDefaults($args, $defaultValues);
+        $args = PhpGenerator::removeDefaults($args, $defaultValues);
 
         $other = Word::label($other);
 

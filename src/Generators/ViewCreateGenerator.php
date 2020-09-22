@@ -6,7 +6,7 @@ use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 
-class ViewCreateGenerator extends BaseGenerator
+class ViewCreateGenerator extends TableBasedGenerator
 {
     /**
      * Return the filename containing the stub this generator is based on.

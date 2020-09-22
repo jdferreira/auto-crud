@@ -6,7 +6,7 @@ use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
 
-class RequestGenerator extends BaseGenerator
+class RequestGenerator extends TableBasedGenerator
 {
     /**
      * Whether we need to use the Model class in this file.

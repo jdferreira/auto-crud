@@ -4,7 +4,7 @@ namespace Ferreira\AutoCrud\Generators;
 
 use Illuminate\Support\Str;
 
-class SeederGenerator extends BaseGenerator
+class SeederGenerator extends TableBasedGenerator
 {
     /**
      * Get the stub filename.

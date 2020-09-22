@@ -5,7 +5,7 @@ namespace Ferreira\AutoCrud\Generators;
 use Ferreira\AutoCrud\Word;
 use Ferreira\AutoCrud\AccessorBuilder;
 
-class ViewIndexGenerator extends BaseGenerator
+class ViewIndexGenerator extends TableBasedGenerator
 {
     /**
      * Return the filename containing the stub this generator is based on.

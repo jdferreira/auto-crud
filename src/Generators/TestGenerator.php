@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Ferreira\AutoCrud\AccessorBuilder;
 
-class TestGenerator extends BaseGenerator
+class TestGenerator extends TableBasedGenerator
 {
     /** @var null|string */
     private $oneConstraintField = null;

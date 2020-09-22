@@ -2,12 +2,10 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
-use Illuminate\Support\Str;
 use Ferreira\AutoCrud\AccessorBuilder;
 
-class ViewShowGenerator extends BaseGenerator
+class ViewShowGenerator extends TableBasedGenerator
 {
     /**
      * Return the filename containing the stub this generator is based on.
