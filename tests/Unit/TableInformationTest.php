@@ -4,9 +4,15 @@ namespace Tests\Unit;
 
 use Exception;
 use Tests\TestCase;
+use Mockery\MockInterface;
 use Ferreira\AutoCrud\Type;
+use Doctrine\DBAL\Schema\Column;
+use Illuminate\Database\Connection;
+use Doctrine\DBAL\Types\Type as DoctrineType;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Ferreira\AutoCrud\Database\TableInformation;
-use Ferreira\AutoCrud\Database\DatabaseInformation;
+use Ferreira\AutoCrud\Database\DatabaseException;
 
 class TableInformationTest extends TestCase
 {
@@ -232,5 +238,53 @@ class TableInformationTest extends TestCase
         $this->assertEquals((app(TableInformation::class, ['name' => 'products']))->foreignKey(), 'product_product_id');
         $this->assertEquals((app(TableInformation::class, ['name' => 'avatars']))->foreignKey(), 'avatar_id');
         $this->assertEquals((app(TableInformation::class, ['name' => 'sales']))->foreignKey(), 'sale_id');
+    }
+
+    /** @test */
+    public function foreign_keys_cannot_have_default_values()
+    {
+        // Let's suppose our DatabaseInformation is built from an
+        // AbstractSchemaManager that, in its inners, describes a table that has
+        // a default value on a foreign key column. If we build a
+        // TableInformation for that table, it should fail.
+
+        /** @var AbstractSchemaManager&MockInterface $doctrine */
+        $doctrine = $this->mock(AbstractSchemaManager::class, function ($mock) {
+            /** @var AbstractSchemaManager&MockInterface $mock */
+            $column = new Column('column', DoctrineType::getType(DoctrineType::INTEGER));
+            $column->setDefault(0);
+
+            $mock->shouldReceive('tablesExist')->withArgs(['tablename'])->andReturn(true);
+
+            $mock
+                ->shouldReceive('listTableColumns')
+                ->withArgs(['tablename'])
+                ->andReturn([
+                    'column' => $column,
+                ]);
+
+            $mock
+                ->shouldReceive('listTableForeignKeys')
+                ->withArgs(['tablename'])
+                ->andReturn([
+                    new ForeignKeyConstraint(['column'], 'foreign', ['id']),
+                ]);
+
+            $mock
+                ->shouldReceive('listTableIndexes')
+                ->andReturn([]);
+        });
+
+        /** @var Connection&MockInterface $connection */
+        $connection = $this->mock(Connection::class, function ($mock) use ($doctrine) {
+            $mock->shouldReceive('getDoctrineSchemaManager')->andReturn($doctrine);
+        });
+
+        $this->addToAssertionCount(-$doctrine->mockery_getExpectationCount());
+        $this->addToAssertionCount(-$connection->mockery_getExpectationCount());
+
+        $this->assertException(DatabaseException::class, function () {
+            app(TableInformation::class, ['name' => 'tablename']);
+        });
     }
 }

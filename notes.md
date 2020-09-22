@@ -11,7 +11,7 @@
 - [x] Column fakers for types other than string or text should not use custom faker methods, but always the one for that type
 
 - [x] In the migration generator, foreign key columns cannot have a default value
-  - [ ] this should be an error when reading the database.
+  - [x] this should be an error when reading the database.
 
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
 

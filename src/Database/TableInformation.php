@@ -76,6 +76,8 @@ class TableInformation
         $this->uniqueColumns = $this->computeUniqueColumns($doctrine);
         $this->labelColumn = $this->computeLabelColumn();
         $this->defaults = $this->computeDefaults();
+
+        $this->assertForeignKeysDontHaveDefaults();
     }
 
     private function computeColumns($doctrine): array
@@ -178,6 +180,15 @@ class TableInformation
         }
 
         return $result;
+    }
+
+    private function assertForeignKeysDontHaveDefaults()
+    {
+        foreach ($this->columns as $name => $column) {
+            if ($this->reference($name) !== null && $column->getDefault() !== null) {
+                throw new DatabaseException("Column $name has a foreign key and a defautl value");
+            }
+        }
     }
 
     /**
