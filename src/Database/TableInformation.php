@@ -6,9 +6,9 @@ use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Doctrine\DBAL\Schema\Column;
 use Illuminate\Database\Connection;
 use Doctrine\DBAL\Types\Type as DoctrineType;
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Ferreira\AutoCrud\Validation\MySqlEnumChecker;
 use Ferreira\AutoCrud\Validation\SQLiteEnumChecker;
 use Ferreira\AutoCrud\Validation\PostgresEnumChecker;
@@ -16,6 +16,9 @@ use Ferreira\AutoCrud\Validation\SqlServerEnumChecker;
 
 class TableInformation
 {
+    /** @var Connection */
+    private $connection;
+
     /**
      * The name of the table being analysed.
      *
@@ -62,31 +65,40 @@ class TableInformation
      */
     public function __construct(Connection $connection, string $name)
     {
-        $doctrine = $connection->getDoctrineSchemaManager();
-
-        if (! $doctrine->tablesExist($name)) {
-            throw new DatabaseException("Table $name does not exist");
-        }
-
+        $this->connection = $connection;
         $this->name = $name;
 
-        $this->columns = $this->computeColumns($doctrine);
-        $this->primaryKey = $this->computePrimaryKey($doctrine);
-        $this->references = $this->computeReferences($doctrine);
-        $this->uniqueColumns = $this->computeUniqueColumns($doctrine);
-        $this->labelColumn = $this->computeLabelColumn();
-        $this->defaults = $this->computeDefaults();
+        $this->assertTableExists();
+
+        $this->computeColumns();
+        $this->computePrimaryKey();
+        $this->computeReferences();
+        $this->computeUniqueColumns();
+        $this->computeLabelColumn();
+        $this->computeDefaults();
 
         $this->assertForeignKeysDontHaveDefaults();
     }
 
-    private function computeColumns($doctrine): array
+    private function schema(): AbstractSchemaManager
     {
-        $columns = $doctrine->listTableColumns($this->name);
+        return $this->connection->getDoctrineSchemaManager();
+    }
+
+    private function assertTableExists()
+    {
+        if (! $this->schema()->tablesExist($this->name)) {
+            throw new DatabaseException("Table $this->name does not exist");
+        }
+    }
+
+    private function computeColumns(): void
+    {
+        $columns = $this->schema()->listTableColumns($this->name);
 
         $this->unescapeColumnNames($columns);
 
-        return $columns;
+        $this->columns = $columns;
     }
 
     private function unescapeColumnNames(&$columns)
@@ -108,9 +120,9 @@ class TableInformation
         }
     }
 
-    private function computePrimaryKey($doctrine)
+    private function computePrimaryKey(): void
     {
-        $indexes = $doctrine->listTableIndexes($this->name);
+        $indexes = $this->schema()->listTableIndexes($this->name);
 
         if (! isset($indexes['primary'])) {
             return;
@@ -118,75 +130,62 @@ class TableInformation
 
         $columns = $indexes['primary']->getColumns();
 
-        if (count($columns) === 0) {
-            return;
-        } elseif (count($columns) === 1) {
-            return $columns[0];
+        if (count($columns) === 1) {
+            $this->primaryKey = $columns[0];
         } else {
-            return $columns;
+            throw new DatabaseException("Table $this->name has a primary key spanning more than 1 column.");
         }
     }
 
-    private function computeReferences($doctrine)
+    private function computeReferences(): void
     {
-        $result = [];
+        $this->references = [];
 
-        foreach ($doctrine->listTableForeignKeys($this->name) as $key) {
+        foreach ($this->schema()->listTableForeignKeys($this->name) as $key) {
             $localColumns = $key->getLocalColumns();
 
             if (count($localColumns) === 1) {
-                $result[$localColumns[0]] = [$key->getForeignTableName(), $key->getForeignColumns()[0]];
+                $this->references[$localColumns[0]] = [$key->getForeignTableName(), $key->getForeignColumns()[0]];
             }
         }
-
-        return $result;
     }
 
-    private function computeUniqueColumns($doctrine)
+    private function computeUniqueColumns(): void
     {
-        $result = [];
+        $this->uniqueColumns = [];
 
-        foreach ($doctrine->listTableIndexes($this->name) as $index) {
+        foreach ($this->schema()->listTableIndexes($this->name) as $index) {
             if ($index->isUnique() || $index->isPrimary()) {
-                $result[] = Arr::sort($index->getColumns());
+                $this->uniqueColumns[] = Arr::sort($index->getColumns());
             }
         }
-
-        return $result;
     }
 
-    private function computeLabelColumn()
+    private function computeLabelColumn(): void
     {
-        $stringColumns = collect($this->columns)->filter(function (Column $column) {
-            return
-                $column->getType()->getName() === DoctrineType::STRING && // String type
-                $this->getEnumValid($column->getName()) === null; // Non-enum
-                // TODO: The previous should use our own Type class, not Doctrine's type
-        })->map(function (Column $column) {
-            return $column->getName();
+        $stringColumns = collect($this->columns())->filter(function ($column) {
+            return $this->type($column) === Type::STRING;
         })->values();
 
-        return $stringColumns->contains('name') ? 'name' : $stringColumns->first();
+        $this->labelColumn = $stringColumns->contains('name') ? 'name' : $stringColumns->first();
     }
 
-    private function computeDefaults()
+    private function computeDefaults(): void
     {
-        $result = [];
+        $this->defaults = [];
 
         foreach ($this->columns as $name => $column) {
             if (($default = $column->getDefault()) !== null) {
-                $result[$name] = $default;
+                $this->defaults[$name] = $default;
             }
         }
-
-        return $result;
     }
 
     private function assertForeignKeysDontHaveDefaults()
     {
         foreach ($this->columns as $name => $column) {
             if ($this->reference($name) !== null && $column->getDefault() !== null) {
-                throw new DatabaseException("Column $name has a foreign key and a defautl value");
+                throw new DatabaseException("Column $name of table $this->name has a foreign key and a default value");
             }
         }
     }
@@ -268,7 +267,9 @@ class TableInformation
     {
         if (! $this->has($column)) {
             return null;
-        } elseif ($valid = $this->getEnumValid($column)) {
+        }
+
+        if ($this->getEnumValid($column)) {
             return Type::ENUM;
         }
 
@@ -308,7 +309,7 @@ class TableInformation
             default:
                 // TODO: Add a test for this throw
                 throw new DatabaseException(
-                    "Table $this->name contains an unrecognized column type: $type"
+                    "Column $column on table $this->name contains an unrecognized column type: $type"
                 );
         }
     }
@@ -370,7 +371,6 @@ class TableInformation
         return
             count($this->allReferences()) === 2 &&
             count(array_diff($this->columns(), [$this->primaryKey(), 'created_at', 'updated_at'])) === 2;
-        // TODO: What about soft deletes?
     }
 
     /**
@@ -413,7 +413,7 @@ class TableInformation
         // TODO: This should run exactly once for all enum columns and the
         // result stored somewhere in this class; future calls should instead
         // query the internal data structure
-        switch (app(Connection::class)->getDriverName()) {
+        switch ($this->connection->getDriverName()) {
             case 'mysql':
                 return (new MySqlEnumChecker($this->name, $column))->valid();
 

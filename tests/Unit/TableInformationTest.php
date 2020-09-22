@@ -6,11 +6,13 @@ use Exception;
 use Tests\TestCase;
 use Mockery\MockInterface;
 use Ferreira\AutoCrud\Type;
+use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Column;
 use Illuminate\Database\Connection;
 use Doctrine\DBAL\Types\Type as DoctrineType;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Doctrine\DBAL\Types\Types as DoctrineTypes;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Database\DatabaseException;
 
@@ -126,8 +128,6 @@ class TableInformationTest extends TestCase
         $table = app(TableInformation::class, ['name' => 'users']);
 
         $this->assertEquals('id', $table->primaryKey());
-
-        // TODO: Ensure that compound primary keys are handled here as well
     }
 
     /** @test */
@@ -229,8 +229,6 @@ class TableInformationTest extends TestCase
         $this->assertTrue((app(TableInformation::class, ['name' => 'users']))->unique('email'));
     }
 
-    // TODO: Test that boolean columns with default values are never nullable
-
     /** @test */
     public function it_computes_expected_foreign_key_column_name()
     {
@@ -251,7 +249,7 @@ class TableInformationTest extends TestCase
         /** @var AbstractSchemaManager&MockInterface $doctrine */
         $doctrine = $this->mock(AbstractSchemaManager::class, function ($mock) {
             /** @var AbstractSchemaManager&MockInterface $mock */
-            $column = new Column('column', DoctrineType::getType(DoctrineType::INTEGER));
+            $column = new Column('column', DoctrineType::getType(DoctrineTypes::INTEGER));
             $column->setDefault(0);
 
             $mock->shouldReceive('tablesExist')->withArgs(['tablename'])->andReturn(true);
@@ -273,6 +271,41 @@ class TableInformationTest extends TestCase
             $mock
                 ->shouldReceive('listTableIndexes')
                 ->andReturn([]);
+        });
+
+        /** @var Connection&MockInterface $connection */
+        $connection = $this->mock(Connection::class, function ($mock) use ($doctrine) {
+            $mock->shouldReceive('getDoctrineSchemaManager')->andReturn($doctrine);
+            $mock->shouldReceive('getDriverName')->andReturn(null);
+        });
+
+        $this->addToAssertionCount(-$doctrine->mockery_getExpectationCount());
+        $this->addToAssertionCount(-$connection->mockery_getExpectationCount());
+
+        $this->assertException(DatabaseException::class, function () {
+            app(TableInformation::class, ['name' => 'tablename']);
+        });
+    }
+
+    /** @test */
+    public function primary_keys_must_span_exactly_one_column()
+    {
+        /** @var AbstractSchemaManager&MockInterface $doctrine */
+        $doctrine = $this->mock(AbstractSchemaManager::class, function ($mock) {
+            // @var AbstractSchemaManager&MockInterface $mock
+
+            $mock->shouldReceive('tablesExist')->withArgs(['tablename'])->andReturn(true);
+
+            $mock
+                ->shouldReceive('listTableColumns')
+                ->withArgs(['tablename'])
+                ->andReturn([]);
+
+            $mock
+                ->shouldReceive('listTableIndexes')
+                ->andReturn([
+                    'primary' => new Index('', ['one', 'two']),
+                ]);
         });
 
         /** @var Connection&MockInterface $connection */

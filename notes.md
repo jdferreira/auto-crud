@@ -19,7 +19,7 @@
 
 - [ ] On stub replacement, see if we can replace with a multi-line string, which must necessarily be correctly indented
 
-- [ ] Primary keys that span multiple columns should be an error when reading the database
+- [x] Primary keys that span multiple columns should be an error when reading the database
 
 - [x] Do not create views for pivot tables (the problem was that we had a wrong definition of pivot and were generating pivots with soft deletes.)
 
