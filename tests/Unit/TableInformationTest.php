@@ -20,7 +20,7 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_knows_the_table_name()
     {
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
 
         $this->assertEquals('users', $table->name());
     }
@@ -29,14 +29,14 @@ class TableInformationTest extends TestCase
     public function it_throws_on_non_existing_tables()
     {
         $this->assertException(Exception::class, function () {
-            new TableInformation('non_existing_table');
+            app(TableInformation::class, ['name' => 'non_existing_table']);
         });
     }
 
     /** @test */
     public function it_knows_the_columns_of_a_table()
     {
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
 
         $columns = $table->columns();
 
@@ -55,7 +55,7 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_knows_whether_a_colum_exists()
     {
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
 
         $this->assertTrue($table->has('name'));
         $this->assertTrue($table->has('wake_up'));
@@ -66,7 +66,7 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_unescapes_escaped_column_names()
     {
-        $table = new TableInformation('payment_methods');
+        $table = app(TableInformation::class, ['name' => 'payment_methods']);
 
         $this->assertContains('primary', $table->columns());
     }
@@ -74,11 +74,11 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_knows_whether_a_column_is_required_or_optional()
     {
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
         $this->assertFalse($table->hasDefault('name'));
         $this->assertTrue($table->hasDefault('subscribed'));
 
-        $table = new TableInformation('products');
+        $table = app(TableInformation::class, ['name' => 'products']);
         $this->assertTrue($table->hasDefault('start_at'));
     }
 
@@ -88,17 +88,17 @@ class TableInformationTest extends TestCase
         // Note: This probably works only in SQLite, and other drivers must be
         // tested as well.
 
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
         $this->assertEquals('0', $table->default('subscribed'));
 
-        $table = new TableInformation('products');
+        $table = app(TableInformation::class, ['name' => 'products']);
         $this->assertEquals('CURRENT_TIMESTAMP', $table->default('start_at'));
     }
 
     /** @test */
     public function it_returns_column_types_as_strings()
     {
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
         $this->assertEquals(Type::STRING, $table->type('name'));
         $this->assertEquals(Type::DATETIME, $table->type('created_at'));
 
@@ -108,7 +108,7 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_constructs_virtual_enum_types_for_enum_columns()
     {
-        $table = new TableInformation('products');
+        $table = app(TableInformation::class, ['name' => 'products']);
 
         $this->assertEquals(Type::ENUM, $table->type('type'));
         $this->assertSetsEqual(['food', 'stationery', 'other'], $table->getEnumValid('type'));
@@ -117,7 +117,7 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_knows_the_primary_key_of_a_table()
     {
-        $table = new TableInformation('users');
+        $table = app(TableInformation::class, ['name' => 'users']);
 
         $this->assertEquals('id', $table->primaryKey());
 
@@ -128,11 +128,11 @@ class TableInformationTest extends TestCase
     public function it_detects_soft_deletes()
     {
         $this->assertFalse(
-            (new TableInformation('users'))->softDeletes()
+            (app(TableInformation::class, ['name' => 'users']))->softDeletes()
         );
 
         $this->assertTrue(
-            (new TableInformation('products'))->softDeletes()
+            (app(TableInformation::class, ['name' => 'products']))->softDeletes()
         );
     }
 
@@ -140,17 +140,17 @@ class TableInformationTest extends TestCase
     public function it_retrieves_whether_a_column_references_one_in_another_table()
     {
         $this->assertEquals(
-            (new TableInformation('products'))->reference('owner_id'),
+            (app(TableInformation::class, ['name' => 'products']))->reference('owner_id'),
             ['users', 'id']
         );
 
         $this->assertEquals(
-            (new TableInformation('avatars'))->reference('user_id'),
+            (app(TableInformation::class, ['name' => 'avatars']))->reference('user_id'),
             ['users', 'id']
         );
 
         $this->assertNull(
-            (new TableInformation('users'))->reference('name')
+            (app(TableInformation::class, ['name' => 'users']))->reference('name')
         );
     }
 
@@ -161,7 +161,7 @@ class TableInformationTest extends TestCase
             [
                 'user_id' => ['users', 'id'],
             ],
-            (new TableInformation('avatars'))->allReferences()
+            (app(TableInformation::class, ['name' => 'avatars']))->allReferences()
         );
 
         $this->assertEquals(
@@ -169,7 +169,7 @@ class TableInformationTest extends TestCase
                 'role_id' => ['roles', 'id'],
                 'user_id' => ['users', 'id'],
             ],
-            (new TableInformation('role_user'))->allReferences()
+            (app(TableInformation::class, ['name' => 'role_user']))->allReferences()
         );
     }
 
@@ -188,7 +188,7 @@ class TableInformationTest extends TestCase
         foreach ($data as $table => $expected) {
             $this->assertEquals(
                 $expected,
-                (new TableInformation($table))->labelColumn()
+                app(TableInformation::class, ['name' => $table])->labelColumn()
             );
         }
     }
@@ -196,8 +196,8 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_knows_if_a_table_is_a_pivot()
     {
-        $table = new TableInformation('users');
-        $pivot = new TableInformation('role_user');
+        $table = app(TableInformation::class, ['name' => 'users']);
+        $pivot = app(TableInformation::class, ['name' => 'role_user']);
 
         $this->assertFalse($table->isPivot());
         $this->assertTrue($pivot->isPivot());
@@ -207,20 +207,20 @@ class TableInformationTest extends TestCase
     public function it_handles_enum_columns()
     {
         $this->assertNull(
-            (new TableInformation('users'))->getEnumValid('name')
+            (app(TableInformation::class, ['name' => 'users']))->getEnumValid('name')
         );
 
         $this->assertSetsEqual(
             ['food', 'stationery', 'other'],
-            (new TableInformation('products'))->getEnumValid('type')
+            (app(TableInformation::class, ['name' => 'products']))->getEnumValid('type')
         );
     }
 
     /** @test */
     public function it_knows_whether_columns_have_unique_indices()
     {
-        $this->assertFalse((new TableInformation('users'))->unique('name'));
-        $this->assertTrue((new TableInformation('users'))->unique('email'));
+        $this->assertFalse((app(TableInformation::class, ['name' => 'users']))->unique('name'));
+        $this->assertTrue((app(TableInformation::class, ['name' => 'users']))->unique('email'));
     }
 
     // TODO: Test that boolean columns with default values are never nullable
@@ -228,9 +228,9 @@ class TableInformationTest extends TestCase
     /** @test */
     public function it_computes_expected_foreign_key_column_name()
     {
-        $this->assertEquals((new TableInformation('users'))->foreignKey(), 'user_id');
-        $this->assertEquals((new TableInformation('products'))->foreignKey(), 'product_product_id');
-        $this->assertEquals((new TableInformation('avatars'))->foreignKey(), 'avatar_id');
-        $this->assertEquals((new TableInformation('sales'))->foreignKey(), 'sale_id');
+        $this->assertEquals((app(TableInformation::class, ['name' => 'users']))->foreignKey(), 'user_id');
+        $this->assertEquals((app(TableInformation::class, ['name' => 'products']))->foreignKey(), 'product_product_id');
+        $this->assertEquals((app(TableInformation::class, ['name' => 'avatars']))->foreignKey(), 'avatar_id');
+        $this->assertEquals((app(TableInformation::class, ['name' => 'sales']))->foreignKey(), 'sale_id');
     }
 }

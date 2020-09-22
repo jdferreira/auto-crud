@@ -53,7 +53,7 @@ class DatabaseInformationTest extends TestCase
     {
         foreach ($this->db->tablenames() as $table) {
             $this->assertEquals(
-                new TableInformation($table),
+                app(TableInformation::class, ['name' => $table]),
                 $this->db->table($table)
             );
         }

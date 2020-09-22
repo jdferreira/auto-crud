@@ -33,7 +33,7 @@ class DatabaseInformation
                 return $name !== config('database.migrations');
             })
             ->mapWithKeys(function ($name) {
-                return [$name => new TableInformation($name)];
+                return [$name => app(TableInformation::class, ['name' => $name])];
             })
             ->all();
     }

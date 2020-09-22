@@ -60,9 +60,9 @@ class TableInformation
      *
      * @param  string  $name
      */
-    public function __construct(string $name)
+    public function __construct(Connection $connection, string $name)
     {
-        $doctrine = app('db.connection')->getDoctrineSchemaManager();
+        $doctrine = $connection->getDoctrineSchemaManager();
 
         if (! $doctrine->tablesExist($name)) {
             throw new DatabaseException("Table $name does not exist");
