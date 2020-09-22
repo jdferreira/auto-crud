@@ -230,4 +230,30 @@ class StubRendererTest extends TestCase
             ])
         );
     }
+
+    /** @test */
+    public function it_handles_multiple_line_replacements_inserted_within_a_single_line()
+    {
+        $stub = implode("\n", [
+            'function x($obj) {',
+            '    $obj->method({{ arg }});',
+            '}',
+        ]);
+
+        $code = StubRenderer::render($stub, [
+            'arg' => [
+                '[',
+                '    0,',
+                ']',
+            ],
+        ]);
+
+        $this->assertCodeContains('
+            function x($obj) {
+                $obj->method([
+                    0,
+                ]);
+            }
+        ', $code);
+    }
 }

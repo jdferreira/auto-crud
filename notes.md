@@ -25,14 +25,13 @@
 
 - [x] Fix model not being created in the `assertFields` method when the only UNIQUE columns are foreign keys
 
+- [x] On stub replacement, see if we can replace with a multi-line string, which must necessarily be correctly indented
 
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
 
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
-
-- [ ] On stub replacement, see if we can replace with a multi-line string, which must necessarily be correctly indented
 
 - [ ] Columns with foreign keys should be dropdown boxes in the create/edit views
 
