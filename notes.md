@@ -45,3 +45,5 @@
 - [ ] When asserting fields, if the model has a unique constraint on a boolean column, the method `beginAssertFields` must explicitly use the boolean value `false` associated with that column since the model created to check for uniqueness will already have the value `true`.
 
 - [ ] On generated migrations, date-like columns should sometimes have a default value other than `CURRENT_TIMESTAMP`
+
+- [ ] On Table::reference, we can probably not save the name of the foreign column (it is always the primary key).
