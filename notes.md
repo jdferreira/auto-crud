@@ -27,13 +27,13 @@
 
 - [x] On stub replacement, see if we can replace with a multi-line string, which must necessarily be correctly indented
 
+- [x] Columns with foreign keys should be dropdown boxes in the create/edit views
+
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
 
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
-
-- [ ] Columns with foreign keys should be dropdown boxes in the create/edit views
 
 - [ ] Pivot tables should mean that one of the models has a dropdown for the other model
   - [ ] This is computed as such: the first column in the pivot corresponds to the model that shows the dropdown (think `role_user` with columns `user_id` and `role_id`: in this case, it is the user that specifies the roles they have)

@@ -5,6 +5,7 @@ namespace Ferreira\AutoCrud\Generators;
 use Exception;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Ferreira\AutoCrud\AccessorBuilder;
@@ -51,6 +52,7 @@ class TestGenerator extends TableBasedGenerator
             'assertHTMLOnForm' => $this->assertHTMLOnForm(),
             'setTime' => $setTime,
             'assertDefaultValuesOnCreateForm' => $this->assertDefaultValuesOnCreateForm(),
+            'assertForeignFieldsPopulated' => $this->assertForeignFieldsPopulated(),
             'assertEditFormHasValues' => $this->assertEditFormHasValues(),
             'oneConstraintField' => $this->oneConstraintField(),
             'oneInvalidValue' => $this->oneInvalidValue(),
@@ -74,6 +76,12 @@ class TestGenerator extends TableBasedGenerator
 
         if ($this->oneConstraintField === null) {
             $code = $this->removeMethod("it_keeps_old_values_on_unsuccessful_${placeholder}_update", $code);
+        }
+
+        if (count($this->table->allReferences()) === 0) {
+            $tablename = $this->tablename();
+
+            $code = $this->removeMethod("it_populates_foreign_keys_on_the_create_and_edit_forms_of_${tablename}", $code);
         }
 
         return $code;
@@ -190,10 +198,25 @@ class TestGenerator extends TableBasedGenerator
 
     public function assertHTMLOnForm()
     {
-        $selects = $this->fieldsExceptPrimary()
-            ->filter(function (string $column) {
-                return $this->table->type($column) === Type::ENUM;
-            })
+        $groups = $this->fieldsExceptPrimary()
+            ->groupBy(function ($column) {
+                if ($this->table->reference($column) !== null) {
+                    return 'reference';
+                } elseif ($this->table->type($column) === Type::ENUM) {
+                    return 'enum';
+                } else {
+                    return 'other';
+                }
+            });
+
+        $referenceColumns = $groups->get('reference', collect())
+            ->map(function ($column) {
+                $name = $this->quoteName($column);
+
+                return $this->wrapXPath("//select[@name='$name']");
+            });
+
+        $enumColumns = $groups->get('enum', collect())
             ->flatMap(function (string $column) {
                 $name = $this->quoteName($column);
 
@@ -209,10 +232,7 @@ class TestGenerator extends TableBasedGenerator
                     ->all();
             });
 
-        $other = $this->fieldsExceptPrimary()
-            ->filter(function (string $column) {
-                return $this->table->type($column) !== Type::ENUM;
-            })
+        $otherColumns = $groups->get('other', collect())
             ->map(function ($column) {
                 $type = $this->table->type($column);
 
@@ -239,16 +259,7 @@ class TestGenerator extends TableBasedGenerator
                 return $this->wrapXPath("//input[@name='$name' and @type='$type']");
             });
 
-        $result = $other;
-
-        if ($result->count() > 0 && $selects->count() > 0) {
-            // TODO: This is a block merging operation, which can be abstracted
-            // (some place else on the code uses this as well)
-            $result->push('');
-            $result = $result->merge($selects);
-        }
-
-        return $result->all();
+        return $this->joinBlocks($otherColumns, $enumColumns, $referenceColumns);
     }
 
     public function setTime()
@@ -318,12 +329,71 @@ class TestGenerator extends TableBasedGenerator
         return $lines;
     }
 
+    public function assertForeignFieldsPopulated()
+    {
+        $tablename = $this->tablename();
+
+        $references = $this->table->allReferences();
+
+        $modelCreations = [];
+
+        foreach ($references as $_ => [$foreignTable, $_]) {
+            $models = Word::variable($foreignTable);
+            $modelClass = Word::class($foreignTable, true);
+            $modelCreations[] = "$models = factory($modelClass, 30)->create();";
+        }
+
+        $assertions = [];
+
+        foreach ($references as $column => [$foreignTable, $_]) {
+            $model = Word::variableSingular($foreignTable);
+            $models = Word::variable($foreignTable);
+
+            $name = Word::kebab($column);
+            $primaryKey = $this->db->table($foreignTable)->primaryKey();
+            $labelColumn = $this->db->table($foreignTable)->labelColumn();
+
+            if ($labelColumn !== null) {
+                $text = "$model->$labelColumn";
+            } else {
+                $word = Word::labelUpperSingular($foreignTable);
+                $text = "'$word #' . $model->$primaryKey";
+            }
+
+            $assertions = array_merge($assertions, [
+                '',
+                "    foreach ($models as $model) {",
+                '        $this->assertHTML($this->xpath(',
+                "            \"//select[@name='$name']/option[@value='%s' and text()='%s']\",",
+                "            $model->$primaryKey,",
+                "            $text",
+                '        ), $document);',
+                '    }',
+            ]);
+        }
+
+        return array_merge(
+            $modelCreations,
+            [
+                '',
+                'foreach ([\'create\', \'edit\'] as $path) {',
+                "    \$document = \$this->getDOMDocument(\$this->get(\"/$tablename/\$path\"));",
+            ],
+            $assertions,
+            [
+                '}',
+            ]
+        );
+    }
+
     public function assertEditFormHasValues()
     {
         $groups = $this->fieldsExceptPrimary()->groupBy(function ($column) {
             $type = $this->table->type($column);
 
-            if ($type === Type::BOOLEAN) {
+            if ($this->table->reference($column) !== null) {
+                return 'reference';
+            } elseif ($type === Type::BOOLEAN) {
                 return 'checkbox';
             } elseif ($type === Type::ENUM) {
                 return 'select';
@@ -387,16 +457,16 @@ class TestGenerator extends TableBasedGenerator
                 return $this->wrapXPath("//*[@name='$name' and .='%s']", [$value]);
             });
 
-        $inputs = $regularInputs;
+        $referenceInputs = $groups->get('reference', collect())
+            ->map(function ($column) {
+                $value = "{$this->modelVariableSingular()}->$column";
 
-        foreach ([$checkboxInputs, $selectInputs, $textareaInputs] as $partial) {
-            if ($inputs->count() > 0 && $partial->count() > 0) {
-                $inputs->push('');
-                $inputs = $inputs->merge($partial);
-            }
-        }
+                $name = $this->quoteName($column);
 
-        return $inputs->all();
+                return $this->wrapXPath("//*[@name='$name']/option[@value='%s' and @selected]", [$value]);
+            });
+
+        return $this->joinBlocks($regularInputs, $checkboxInputs, $selectInputs, $textareaInputs, $referenceInputs);
     }
 
     public function oneConstraintField()
@@ -783,5 +853,25 @@ class TestGenerator extends TableBasedGenerator
     private function quoteName(string $column)
     {
         return htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function joinBlocks(Collection $first, Collection ...$rest)
+    {
+        $lines = clone $first;
+
+        foreach ($rest as $block) {
+            if ($block->count() > 0) {
+                if ($lines->count() > 0) {
+                    $lines->push('');
+                }
+
+                $lines = $lines->merge($block);
+            }
+        }
+
+        return $lines->all();
     }
 }

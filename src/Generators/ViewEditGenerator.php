@@ -71,9 +71,25 @@ class ViewEditGenerator extends ViewCreateGenerator
 
         $model = Word::variableSingular($this->table->name());
 
-        $selected = "{{ (old('$column') ?? $model->$column) === '$value' ? 'selected' : '' }}";
+        $name = Word::kebab($column);
+
+        $selected = "{{ (old('$name') ?? $model->$column) === '$value' ? 'selected' : '' }}";
 
         return "<option value=\"$value\" $selected>$label</option>";
+    }
+
+    protected function foreignOptionItem(string $column, string $value, string $text)
+    {
+        $model = Word::variableSingular($this->table->name());
+
+        $name = Word::kebab($column);
+
+        // We use a double equal sign `==` on purpose. The `old` helper returns
+        // a string, but the value on the model is very probably an integer.
+        // As such we must test equality disregarding the type (yey PHP!)
+        $selected = "{{ (old('$name') ?? $model->$column) == $value ? 'selected' : '' }}";
+
+        return "<option value=\"{{ $value }}\" $selected>$text</option>";
     }
 
     private function value($column)

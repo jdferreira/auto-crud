@@ -125,6 +125,10 @@ class ViewCreateGenerator extends TableBasedGenerator
 
         $type = $this->table->type($column);
 
+        if (($reference = $this->table->reference($column)) !== null) {
+            return $this->foreignInput($column, $attrs, $reference[0]);
+        }
+
         if ($type === Type::ENUM) {
             return $this->selectInput($column, $attrs);
         }
@@ -234,6 +238,35 @@ class ViewCreateGenerator extends TableBasedGenerator
         $selected = $this->table->default($column) === $value ? ' selected' : '';
 
         return "<option value=\"$value\"$selected>$label</option>";
+    }
+
+    protected function foreignInput(string $column, string $attrs, string $foreignTable)
+    {
+        $modelClass = Word::class($foreignTable);
+        $model = Word::variableSingular($foreignTable);
+        $primaryKey = $this->db->table($foreignTable)->primaryKey();
+        $labelColumn = $this->db->table($foreignTable)->labelColumn();
+
+        $text = $labelColumn !== null
+            ? "{{ $model->$labelColumn }}"
+            : Word::labelUpperSingular($foreignTable) . " #{{ $model->$primaryKey }}";
+
+        $item = $this->foreignOptionItem($column, "$model->$primaryKey", $text);
+
+        $namespace = $this->modelNamespace();
+
+        return [
+            '<select ' . $attrs . '>',
+            "    @foreach (\\$namespace\\$modelClass::all() as $model)",
+            "        $item",
+            '    @endforeach',
+            '</select>',
+        ];
+    }
+
+    protected function foreignOptionItem(string $column, string $value, string $text)
+    {
+        return "<option value=\"{{ $value }}\">$text</option>";
     }
 
     public function buttons()

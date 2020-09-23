@@ -178,4 +178,53 @@ class ViewCreateGeneratorTest extends TestCase
 
         $this->assertStringContainsString('<button type="submit">Submit</button>', $code);
     }
+
+    /** @test */
+    public function it_renders_foreign_keys_as_dropdown()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+            'name' => [],
+        ]);
+
+        $pets = $this->mockTable('pets', [
+            'student_id' => ['reference' => ['students', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $pets);
+
+        $code = $this->generator($pets)->generate();
+
+        $this->assertCodeContains('
+            <select name="student-id" required>
+                @foreach (\App\Student::all() as $student)
+                    <option value="{{ $student->id }}">{{ $student->name }}</option>
+                @endforeach
+            </select>
+        ', $code);
+    }
+
+    /** @test */
+    public function it_renders_foreign_keys_to_unlabeled_tables_with_the_id()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true, 'type' => Type::INTEGER],
+        ]);
+
+        $pets = $this->mockTable('pets', [
+            'student_id' => ['reference' => ['students', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $pets);
+
+        $code = $this->generator($pets)->generate();
+
+        $this->assertCodeContains('
+            <select name="student-id" required>
+                @foreach (\App\Student::all() as $student)
+                    <option value="{{ $student->id }}">Student #{{ $student->id }}</option>
+                @endforeach
+            </select>
+        ', $code);
+    }
 }

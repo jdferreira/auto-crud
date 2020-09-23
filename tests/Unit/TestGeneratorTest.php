@@ -176,6 +176,7 @@ class TestGeneratorTest extends TestCase
                 'height' => ['type' => Type::DECIMAL],
                 'letter' => ['type' => Type::DATETIME],
                 'gender' => ['enum' => ['male', 'female']],
+                'school' => ['reference' => ['schools', 'id']],
             ])
         );
 
@@ -192,6 +193,8 @@ class TestGeneratorTest extends TestCase
             '$this->assertHTML("//select[@name=\'gender\']", $document);',
             '$this->assertHTML("//select[@name=\'gender\']/option[@value=\'male\']", $document);',
             '$this->assertHTML("//select[@name=\'gender\']/option[@value=\'female\']", $document);',
+            '',
+            '$this->assertHTML("//select[@name=\'school\']", $document);',
         ], $lines);
     }
 
@@ -381,7 +384,7 @@ class TestGeneratorTest extends TestCase
 
         $this->assertCodeNotContains('
             /** @test */
-            public function it_starts_the_student_create_form_with_the_default_values()
+            public function it_keeps_old_values_on_unsuccessful_student_update()
         ', $code);
     }
 
@@ -587,5 +590,104 @@ class TestGeneratorTest extends TestCase
         );
 
         $this->assertNotContains('student_code', $generator->fieldsExceptPrimary());
+    }
+
+    /** @test */
+    public function it_populates_foreign_keys_on_create_and_edit_forms()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+            'name' => [],
+        ]);
+
+        $pets = $this->mockTable('pets', [
+            'student_id' => ['reference' => ['students', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $pets);
+
+        $generator = $this->generator($pets);
+
+        $this->assertEquals([
+            '$students = factory(Student::class, 30)->create();',
+            '',
+            'foreach ([\'create\', \'edit\'] as $path) {',
+            '    $document = $this->getDOMDocument($this->get("/pets/$path"));',
+            '',
+            '    foreach ($students as $student) {',
+            '        $this->assertHTML($this->xpath(',
+            '            "//select[@name=\'student-id\']/option[@value=\'%s\' and text()=\'%s\']",',
+            '            $student->id,',
+            '            $student->name',
+            '        ), $document);',
+            '    }',
+            '}',
+        ], $generator->assertForeignFieldsPopulated());
+    }
+
+    /** @test */
+    public function it_renders_the_foreign_key_test_on_create_and_edit_forms_only_if_needed()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+            'name' => [],
+        ]);
+
+        $pets = $this->mockTable('pets', [
+            'student_id' => [
+                'reference' => ['students', 'id'],
+            ],
+        ]);
+
+        $this->mockDatabase($students, $pets);
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_populates_foreign_keys_on_the_create_and_edit_forms_of_pets()
+        ', $this->generator($pets)->generate());
+
+        $pets = $this->mockTable('pets', [
+            'name' => [],
+        ]);
+
+        $this->assertCodeNotContains('
+            /** @test */
+            public function it_populates_foreign_keys_on_the_create_and_edit_forms_of_pets()
+        ', $this->generator($pets)->generate());
+    }
+
+    /** @test */
+    public function it_populates_the_foreign_keys_of_the_create_and_edit_forms_that_do_not_have_labels_with_the_id()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true, 'type' => Type::INTEGER],
+        ]);
+
+        $pets = $this->mockTable(
+            'pets',
+            [
+                'student_id' => ['reference' => ['students', 'id']],
+            ]
+        );
+
+        $this->mockDatabase($students, $pets);
+
+        $generator = $this->generator($pets);
+
+        $this->assertEquals([
+            '$students = factory(Student::class, 30)->create();',
+            '',
+            'foreach ([\'create\', \'edit\'] as $path) {',
+            '    $document = $this->getDOMDocument($this->get("/pets/$path"));',
+            '',
+            '    foreach ($students as $student) {',
+            '        $this->assertHTML($this->xpath(',
+            '            "//select[@name=\'student-id\']/option[@value=\'%s\' and text()=\'%s\']",',
+            '            $student->id,',
+            '            \'Student #\' . $student->id',
+            '        ), $document);',
+            '    }',
+            '}',
+        ], $generator->assertForeignFieldsPopulated());
     }
 }
