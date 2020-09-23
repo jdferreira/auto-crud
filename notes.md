@@ -29,6 +29,8 @@
 
 - [x] Columns with foreign keys should be dropdown boxes in the create/edit views
 
+- [x] All tables must have a primary key
+
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?

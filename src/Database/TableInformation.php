@@ -317,7 +317,7 @@ class TableInformation
     /**
      * Return the name of the column or columns of the primary key of this table.
      *
-     * @return null|string|string[]
+     * @return null|string
      */
     public function primaryKey()
     {
