@@ -199,6 +199,30 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_tests_that_many_to_many_relationships_render_multiple_option_select_inputs()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertEquals(['$this->assertHTML("//select[@name=\'classes\' and @multiple]", $document);',
+        ], $this->generator($students)->assertHTMLOnForm());
+
+        $this->assertEquals([], $this->generator($classes)->assertHTMLOnForm());
+    }
+
+    /** @test */
     public function it_tests_that_the_create_form_starts_with_the_default_values()
     {
         $generator = $this->generator(
@@ -593,7 +617,7 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_populates_foreign_keys_on_create_and_edit_forms()
+    public function it_tests_that_create_and_edit_forms_populate_foreign_keys()
     {
         $students = $this->mockTable('students', [
             'id' => ['primaryKey' => true],
@@ -611,8 +635,8 @@ class TestGeneratorTest extends TestCase
         $this->assertEquals([
             '$students = factory(Student::class, 30)->create();',
             '',
-            'foreach ([\'create\', \'edit\'] as $path) {',
-            '    $document = $this->getDOMDocument($this->get("/pets/$path"));',
+            'foreach ([\'/pets/create\', factory(Pet::class)->create()->path() . \'/edit\'] as $path) {',
+            '    $document = $this->getDOMDocument($this->get($path));',
             '',
             '    foreach ($students as $student) {',
             '        $this->assertHTML($this->xpath(',
@@ -657,6 +681,54 @@ class TestGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_tests_that_create_and_edit_forms_populate_many_to_many_relationships()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true, 'type' => Type::INTEGER],
+            'name' => [],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertEquals([
+            '$classes = factory(Class::class, 3)->create();',
+            '',
+            'foreach ([\'/students/create\', factory(Student::class)->create()->path() , \'/edit\'] as $path) {',
+            '    $document = $this->getDOMDocument($this->get($path));',
+            '',
+            '    foreach ($classes as $class) {',
+            '        $this->assertHTML($this->xpath(',
+            '            "//select[@name=\'classes\' and @multiple]/option[@value=\'%s\' and .=\'%s\']",',
+            '            $class->id,',
+            '            $class->name',
+            '        ), $document);',
+            '    }',
+            '}',
+        ], $this->generator($students)->assertManyToManyRelationships());
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_populates_many_to_many_relationships_on_the_create_and_edit_forms_of_students()
+        ', $this->generator($students)->generate());
+
+        $this->assertEquals([], $this->generator($classes)->assertManyToManyRelationships());
+
+        $this->assertCodeNotContains('
+            /** @test */
+            public function it_populates_many_to_many_relationships_on_the_create_and_edit_forms_of_classes()
+        ', $this->generator($classes)->generate());
+    }
+
+    /** @test */
     public function it_populates_the_foreign_keys_of_the_create_and_edit_forms_that_do_not_have_labels_with_the_id()
     {
         $students = $this->mockTable('students', [
@@ -677,8 +749,8 @@ class TestGeneratorTest extends TestCase
         $this->assertEquals([
             '$students = factory(Student::class, 30)->create();',
             '',
-            'foreach ([\'create\', \'edit\'] as $path) {',
-            '    $document = $this->getDOMDocument($this->get("/pets/$path"));',
+            'foreach ([\'/pets/create\', factory(Pet::class)->create()->path() . \'/edit\'] as $path) {',
+            '    $document = $this->getDOMDocument($this->get($path));',
             '',
             '    foreach ($students as $student) {',
             '        $this->assertHTML($this->xpath(',

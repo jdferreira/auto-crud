@@ -148,6 +148,24 @@ class TableInformation
                 $this->references[$localColumns[0]] = [$key->getForeignTableName(), $key->getForeignColumns()[0]];
             }
         }
+
+        if ($this->isPivot()) {
+            // Sort the two foreign keys based on the order of the columns. This
+            // is important because we want to use that order to decide which
+            // model will show in its create/edit forms the dropdown boxes
+
+            $columnsInOrder = collect($this->columns)
+                ->filter(function ($column, $name) {
+                    return ! in_array($name, [$this->primaryKey(), 'created_at', 'updated_at']);
+                })
+                ->keys()
+                ->all();
+
+            $this->references = [
+                $columnsInOrder[0] => $this->references[$columnsInOrder[0]],
+                $columnsInOrder[1] => $this->references[$columnsInOrder[1]],
+            ];
+        }
     }
 
     private function computeUniqueColumns(): void

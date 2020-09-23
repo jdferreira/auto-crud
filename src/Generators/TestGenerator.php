@@ -5,10 +5,11 @@ namespace Ferreira\AutoCrud\Generators;
 use Exception;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Ferreira\AutoCrud\AccessorBuilder;
+use Ferreira\AutoCrud\Database\ManyToMany;
+use Ferreira\AutoCrud\Database\Relationship;
 
 class TestGenerator extends TableBasedGenerator
 {
@@ -35,8 +36,10 @@ class TestGenerator extends TableBasedGenerator
     {
         // We need to generate a few blocks of code first, because they tell us
         // if we need to use additional classes
-        $assertFields = $this->assertFields();
         $setTime = $this->setTime();
+        $assertFields = $this->assertFields();
+        $assertForeignFieldsPopulated = $this->assertForeignFieldsPopulated();
+        $assertManyToManyRelationships = $this->assertManyToManyRelationships();
 
         return [
             'modelNamespace' => $this->modelNamespace(),
@@ -52,7 +55,8 @@ class TestGenerator extends TableBasedGenerator
             'assertHTMLOnForm' => $this->assertHTMLOnForm(),
             'setTime' => $setTime,
             'assertDefaultValuesOnCreateForm' => $this->assertDefaultValuesOnCreateForm(),
-            'assertForeignFieldsPopulated' => $this->assertForeignFieldsPopulated(),
+            'assertForeignFieldsPopulated' => $assertForeignFieldsPopulated,
+            'assertManyToManyRelationships' => $assertManyToManyRelationships,
             'assertEditFormHasValues' => $this->assertEditFormHasValues(),
             'oneConstraintField' => $this->oneConstraintField(),
             'oneInvalidValue' => $this->oneInvalidValue(),
@@ -64,6 +68,7 @@ class TestGenerator extends TableBasedGenerator
 
     protected function postProcess(string $code): string
     {
+        $tablename = $this->tablename();
         $placeholder = $this->tablenameSingular();
 
         $countDefaultFields = $this->fields()->filter(function ($column) {
@@ -79,9 +84,11 @@ class TestGenerator extends TableBasedGenerator
         }
 
         if (count($this->table->allReferences()) === 0) {
-            $tablename = $this->tablename();
-
             $code = $this->removeMethod("it_populates_foreign_keys_on_the_create_and_edit_forms_of_${tablename}", $code);
+        }
+
+        if ($this->getManyToMany()->count() === 0) {
+            $code = $this->removeMethod("it_populates_many_to_many_relationships_on_the_create_and_edit_forms_of_${tablename}", $code);
         }
 
         return $code;
@@ -259,7 +266,14 @@ class TestGenerator extends TableBasedGenerator
                 return $this->wrapXPath("//input[@name='$name' and @type='$type']");
             });
 
-        return $this->joinBlocks($otherColumns, $enumColumns, $referenceColumns);
+        $manyToManyInputs = $this->getManyToMany()
+            ->map(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+
+                return $this->wrapXPath("//select[@name='$foreignTable' and @multiple]");
+            });
+
+        return $this->joinBlocks($otherColumns, $enumColumns, $referenceColumns, $manyToManyInputs);
     }
 
     public function setTime()
@@ -339,8 +353,10 @@ class TestGenerator extends TableBasedGenerator
 
         foreach ($references as $_ => [$foreignTable, $_]) {
             $models = Word::variable($foreignTable);
-            $modelClass = Word::class($foreignTable, true);
-            $modelCreations[] = "$models = factory($modelClass, 30)->create();";
+            $modelClass = Word::class($foreignTable);
+            $modelCreations[] = "$models = factory($modelClass::class, 30)->create();";
+
+            $this->otherUses[] = $this->modelNamespace() . '\\' . $modelClass;
         }
 
         $assertions = [];
@@ -372,17 +388,85 @@ class TestGenerator extends TableBasedGenerator
             ]);
         }
 
+        $modelClass = Word::class($this->table->name(), true);
+
         return array_merge(
             $modelCreations,
             [
                 '',
-                'foreach ([\'create\', \'edit\'] as $path) {',
-                "    \$document = \$this->getDOMDocument(\$this->get(\"/$tablename/\$path\"));",
+                "foreach (['/$tablename/create', factory($modelClass)->create()->path() . '/edit'] as \$path) {",
+                '    $document = $this->getDOMDocument($this->get($path));',
             ],
             $assertions,
             [
                 '}',
             ]
+        );
+    }
+
+    public function assertManyToManyRelationships()
+    {
+        $modelCreationLines = $this->getManyToMany()
+            ->map(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+
+                $foreignModels = Word::variable($foreignTable);
+                $foreignClass = Word::class($foreignTable);
+
+                $this->otherUses[] = $this->modelNamespace() . '\\' . $foreignClass;
+
+                return "$foreignModels = factory($foreignClass::class, 3)->create();";
+            })
+            ->all();
+
+        $assertionBlocks = $this->getManyToMany()
+            ->map(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+
+                $foreignModels = Word::variable($foreignTable);
+                $foreignModel = Word::variableSingular($foreignTable);
+
+                $primaryKey = $this->db->table($foreignTable)->primaryKey();
+                $labelColumn = $this->db->table($foreignTable)->labelColumn();
+
+                $foreignLabel = $labelColumn !== null
+                    ? "$foreignModel->$labelColumn"
+                    : "'" . Word::labelUpperSingular($foreignTable) . " #' . $foreignModel->$primaryKey";
+
+                $name = Word::kebab($foreignTable);
+
+                return new Collection([
+                    "    foreach ($foreignModels as $foreignModel) {",
+                    '        $this->assertHTML($this->xpath(',
+                "            \"//select[@name='$name' and @multiple]/option[@value='%s' and .='%s']\",",
+                "            $foreignModel->$primaryKey,",
+                    "            $foreignLabel",
+                    '        ), $document);',
+                    '    }',
+                ]);
+            });
+
+        if ($assertionBlocks->count() === 0) {
+            return [];
+        }
+
+        $assertionBlocks = $this->joinBlocks(...$assertionBlocks);
+
+        $route = $this->tablename();
+        $thisClass = Word::class($this->table->name(), true);
+
+        return array_merge(
+            $modelCreationLines,
+            [
+                '',
+                "foreach (['/$route/create', factory($thisClass)->create()->path() , '/edit'] as \$path) {",
+                '    $document = $this->getDOMDocument($this->get($path));',
+                '',
+            ],
+            $assertionBlocks,
+            [
+                '}',
+            ],
         );
     }
 
@@ -853,6 +937,16 @@ class TestGenerator extends TableBasedGenerator
     private function quoteName(string $column)
     {
         return htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
+    }
+
+    private function getManyToMany(): Collection
+    {
+        return collect($this->db->relationshipsFor($this->table->name()))
+            ->filter(function (Relationship $relationship) {
+                return
+                    $relationship instanceof ManyToMany &&
+                    $relationship->foreignOne === $this->table->name();
+            });
     }
 
     /**

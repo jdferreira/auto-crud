@@ -111,6 +111,12 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
+    public function it_populates_many_to_many_relationships_on_the_create_and_edit_forms_of_{{ tablename }}()
+    {
+        {{ assertManyToManyRelationships }}
+    }
+
+    /** @test */
     public function it_marks_required_labels_on_{{ tablename }}_create_and_edit_forms()
     {
         $document = $this->getDOMDocument($this->get('/{{ tablename }}/create'));
