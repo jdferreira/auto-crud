@@ -2,7 +2,6 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
-use Ferreira\AutoCrud\Word;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\Stub\StubRenderer;
 
