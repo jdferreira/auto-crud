@@ -364,7 +364,7 @@ class TestGenerator extends TableBasedGenerator
                 '',
                 "    foreach ($models as $model) {",
                 '        $this->assertHTML($this->xpath(',
-                "            \"//select[@name='$name']/option[@value='%s' and text()='%s']\",",
+                "            \"//select[@name='$name']/option[@value='%s' and .='%s']\",",
                 "            $model->$primaryKey,",
                 "            $text",
                 '        ), $document);',
