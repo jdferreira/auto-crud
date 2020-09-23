@@ -70,7 +70,7 @@ class DatabaseInformationTest extends TestCase
             new OneToOne('avatars', 'user_id', 'users', 'id'),
             new OneToMany('products', 'owner_id', 'users', 'id'),
             new OneToMany('sales', 'product_id', 'products', 'product_id'),
-            new ManyToMany('role_user', 'role_id', 'roles', 'id', 'user_id', 'users', 'id'),
+            new ManyToMany('role_user', 'user_id', 'users', 'id', 'role_id', 'roles', 'id'),
         ];
 
         $this->assertSetsEqual($expected, $relationships);
@@ -84,7 +84,7 @@ class DatabaseInformationTest extends TestCase
         $expected = [
             new OneToOne('avatars', 'user_id', 'users', 'id'),
             new OneToMany('products', 'owner_id', 'users', 'id'),
-            new ManyToMany('role_user', 'role_id', 'roles', 'id', 'user_id', 'users', 'id'),
+            new ManyToMany('role_user', 'user_id', 'users', 'id', 'role_id', 'roles', 'id'),
         ];
 
         $this->assertSetsEqual($expected, $relationships);

@@ -64,15 +64,15 @@ class ManyToMany extends Relationship
         string $foreignTwo,
         string $foreignTwoColumn
     ) {
-        if ($foreignOne > $foreignTwo) {
-            [
-                $pivotColumnOne, $foreignOne, $foreignOneColumn,
-                $pivotColumnTwo, $foreignTwo, $foreignTwoColumn,
-            ] = [
-                $pivotColumnTwo, $foreignTwo, $foreignTwoColumn,
-                $pivotColumnOne, $foreignOne, $foreignOneColumn,
-            ];
-        }
+        // if ($foreignOne > $foreignTwo) {
+        //     [
+        //         $pivotColumnOne, $foreignOne, $foreignOneColumn,
+        //         $pivotColumnTwo, $foreignTwo, $foreignTwoColumn,
+        //     ] = [
+        //         $pivotColumnTwo, $foreignTwo, $foreignTwoColumn,
+        //         $pivotColumnOne, $foreignOne, $foreignOneColumn,
+        //     ];
+        // }
 
         $this->pivot = $pivot;
         $this->pivotColumnOne = $pivotColumnOne;
