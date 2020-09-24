@@ -31,6 +31,8 @@
 
 - [x] All tables must have a primary key
 
+- [x] On models, many-to-many relationships are not selecting the correct ids on pivot tables that do not follow the standard Laravel convention
+
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?

@@ -315,10 +315,10 @@ class ModelGenerator extends TableBasedGenerator
         $args = [
             Word::class($other, true),
             "'" . $relation->pivot . "'",
-            "'" . $otherPivotCol . "'",
             "'" . $myPivotCol . "'",
-            "'" . $otherCol . "'",
+            "'" . $otherPivotCol . "'",
             "'" . $myCol . "'",
+            "'" . $otherCol . "'",
         ];
 
         if ($me < $other) {
@@ -329,10 +329,10 @@ class ModelGenerator extends TableBasedGenerator
 
         $defaultValues = [
             "'" . $pivot . "'",
-            "'" . $this->db->table($other)->foreignKey() . "'",
             "'" . $this->db->table($me)->foreignKey() . "'",
-            "'" . $this->db->table($other)->primaryKey() . "'",
+            "'" . $this->db->table($other)->foreignKey() . "'",
             "'" . $this->db->table($me)->primaryKey() . "'",
+            "'" . $this->db->table($other)->primaryKey() . "'",
         ];
 
         $args = PhpGenerator::removeDefaults($args, $defaultValues);

@@ -233,7 +233,7 @@ class ModelGeneratorTest extends TestCase
         ', $students);
     }
 
-    /** @test TODO: Re-add this as a actual test */
+    /** @test */
     public function it_handles_many_to_many_relationships()
     {
         $students = $this->mockTable('students', [
@@ -265,6 +265,42 @@ class ModelGeneratorTest extends TestCase
             public function students()
             {
                 return $this->belongsToMany(Student::class);
+            }
+        ', $classes);
+    }
+
+    /** @test */
+    public function it_uses_the_correct_arguments_in_many_to_many_relationships()
+    {
+        $students = $this->mockTable('students', [
+            'student_id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'code' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('student_class_pivot', [
+            'student_number' => ['reference' => ['students', 'student_id']],
+            'class' => ['reference' => ['classes', 'code']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $students = $this->generator($students)->generate();
+        $classes = $this->generator($classes)->generate();
+
+        $this->assertCodeContains('
+            public function classes()
+            {
+                return $this->belongsToMany(Class::class, \'student_class_pivot\', \'student_number\', \'class\');
+            }
+        ', $students);
+
+        $this->assertCodeContains('
+            public function students()
+            {
+                return $this->belongsToMany(Student::class, \'student_class_pivot\', \'class\', \'student_number\');
             }
         ', $classes);
     }
