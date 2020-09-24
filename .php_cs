@@ -158,6 +158,7 @@ $finder = Finder::create()
     ->name('*.php')
     ->notName('*.blade.php')
     ->notPath('Unit/inputs/code.php')
+    ->append([$project_path . '/wizard'])
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
 

@@ -114,7 +114,7 @@ class AutocrudMaker
     {
         // Run the migrations and then the autocrud:make command
         exec('php artisan migrate');
-        exec('php artisan autocrud:make');
+        passthru('php artisan autocrud:make');
     }
 
     public function revert()
