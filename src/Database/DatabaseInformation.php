@@ -5,6 +5,7 @@ namespace Ferreira\AutoCrud\Database;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Connection;
+use Illuminate\Database\Eloquent\Collection;
 
 class DatabaseInformation
 {
@@ -124,6 +125,25 @@ class DatabaseInformation
             ->filter(function ($relation) use ($table) {
                 return in_array($table, $relation->tables());
             })->all();
+    }
+
+    /**
+     * Retrieve the many-to-many relationships that have the given table as the
+     * first table in the corresponding pivot.
+     *
+     * @param string $table
+     *
+     * @return ManyToMany[]
+     */
+    public function manyToMany(string $table): array
+    {
+        return collect($this->relationshipsFor($table))
+            ->filter(function (Relationship $relationship) use ($table) {
+                return
+                    $relationship instanceof ManyToMany &&
+                    $relationship->foreignOne === $table;
+            })
+            ->all();
     }
 
     /**

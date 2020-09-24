@@ -89,4 +89,18 @@ class DatabaseInformationTest extends TestCase
 
         $this->assertSetsEqual($expected, $relationships);
     }
+
+    /** @test */
+    public function it_retrieves_many_to_many_relationships()
+    {
+        $this->assertSetsEqual(
+            [new ManyToMany('role_user', 'user_id', 'users', 'id', 'role_id', 'roles', 'id')],
+            $this->db->manyToMany('users')
+        );
+
+        $this->assertSetsEqual(
+            [],
+            $this->db->manyToMany('roles')
+        );
+    }
 }
