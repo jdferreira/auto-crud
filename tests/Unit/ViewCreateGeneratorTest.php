@@ -227,4 +227,33 @@ class ViewCreateGeneratorTest extends TestCase
             </select>
         ', $code);
     }
+
+    /** @test */
+    public function it_renders_many_to_many_relationships()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true, 'type' => Type::INTEGER],
+            'name' => [],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertCodeContains('
+            <label for="classes">Classes</label>
+            <select name="classes" multiple>
+                @foreach (\App\Class::all() as $class)
+                    <option value="{{ $class->id }}">{{ $class->name }}</option>
+                @endforeach
+            </select>
+        ', $this->generator($students)->generate());
+    }
 }

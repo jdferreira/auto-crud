@@ -5,6 +5,7 @@ namespace Ferreira\AutoCrud\Generators;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
+use Ferreira\AutoCrud\Database\ManyToMany;
 
 class ViewCreateGenerator extends TableBasedGenerator
 {
@@ -26,7 +27,6 @@ class ViewCreateGenerator extends TableBasedGenerator
     protected function filename(): string
     {
         return resource_path(
-            // 'views/' . Str::snake(Str::plural($this->table->name())) . '/create.blade.php'
             'views/' . $this->table->name() . '/create.blade.php'
         );
     }
@@ -70,6 +70,19 @@ class ViewCreateGenerator extends TableBasedGenerator
             $result = array_merge($result, Arr::wrap($field));
         }
 
+        $result = array_merge(
+            $result,
+            collect($this->db->manyToMany($this->table->name()))
+                ->flatMap(function (ManyToMany $relationship) {
+                    return $this->fieldGroup(
+                        Word::kebab($relationship->foreignTwo),
+                        Word::labelUpper($relationship->foreignTwo),
+                        $this->manyToManyField($relationship)
+                    );
+                })
+                ->all()
+        );
+
         return $result;
     }
 
@@ -84,20 +97,23 @@ class ViewCreateGenerator extends TableBasedGenerator
             return;
         }
 
-        $for = Word::kebab($column);
+        return $this->fieldGroup(
+            Word::kebab($column),
+            Word::labelUpper($column),
+            $this->input($column)
+        );
+    }
 
-        $label = Word::labelUpper($column);
-
-        $input = collect($this->input($column))->map(function ($arg) {
-            return "    $arg";
-        })->all();
-
+    private function fieldGroup(string $for, string $label, $input)
+    {
         return array_merge(
             [
                 '<div>',
                 '    <label for="' . $for . '">' . $label . '</label>',
             ],
-            $input,
+            array_map(function ($arg) {
+                return "    $arg";
+            }, Arr::wrap($input)),
             [
                 '</div>',
             ]
@@ -267,6 +283,32 @@ class ViewCreateGenerator extends TableBasedGenerator
     protected function foreignOptionItem(string $column, string $value, string $text)
     {
         return "<option value=\"{{ $value }}\">$text</option>";
+    }
+
+    private function manyToManyField(ManyToMany $relationship)
+    {
+        $foreignTable = $relationship->foreignTwo;
+
+        $name = Word::kebab($foreignTable);
+        $foreignClass = '\\' . $this->modelNamespace() . '\\' . Word::class($foreignTable);
+        $model = Word::variableSingular($foreignTable);
+        $primaryKey = $this->db->table($foreignTable)->primaryKey();
+        $labelColumn = $this->db->table($foreignTable)->labelColumn();
+
+        if ($labelColumn !== null) {
+            $text = "{{ $model->$labelColumn }}";
+        } else {
+            $word = Word::labelUpperSingular($foreignTable);
+            $text = "$word #{{ $model->$primaryKey }}";
+        }
+
+        return [
+            "<select name=\"$name\" multiple>",
+            "    @foreach ($foreignClass::all() as $model)",
+            "        <option value=\"{{ $model->$primaryKey }}\">$text</option>",
+            '    @endforeach',
+            '</select>',
+        ];
     }
 
     public function buttons()
