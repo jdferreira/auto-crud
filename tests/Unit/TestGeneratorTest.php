@@ -216,7 +216,8 @@ class TestGeneratorTest extends TestCase
 
         $this->mockDatabase($students, $classes, $pivot);
 
-        $this->assertEquals(['$this->assertHTML("//select[@name=\'classes\' and @multiple]", $document);',
+        $this->assertEquals([
+            '$this->assertHTML("//select[@name=\'classes\' and @multiple]", $document);',
         ], $this->generator($students)->assertHTMLOnForm());
 
         $this->assertEquals([], $this->generator($classes)->assertHTMLOnForm());
@@ -735,12 +736,9 @@ class TestGeneratorTest extends TestCase
             'id' => ['primaryKey' => true, 'type' => Type::INTEGER],
         ]);
 
-        $pets = $this->mockTable(
-            'pets',
-            [
-                'student_id' => ['reference' => ['students', 'id']],
-            ]
-        );
+        $pets = $this->mockTable('pets', [
+            'student_id' => ['reference' => ['students', 'id']],
+        ]);
 
         $this->mockDatabase($students, $pets);
 

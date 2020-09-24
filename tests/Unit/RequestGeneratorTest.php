@@ -111,4 +111,28 @@ class RequestGeneratorTest extends TestCase
 
         $this->assertStringNotContainsString('function prepareForValidation()', $code);
     }
+
+    /** @test */
+    public function it_checks_for_many_to_many_relationships()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertCodeContains('
+            \'classes\' => \'array\',
+            \'classes.*\' => \'exists:classes,id\',
+        ', $this->generator($students)->generate());
+    }
 }

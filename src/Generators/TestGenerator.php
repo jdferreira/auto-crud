@@ -87,7 +87,7 @@ class TestGenerator extends TableBasedGenerator
             $code = $this->removeMethod("it_populates_foreign_keys_on_the_create_and_edit_forms_of_${tablename}", $code);
         }
 
-        if ($this->getManyToMany()->count() === 0) {
+        if (count($this->db->manyToMany($this->table->name())) === 0) {
             $code = $this->removeMethod("it_populates_many_to_many_relationships_on_the_create_and_edit_forms_of_${tablename}", $code);
         }
 
@@ -266,7 +266,7 @@ class TestGenerator extends TableBasedGenerator
                 return $this->wrapXPath("//input[@name='$name' and @type='$type']");
             });
 
-        $manyToManyInputs = $this->getManyToMany()
+        $manyToManyInputs = collect($this->db->manyToMany($this->table->name()))
             ->map(function (ManyToMany $relationship) {
                 $foreignTable = $relationship->foreignTwo;
 
@@ -406,7 +406,7 @@ class TestGenerator extends TableBasedGenerator
 
     public function assertManyToManyRelationships()
     {
-        $modelCreationLines = $this->getManyToMany()
+        $modelCreationLines = collect($this->db->manyToMany($this->table->name()))
             ->map(function (ManyToMany $relationship) {
                 $foreignTable = $relationship->foreignTwo;
 
@@ -419,7 +419,7 @@ class TestGenerator extends TableBasedGenerator
             })
             ->all();
 
-        $assertionBlocks = $this->getManyToMany()
+        $assertionBlocks = collect($this->db->manyToMany($this->table->name()))
             ->map(function (ManyToMany $relationship) {
                 $foreignTable = $relationship->foreignTwo;
 
@@ -438,8 +438,8 @@ class TestGenerator extends TableBasedGenerator
                 return new Collection([
                     "    foreach ($foreignModels as $foreignModel) {",
                     '        $this->assertHTML($this->xpath(',
-                "            \"//select[@name='$name' and @multiple]/option[@value='%s' and .='%s']\",",
-                "            $foreignModel->$primaryKey,",
+                    "            \"//select[@name='$name' and @multiple]/option[@value='%s' and .='%s']\",",
+                    "            $foreignModel->$primaryKey,",
                     "            $foreignLabel",
                     '        ), $document);',
                     '    }',
@@ -937,16 +937,6 @@ class TestGenerator extends TableBasedGenerator
     private function quoteName(string $column)
     {
         return htmlentities(str_replace('_', '-', $column), ENT_QUOTES);
-    }
-
-    private function getManyToMany(): Collection
-    {
-        return collect($this->db->relationshipsFor($this->table->name()))
-            ->filter(function (Relationship $relationship) {
-                return
-                    $relationship instanceof ManyToMany &&
-                    $relationship->foreignOne === $this->table->name();
-            });
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
+use Ferreira\AutoCrud\Database\ManyToMany;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
 
 class RequestGenerator extends TableBasedGenerator
@@ -88,6 +89,21 @@ class RequestGenerator extends TableBasedGenerator
                 $this->needsModel = true;
             }
         }
+
+        $lines = array_merge(
+            $lines,
+            collect($this->db->manyToMany($this->table->name()))
+                ->flatMap(function (ManyToMany $relationship) {
+                    $foreignTable = $relationship->foreignTwo;
+                    $primaryKey = $this->db->table($foreignTable)->primaryKey();
+
+                    return [
+                        "    '$foreignTable' => 'array',",
+                        "    '$foreignTable.*' => 'exists:$foreignTable,$primaryKey',",
+                    ];
+                })
+                ->all()
+        );
 
         $lines[] = '];';
 
