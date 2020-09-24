@@ -703,7 +703,7 @@ class TestGeneratorTest extends TestCase
         $this->assertEquals([
             '$classes = factory(Class::class, 3)->create();',
             '',
-            'foreach ([\'/students/create\', factory(Student::class)->create()->path() , \'/edit\'] as $path) {',
+            'foreach ([\'/students/create\', factory(Student::class)->create()->path() . \'/edit\'] as $path) {',
             '    $document = $this->getDOMDocument($this->get($path));',
             '',
             '    foreach ($classes as $class) {',

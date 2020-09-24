@@ -459,7 +459,7 @@ class TestGenerator extends TableBasedGenerator
             $modelCreationLines,
             [
                 '',
-                "foreach (['/$route/create', factory($thisClass)->create()->path() , '/edit'] as \$path) {",
+                "foreach (['/$route/create', factory($thisClass)->create()->path() . '/edit'] as \$path) {",
                 '    $document = $this->getDOMDocument($this->get($path));',
                 '',
             ],
