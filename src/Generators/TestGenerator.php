@@ -315,7 +315,7 @@ class TestGenerator extends TableBasedGenerator
                 $value = $this->table->default($column);
 
                 if ($type === Type::ENUM) {
-                    return $this->wrapXPath("//select[@name='$name']/option[@name='$value' and @selected]");
+                    return $this->wrapXPath("//select[@name='$name']/option[@value='$value' and @selected]");
                 } elseif ($type === Type::TEXT) {
                     return $this->wrapXPath("//textarea[@name='$name' and .='$value']");
                 } elseif ($type === Type::BOOLEAN) {

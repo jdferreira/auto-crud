@@ -253,7 +253,7 @@ class TestGeneratorTest extends TestCase
             '$this->assertHTML("//input[@name=\'name\' and @type=\'text\' and @value=\'Hogwarts\']", $document);',
             '$this->assertHTML("//textarea[@name=\'motto\' and .=\'Draco dormiens nunquam titillandus\']", $document);',
             '$this->assertHTML("//input[@name=\'magical\' and @type=\'checkbox\' and @checked]", $document);',
-            '$this->assertHTML("//select[@name=\'country\']/option[@name=\'uk\' and @selected]", $document);',
+            '$this->assertHTML("//select[@name=\'country\']/option[@value=\'uk\' and @selected]", $document);',
         ], $lines);
     }
 
