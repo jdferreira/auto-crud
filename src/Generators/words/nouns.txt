@@ -266,7 +266,6 @@ archeology
 archer
 architect
 architecture
-archives
 area
 arena
 argument
@@ -332,7 +331,6 @@ asymmetry
 atelier
 atheist
 athlete
-athletics
 atmosphere
 atom
 atrium
@@ -448,7 +446,6 @@ bark
 barley
 barn
 barometer
-barracks
 barrage
 barrel
 barrier
@@ -459,7 +456,6 @@ baseball
 baseboard
 baseline
 basement
-basics
 basil
 basin
 basis
@@ -525,7 +521,6 @@ belief
 believer
 bell
 belligerency
-bellows
 belly
 belt
 bench
@@ -545,7 +540,6 @@ bid
 bidder
 bidding
 bidet
-bifocals
 bijou
 bike
 bikini
@@ -554,7 +548,6 @@ billboard
 billing
 billion
 bin
-binoculars
 biology
 biopsy
 biosphere
@@ -714,7 +707,6 @@ bridge
 brief
 briefing
 briefly
-briefs
 brilliant
 brink
 brisket
@@ -960,7 +952,6 @@ centurion
 century
 cephalopod
 ceramic
-ceramics
 cereal
 ceremony
 certainty
@@ -1052,7 +1043,6 @@ chip
 chipmunk
 chivalry
 chive
-chives
 chocolate
 choice
 choir
@@ -1060,9 +1050,7 @@ choker
 cholesterol
 choosing
 chop
-chops
 chopstick
-chopsticks
 chord
 chorus
 chow
@@ -1145,7 +1133,6 @@ cloak
 cloakroom
 clock
 clockwork
-clogs
 cloister
 clone
 close
@@ -1153,13 +1140,11 @@ closet
 closing
 closure
 cloth
-clothes
 clothing
 cloud
 cloudburst
 clove
 clover
-cloves
 club
 clue
 cluster
@@ -1234,7 +1219,6 @@ comestible
 comfort
 comfortable
 comic
-comics
 comma
 command
 commander
@@ -1399,7 +1383,6 @@ corn
 corner
 cornerstone
 cornet
-cornflakes
 cornmeal
 corporal
 corporation
@@ -1456,7 +1439,6 @@ coyote
 crab
 crack
 cracker
-crackers
 cradle
 craft
 craftsman
@@ -1724,7 +1706,6 @@ device
 devil
 dew
 dhow
-diabetes
 diadem
 diagnosis
 diagram
@@ -1883,7 +1864,6 @@ downfall
 downforce
 downgrade
 download
-downstairs
 downtown
 downturn
 dozen
@@ -1898,7 +1878,6 @@ drainage
 drake
 drama
 dramaturge
-drapes
 draw
 drawbridge
 drawer
@@ -1938,7 +1917,6 @@ dulcimer
 dumbwaiter
 dump
 dune
-dungarees
 dungeon
 duplexer
 duration
@@ -1959,11 +1937,8 @@ eagle
 eaglet
 ear
 eardrum
-earmuffs
-earnings
 earplug
 earring
-earrings
 earth
 earthquake
 earthworm
@@ -1971,7 +1946,6 @@ ease
 easel
 east
 eating
-eaves
 eavesdropper
 ecclesia
 echidna
@@ -2205,12 +2179,8 @@ extremist
 eye
 eyeball
 eyebrow
-eyebrows
-eyeglasses
 eyelash
-eyelashes
 eyelid
-eyelids
 eyeliner
 eyestrain
 eyrie
@@ -2253,7 +2223,6 @@ fat
 fate
 father
 fatigue
-fatigues
 faucet
 fault
 fav
@@ -2397,7 +2366,6 @@ following
 fondue
 font
 food
-foodstuffs
 fool
 foot
 footage
@@ -2442,7 +2410,6 @@ foundation
 founder
 founding
 fountain
-fourths
 fowl
 fox
 foxglove
@@ -2469,7 +2436,6 @@ friction
 fridge
 friend
 friendship
-fries
 frigate
 fright
 fringe
@@ -2507,12 +2473,10 @@ gadget
 gaffe
 gaffer
 gain
-gaiters
 gale
 gallery
 galley
 gallon
-galoshes
 gambling
 game
 gamebird
@@ -2590,7 +2554,6 @@ gladiolus
 glance
 gland
 glass
-glasses
 glee
 glen
 glider
@@ -2616,7 +2579,6 @@ goddess
 godfather
 godmother
 godparent
-goggles
 going
 gold
 goldfish
@@ -2681,7 +2643,6 @@ greatness
 greed
 green
 greenhouse
-greens
 grenade
 grey
 grid
@@ -2804,8 +2765,6 @@ head
 headache
 headlight
 headline
-headphones
-headquarters
 headrest
 health
 hearing
@@ -2842,7 +2801,6 @@ hemp
 hen
 hepatitis
 herb
-herbs
 heritage
 hermit
 hero
@@ -2853,7 +2811,6 @@ hesitation
 heterosexual
 hexagon
 heyday
-hiccups
 hide
 hierarchy
 high
@@ -2903,7 +2860,6 @@ hoof
 hook
 hop
 hope
-hops
 horde
 horizon
 hormone
@@ -3201,10 +3157,8 @@ jasmine
 jaw
 jazz
 jealousy
-jeans
 jeep
 jelly
-jellybeans
 jellyfish
 jerk
 jet
@@ -3216,7 +3170,6 @@ jicama
 jiffy
 job
 jockey
-jodhpurs
 joey
 jogging
 joint
@@ -3294,7 +3247,6 @@ kitty
 kiwi
 knee
 kneejerk
-knickers
 knife
 knight
 knitting
@@ -3346,7 +3298,6 @@ lark
 larva
 laryngitis
 lasagna
-lashes
 last
 latency
 latex
@@ -3423,7 +3374,6 @@ license
 licensing
 licorice
 lid
-lie
 lieu
 lieutenant
 life
@@ -3621,7 +3571,6 @@ many
 map
 maple
 mapping
-maracas
 marathon
 marble
 march
@@ -3630,7 +3579,6 @@ margarine
 margin
 mariachi
 marimba
-marines
 marionberry
 mark
 marker
@@ -3679,9 +3627,7 @@ meal
 mean
 meander
 meaning
-means
 meantime
-measles
 measure
 measurement
 meat
@@ -3817,7 +3763,6 @@ mob
 mobile
 mobility
 mobster
-moccasins
 mocha
 mochi
 mode
@@ -3828,7 +3773,6 @@ modernist
 modernity
 modification
 molar
-molasses
 molding
 mole
 molecule
@@ -3966,7 +3910,6 @@ neurobiologist
 neuron
 neuropathologist
 neuropsychiatry
-news
 newsletter
 newspaper
 newsprint
@@ -3999,7 +3942,6 @@ nonconformist
 nondisclosure
 nonsense
 noodle
-noodles
 noon
 norm
 normal
@@ -4043,7 +3985,6 @@ oar
 oasis
 oat
 oatmeal
-oats
 obedience
 obesity
 obi
@@ -4198,7 +4139,6 @@ painter
 painting
 paintwork
 pair
-pajamas
 palace
 palate
 palm
@@ -4213,11 +4153,9 @@ pannier
 panpipe
 pansy
 panther
-panties
 pantologist
 pantology
 pantry
-pants
 pantsuit
 panty
 pantyhose
@@ -4493,7 +4431,6 @@ pleat
 pledge
 plenty
 plier
-pliers
 plight
 plot
 plough
@@ -4613,7 +4550,6 @@ presence
 present
 presentation
 preservation
-preserves
 presidency
 president
 press
@@ -4655,7 +4591,6 @@ probation
 probe
 problem
 procedure
-proceedings
 process
 processing
 processor
@@ -4846,7 +4781,6 @@ ratepayer
 rating
 ratio
 rationale
-rations
 raven
 ravioli
 rawhide
@@ -4907,7 +4841,6 @@ reference
 referendum
 reflection
 reform
-refreshments
 refrigerator
 refuge
 refund
@@ -4939,7 +4872,6 @@ relief
 religion
 relish
 reluctance
-remains
 remark
 reminder
 remnant
@@ -5029,7 +4961,6 @@ revolver
 reward
 rhetoric
 rheumatism
-rhinoceros
 rhubarb
 rhyme
 rhythm
@@ -5173,7 +5104,6 @@ sausage
 savage
 savannah
 saving
-savings
 savior
 saviour
 savory
@@ -5182,7 +5112,6 @@ saxophone
 scaffold
 scale
 scallion
-scallops
 scalp
 scam
 scanner
@@ -5207,7 +5136,6 @@ schooner
 science
 scientist
 scimitar
-scissors
 scooter
 scope
 score
@@ -5318,7 +5246,6 @@ shadowbox
 shakedown
 shaker
 shallot
-shallows
 shame
 shampoo
 shanty
@@ -5357,7 +5284,6 @@ shoe
 shoehorn
 shoelace
 shoemaker
-shoes
 shoestring
 shofar
 shoot
@@ -5369,7 +5295,6 @@ shore
 shoreline
 short
 shortage
-shorts
 shortwave
 shot
 shoulder
@@ -5386,7 +5311,6 @@ sick
 sickness
 side
 sideboard
-sideburns
 sidecar
 sidestream
 sidewalk
@@ -5467,7 +5391,6 @@ slider
 slime
 slip
 slipper
-slippers
 slope
 slot
 sloth
@@ -5489,7 +5412,6 @@ snakebite
 snap
 snarl
 sneaker
-sneakers
 sneeze
 sniffle
 snob
@@ -5512,7 +5434,6 @@ socialist
 society
 sociology
 sock
-socks
 soda
 sofa
 softball
@@ -5591,7 +5512,6 @@ specialty
 species
 specification
 spectacle
-spectacles
 spectrograph
 spectrum
 speculation
@@ -5640,7 +5560,6 @@ spread
 spreadsheet
 spree
 spring
-sprinkles
 sprinter
 sprout
 spruce
@@ -5723,7 +5642,6 @@ stinger
 stitch
 stitcher
 stock
-stockings
 stole
 stomach
 stone
@@ -5826,7 +5744,6 @@ sundae
 sunday
 sundial
 sunflower
-sunglasses
 sunlamp
 sunlight
 sunrise
@@ -5855,14 +5772,11 @@ surname
 surplus
 surprise
 surround
-surroundings
-surrounds
 survey
 survival
 survivor
 sushi
 suspect
-suspenders
 suspension
 sustainment
 sustenance
@@ -5876,7 +5790,6 @@ sweater
 sweatshirt
 sweatshop
 sweatsuit
-sweets
 swell
 swim
 swimming
@@ -6020,7 +5933,6 @@ text
 textbook
 textual
 texture
-thanks
 thaw
 theater
 theft
@@ -6030,7 +5942,6 @@ theology
 theory
 therapist
 therapy
-thermals
 thermometer
 thermostat
 thesis
@@ -6042,7 +5953,6 @@ thinking
 thirst
 thistle
 thong
-thongs
 thorn
 thought
 thousand
@@ -6070,7 +5980,6 @@ ticket
 tide
 tie
 tiger
-tights
 tile
 till
 tilt
@@ -6227,7 +6136,6 @@ troop
 trooper
 trophy
 trouble
-trousers
 trout
 trove
 trowel
@@ -6269,11 +6177,9 @@ tussle
 tutu
 tuxedo
 tweet
-tweezers
 twig
 twilight
 twine
-twins
 twist
 twister
 twitter
@@ -6287,11 +6193,9 @@ umbrella
 unblinking
 uncertainty
 uncle
-underclothes
 underestimate
 underground
 underneath
-underpants
 underpass
 undershirt
 understanding
@@ -6315,7 +6219,6 @@ update
 upgrade
 uplift
 upper
-upstairs
 upward
 urge
 urgency
@@ -6614,7 +6517,6 @@ woodland
 woodshed
 woodwind
 wool
-woolens
 word
 wording
 work

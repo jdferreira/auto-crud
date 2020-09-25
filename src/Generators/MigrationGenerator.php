@@ -146,8 +146,8 @@ class MigrationGenerator extends PhpGenerator
                 $method .= '->nullable()';
             }
 
-            // 20% probability of unique
-            if (! $this->pivot && random_int(1, 100) <= 20) {
+            // 20% probability of unique, but not if boolean
+            if (! $this->pivot && $column !== 'boolean' && random_int(1, 100) <= 20) {
                 $method .= '->unique()';
             }
 

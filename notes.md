@@ -49,3 +49,7 @@
 - [ ] On generated migrations, date-like columns should sometimes have a default value other than `CURRENT_TIMESTAMP`
 
 - [ ] On Table::reference, we can probably not save the name of the foreign column (it is always the primary key).
+
+- [ ] Allow the user to specify the plural and singular forms of words, if they want
+
+- [ ] Words like "scissors" are tripping up the singular and plural conventions. (the route parameter is "scissors", but the parameter name in the controller is "scissor" for some reason...)
