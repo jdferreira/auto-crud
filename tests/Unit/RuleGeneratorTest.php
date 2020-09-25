@@ -61,6 +61,18 @@ class RuleGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_uses_specific_formatters_only_when_columns_are_textual()
+    {
+        $table = $this->mockTable('muggle_things', [
+            'email' => ['type' => Type::DECIMAL],
+            'uuid' => ['type' => Type::DATE],
+        ]);
+
+        $this->assertRulesNotContain($table, 'email', "'email:rfc'");
+        $this->assertRulesNotContain($table, 'uuid', "'uuid'");
+    }
+
+    /** @test */
     public function it_generates_rules_for_column_types()
     {
         $table = $this->mockTable('students', [
@@ -163,6 +175,14 @@ class RuleGeneratorTest extends TestCase
     private function assertRulesContain($table, $column, $value)
     {
         $this->assertContains(
+            $value,
+            (new RuleGenerator($table, $column))->makeRules()
+        );
+    }
+
+    private function assertRulesNotContain($table, $column, $value)
+    {
+        $this->assertNotContains(
             $value,
             (new RuleGenerator($table, $column))->makeRules()
         );

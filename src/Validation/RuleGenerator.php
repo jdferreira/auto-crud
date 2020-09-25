@@ -121,7 +121,9 @@ class RuleGenerator
             'uuid' => 'uuid',
         ];
 
-        return $this->quote(Arr::get($customs, $this->column));
+        if (in_array($this->table->type($this->column), [Type::STRING, Type::TEXT])) {
+            return $this->quote(Arr::get($customs, $this->column));
+        }
     }
 
     private function byColumnType()
