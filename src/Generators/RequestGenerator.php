@@ -98,7 +98,7 @@ class RequestGenerator extends TableBasedGenerator
                     $primaryKey = $this->db->table($foreignTable)->primaryKey();
 
                     return [
-                        "    '$foreignTable' => 'array',",
+                        "    '$foreignTable' => 'nullable|array',",
                         "    '$foreignTable.*' => 'exists:$foreignTable,$primaryKey',",
                     ];
                 })

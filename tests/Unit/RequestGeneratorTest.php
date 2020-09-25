@@ -131,7 +131,7 @@ class RequestGeneratorTest extends TestCase
         $this->mockDatabase($students, $classes, $pivot);
 
         $this->assertCodeContains('
-            \'classes\' => \'array\',
+            \'classes\' => \'nullable|array\',
             \'classes.*\' => \'exists:classes,id\',
         ', $this->generator($students)->generate());
     }
