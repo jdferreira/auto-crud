@@ -3,6 +3,7 @@
 namespace Ferreira\AutoCrud\Generators;
 
 use Ferreira\AutoCrud\Word;
+use Ferreira\AutoCrud\Database\ManyToMany;
 
 class ControllerGenerator extends TableBasedGenerator
 {
@@ -35,6 +36,7 @@ class ControllerGenerator extends TableBasedGenerator
             'modelSingular' => $this->modelSingular(),
             'modelPlural' => $this->modelPlural(),
             'modelSingularNoDollar' => $this->modelSingularNoDollar(),
+            'syncManyToManyRelationships' => $this->syncManyToManyRelationships(),
         ];
     }
 
@@ -51,5 +53,18 @@ class ControllerGenerator extends TableBasedGenerator
     protected function modelSingularNoDollar()
     {
         return Word::variableSingular($this->table->name(), false);
+    }
+
+    public function syncManyToManyRelationships()
+    {
+        return collect($this->db->manyToMany($this->table->name()))
+            ->map(function (ManyToMany $relationship) {
+                $model = Word::variableSingular($this->table->name());
+                $method = Word::method($relationship->foreignTwo);
+                $field = Word::kebab($relationship->foreignTwo);
+
+                return "$model->$method()->sync(\$request->get('$field'));";
+            })
+            ->all();
     }
 }

@@ -100,6 +100,7 @@ class TestGenerator extends TableBasedGenerator
     public function otherUses()
     {
         return collect($this->otherUses)
+            ->unique()
             ->map(function ($class) {
                 return "use $class;";
             })
@@ -271,9 +272,9 @@ class TestGenerator extends TableBasedGenerator
 
         $manyToManyInputs = collect($this->db->manyToMany($this->table->name()))
             ->map(function (ManyToMany $relationship) {
-                $foreignTable = $relationship->foreignTwo;
+                $name = Word::kebab($relationship->foreignTwo);
 
-                return $this->wrapXPath("//select[@name='$foreignTable' and @multiple]");
+                return $this->wrapXPath("//select[@name='$name' and @multiple]");
             });
 
         return $this->joinBlocks($otherColumns, $enumColumns, $referenceColumns, $manyToManyInputs);
@@ -632,10 +633,12 @@ class TestGenerator extends TableBasedGenerator
         return collect($this->db->manyToMany($this->table->name()))
             ->map(function (ManyToMany $relationship) {
                 $foreignTable = $relationship->foreignTwo;
+
+                $name = Word::kebab($foreignTable);
                 $foreignClass = Word::class($foreignTable, true);
                 $primaryKey = $this->db->table($foreignTable)->primaryKey();
 
-                return "\$new['$foreignTable'] = factory($foreignClass, 5)->create()->random(2)->pluck('$primaryKey')->all();";
+                return "\$new['$name'] = factory($foreignClass, 5)->create()->random(2)->pluck('$primaryKey')->all();";
             })
             ->all();
     }
@@ -667,11 +670,13 @@ class TestGenerator extends TableBasedGenerator
         return collect($this->db->manyToMany($this->table->name()))
             ->map(function (ManyToMany $relationship) {
                 $foreignTable = $relationship->foreignTwo;
+
+                $name = Word::kebab($foreignTable);
                 $model = Word::variableSingular($this->table->name());
                 $method = Word::method($foreignTable);
                 $primaryKey = $this->db->table($foreignTable)->primaryKey();
 
-                return "\$this->assertEquals(\$new['$foreignTable'], $model->{$method}->pluck('$primaryKey')->all());";
+                return "\$this->assertEquals(\$new['$name'], $model->{$method}->pluck('$primaryKey')->all());";
             })
             ->all();
     }
@@ -714,12 +719,14 @@ class TestGenerator extends TableBasedGenerator
         return collect($this->db->manyToMany($this->table->name()))
             ->flatMap(function (ManyToMany $relationship) {
                 $foreignTable = $relationship->foreignTwo;
+
+                $name = Word::kebab($foreignTable);
                 $foreignClass = Word::class($foreignTable);
                 $primaryKey = $this->db->table($foreignTable)->primaryKey();
 
                 return [
                     '',
-                    "\$this->assertField('$foreignTable')",
+                    "\$this->assertField('$name')",
                     '    ->accepts([])',
                     "    ->accepts(factory($foreignClass::class, 2)->create()->pluck('$primaryKey')->all())",
                     "    ->rejects([$foreignClass::all()->max('$primaryKey') + 1])",

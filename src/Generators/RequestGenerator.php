@@ -95,11 +95,12 @@ class RequestGenerator extends TableBasedGenerator
             collect($this->db->manyToMany($this->table->name()))
                 ->flatMap(function (ManyToMany $relationship) {
                     $foreignTable = $relationship->foreignTwo;
+                    $name = Word::kebab($foreignTable);
                     $primaryKey = $this->db->table($foreignTable)->primaryKey();
 
                     return [
-                        "    '$foreignTable' => 'nullable|array',",
-                        "    '$foreignTable.*' => 'exists:$foreignTable,$primaryKey',",
+                        "    '$name' => 'nullable|array',",
+                        "    '$name.*' => 'exists:$foreignTable,$primaryKey',",
                     ];
                 })
                 ->all()

@@ -25,6 +25,7 @@ class {{ modelClass }}Controller extends Controller
     public function store({{ modelClass }}Request $request)
     {
         {{ modelSingular }} = {{ modelClass }}::create($request->validated());
+        {{ syncManyToManyRelationships }}
 
         return redirect({{ modelSingular }}->path());
     }
@@ -37,6 +38,7 @@ class {{ modelClass }}Controller extends Controller
     public function update({{ modelClass }} {{ modelSingular }}, {{ modelClass }}Request $request)
     {
         {{ modelSingular }}->update($request->validated());
+        {{ syncManyToManyRelationships }}
 
         return redirect({{ modelSingular }}->path());
     }

@@ -33,14 +33,14 @@
 
 - [x] On models, many-to-many relationships are not selecting the correct ids on pivot tables that do not follow the standard Laravel convention
 
+- [x] Pivot tables should mean that one of the models has a dropdown for the other model
+  - [x] This is computed as such: the first column in the pivot corresponds to the model that shows the dropdown (think `role_user` with columns `user_id` and `role_id`: in this case, it is the user that specifies the roles they have)
+
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
 
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
-
-- [ ] Pivot tables should mean that one of the models has a dropdown for the other model
-  - [ ] This is computed as such: the first column in the pivot corresponds to the model that shows the dropdown (think `role_user` with columns `user_id` and `role_id`: in this case, it is the user that specifies the roles they have)
 
 - [ ] On generated migrations, do not allow "weird" relationships. For example, table A, column X refers to id of table B, and then there is a pivot for tables A and B...
 
