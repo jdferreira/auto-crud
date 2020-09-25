@@ -760,4 +760,168 @@ class TestGeneratorTest extends TestCase
             '}',
         ], $generator->assertForeignFieldsPopulated());
     }
+
+    /** @test */
+    public function it_tests_that_creating_a_model_with_many_to_many_relationships_stores_those_relationships()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertCodeContains('
+            public function it_validates_field_values_when_creating_a_student()
+            {
+                $new = factory(Student::class)->raw();
+                $new[\'classes\'] = factory(Class::class, 5)->create()->random(2)->pluck(\'id\')->all();
+
+                $this->beginAssertFields(\'POST\', \'/students\', $new)->assertFields();
+            }
+        ', $this->generator($students)->generate());
+    }
+
+    /** @test */
+    public function it_tests_that_updating_a_model_with_many_to_many_relationships_stores_those_relationships()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertCodeContains('
+            public function it_validates_field_values_when_updating_a_student()
+            {
+                $new = factory(Student::class)->raw();
+
+                $student = new Student($new);
+                $student->save();
+
+                $student->classes()->saveMany(factory(Class::class, 5)->make());
+                $new[\'classes\'] = factory(Class::class, 5)->create()->random(2)->pluck(\'id\')->all();
+
+                $this->beginAssertFields(\'PUT\', $student->path(), $new)->assertFields();
+            }
+        ', $this->generator($students)->generate());
+    }
+
+    /** @test */
+    public function it_tests_that_many_to_many_fields_are_validated()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertEquals([
+            '',
+            '$this->assertField(\'classes\')',
+            '    ->accepts([])',
+            '    ->accepts(factory(Class::class, 2)->create()->pluck(\'id\')->all())',
+            '    ->rejects([Class::all()->max(\'id\') + 1])',
+            '    ->accepts(null);',
+        ], $this->generator($students)->assertManyToManyFields());
+    }
+
+    /** @test */
+    public function it_tests_that_creation_of_model_with_many_to_many_relationships_works()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_creates_students_when_asked_to()
+            {
+                $this->assertNull(Student::find(1));
+
+                $new = factory(Student::class)->raw();
+                $new[\'classes\'] = factory(Class::class, 5)->create()->random(2)->pluck(\'id\')->all();
+
+                $this->post(\'/students\', $new);
+
+                $this->assertNotNull($student = Student::find(1));
+
+                $this->assertEquals($new[\'classes\'], $student->classes->pluck(\'id\')->all());
+            }
+        ', $this->generator($students)->generate());
+    }
+
+    /** @test */
+    public function it_tests_that_update_of_model_with_many_to_many_relationships_works()
+    {
+        $students = $this->mockTable('students', [
+            'id' => ['primaryKey' => true],
+        ]);
+
+        $classes = $this->mockTable('classes', [
+                'id' => ['primaryKey' => true],
+            ]);
+
+        $pivot = $this->mockTable('class_student', [
+            'student_id' => ['reference' => ['students', 'id']],
+            'class_id' => ['reference' => ['classes', 'id']],
+        ]);
+
+        $this->mockDatabase($students, $classes, $pivot);
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_updates_students_when_asked_to()
+            {
+                $student = factory(Student::class)->create();
+                $student->classes()->saveMany(factory(Class::class, 5)->make());
+
+                $new = factory(Student::class)->raw();
+                $new[\'classes\'] = factory(Class::class, 5)->create()->random(2)->pluck(\'id\')->all();
+
+                $this->put($student->path(), $new);
+
+                $student = $student->fresh();
+
+                $this->assertEquals($new[\'classes\'], $student->classes->pluck(\'id\')->all());
+            }
+        ', $this->generator($students)->generate());
+    }
 }

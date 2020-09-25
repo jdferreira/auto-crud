@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Ferreira\AutoCrud\AccessorBuilder;
 use Ferreira\AutoCrud\Database\ManyToMany;
-use Ferreira\AutoCrud\Database\Relationship;
 
 class TestGenerator extends TableBasedGenerator
 {
@@ -55,14 +54,18 @@ class TestGenerator extends TableBasedGenerator
             'assertHTMLOnForm' => $this->assertHTMLOnForm(),
             'setTime' => $setTime,
             'assertDefaultValuesOnCreateForm' => $this->assertDefaultValuesOnCreateForm(),
-            'assertForeignFieldsPopulated' => $assertForeignFieldsPopulated,
-            'assertManyToManyRelationships' => $assertManyToManyRelationships,
             'assertEditFormHasValues' => $this->assertEditFormHasValues(),
             'oneConstraintField' => $this->oneConstraintField(),
             'oneInvalidValue' => $this->oneInvalidValue(),
+            'assertForeignFieldsPopulated' => $assertForeignFieldsPopulated,
+            'assertManyToManyRelationships' => $assertManyToManyRelationships,
             'assertRequiredFields' => $this->assertRequiredFields(),
+            'updateNewWithManyToManyRelationships' => $this->updateNewWithManyToManyRelationships(),
             'assertNewEqualsModel' => $this->assertNewEqualsModel(),
+            'assertNewEqualsModelForManyToManyRelationships' => $this->assertNewEqualsModelForManyToManyRelationships(),
+            'modelVariableStoreSomeManyToManyRelationships' => $this->modelVariableStoreSomeManyToManyRelationships(),
             'assertFields' => $assertFields,
+            'assertManyToManyFields' => $this->assertManyToManyFields(),
         ];
     }
 
@@ -624,6 +627,19 @@ class TestGenerator extends TableBasedGenerator
             ->all();
     }
 
+    public function updateNewWithManyToManyRelationships()
+    {
+        return collect($this->db->manyToMany($this->table->name()))
+            ->map(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+                $foreignClass = Word::class($foreignTable, true);
+                $primaryKey = $this->db->table($foreignTable)->primaryKey();
+
+                return "\$new['$foreignTable'] = factory($foreignClass, 5)->create()->random(2)->pluck('$primaryKey')->all();";
+            })
+            ->all();
+    }
+
     public function assertNewEqualsModel()
     {
         return $this->fieldsExceptPrimary()
@@ -646,6 +662,34 @@ class TestGenerator extends TableBasedGenerator
             ->all();
     }
 
+    public function assertNewEqualsModelForManyToManyRelationships()
+    {
+        return collect($this->db->manyToMany($this->table->name()))
+            ->map(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+                $model = Word::variableSingular($this->table->name());
+                $method = Word::method($foreignTable);
+                $primaryKey = $this->db->table($foreignTable)->primaryKey();
+
+                return "\$this->assertEquals(\$new['$foreignTable'], $model->{$method}->pluck('$primaryKey')->all());";
+            })
+            ->all();
+    }
+
+    public function modelVariableStoreSomeManyToManyRelationships()
+    {
+        return collect($this->db->manyToMany($this->table->name()))
+            ->map(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+                $model = Word::variableSingular($this->table->name());
+                $foreignClass = Word::class($foreignTable, true);
+                $method = Word::method($foreignTable);
+
+                return "$model->$method()->saveMany(factory($foreignClass, 5)->make());";
+            })
+            ->all();
+    }
+
     public function assertFields()
     {
         $result = $this->generateInitialModelForUniqueChecks();
@@ -663,6 +707,26 @@ class TestGenerator extends TableBasedGenerator
         }
 
         return $result;
+    }
+
+    public function assertManyToManyFields()
+    {
+        return collect($this->db->manyToMany($this->table->name()))
+            ->flatMap(function (ManyToMany $relationship) {
+                $foreignTable = $relationship->foreignTwo;
+                $foreignClass = Word::class($foreignTable);
+                $primaryKey = $this->db->table($foreignTable)->primaryKey();
+
+                return [
+                    '',
+                    "\$this->assertField('$foreignTable')",
+                    '    ->accepts([])',
+                    "    ->accepts(factory($foreignClass::class, 2)->create()->pluck('$primaryKey')->all())",
+                    "    ->rejects([$foreignClass::all()->max('$primaryKey') + 1])",
+                    '    ->accepts(null);',
+                ];
+            })
+            ->all();
     }
 
     private function generateInitialModelForUniqueChecks()

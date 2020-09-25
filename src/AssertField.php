@@ -70,8 +70,12 @@ class AssertField
      */
     public function rejects($value): self
     {
+        $fieldWithError = is_array($value)
+            ? $this->field . '.*'
+            : $this->field;
+
         $this->request($value)
-            ->assertSessionHasErrors($this->field)
+            ->assertSessionHasErrors($fieldWithError)
             ->assertSessionDoesntHaveErrors($this->shouldPass);
 
         return $this;

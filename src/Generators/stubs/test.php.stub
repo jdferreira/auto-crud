@@ -133,9 +133,10 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_validates_field_values_when_creating_{{ tablenameSingularWithArticle }}()
     {
-        $data = factory({{ modelClass }}::class)->raw();
+        $new = factory({{ modelClass }}::class)->raw();
+        {{ updateNewWithManyToManyRelationships }}
 
-        $this->beginAssertFields('POST', '/{{ tablename }}', $data)->assertFields();
+        $this->beginAssertFields('POST', '/{{ tablename }}', $new)->assertFields();
     }
 
     /** @test */
@@ -144,12 +145,14 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         $this->assertNull({{ modelClass }}::find(1));
 
         $new = factory({{ modelClass }}::class)->raw();
+        {{ updateNewWithManyToManyRelationships }}
 
         $this->post('/{{ tablename }}', $new);
 
         $this->assertNotNull({{ modelVariableSingular }} = {{ modelClass }}::find(1));
 
         {{ assertNewEqualsModel }}
+        {{ assertNewEqualsModelForManyToManyRelationships }}
     }
 
     /** @test */
@@ -160,6 +163,9 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         {{ modelVariableSingular }} = new {{ modelClass }}($new);
         {{ modelVariableSingular }}->save();
 
+        {{ modelVariableStoreSomeManyToManyRelationships }}
+        {{ updateNewWithManyToManyRelationships }}
+
         $this->beginAssertFields('PUT', {{ modelVariableSingular }}->path(), $new)->assertFields();
     }
 
@@ -167,14 +173,17 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     public function it_updates_{{ tablename }}_when_asked_to()
     {
         {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableStoreSomeManyToManyRelationships }}
 
         $new = factory({{ modelClass }}::class)->raw();
+        {{ updateNewWithManyToManyRelationships }}
 
         $this->put({{ modelVariableSingular }}->path(), $new);
 
         {{ modelVariableSingular }} = {{ modelVariableSingular }}->fresh();
 
         {{ assertNewEqualsModel }}
+        {{ assertNewEqualsModelForManyToManyRelationships }}
     }
 
     /** @test */
@@ -192,5 +201,6 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         $this->withExceptionHandling();
 
         {{ assertFields }}
+        {{ assertManyToManyFields }}
     }
 }
