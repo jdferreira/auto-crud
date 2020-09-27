@@ -5,9 +5,15 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Validation\RuleGenerator;
+use Ferreira\AutoCrud\Database\TableInformation;
 
 class RuleGeneratorTest extends TestCase
 {
+    private function generator(TableInformation $table, string $column)
+    {
+        return app(RuleGenerator::class, ['table' => $table, 'column' => $column]);
+    }
+
     /** @test */
     public function it_ignores_primary_key_columns()
     {
@@ -15,7 +21,7 @@ class RuleGeneratorTest extends TestCase
             'id' => ['primaryKey' => true],
         ]);
 
-        $rule = new RuleGenerator($table, 'id');
+        $rule = $this->generator($table, 'id');
 
         $this->assertEquals(null, $rule->generate());
     }
@@ -30,7 +36,7 @@ class RuleGeneratorTest extends TestCase
         ]);
 
         foreach (['created_at', 'updated_at', 'deleted_at'] as $column) {
-            $rule = new RuleGenerator($table, $column);
+            $rule = $this->generator($table, $column);
 
             $this->assertEquals(null, $rule->generate());
         }
@@ -100,8 +106,8 @@ class RuleGeneratorTest extends TestCase
             'motto' => ['type' => Type::TEXT, 'required' => true],
         ]);
 
-        $this->assertEquals(["'required'"], (new RuleGenerator($table, 'name'))->makeRules());
-        $this->assertEquals(["'required'"], (new RuleGenerator($table, 'motto'))->makeRules());
+        $this->assertEquals(["'required'"], $this->generator($table, 'name')->makeRules());
+        $this->assertEquals(["'required'"], $this->generator($table, 'motto')->makeRules());
     }
 
     /** @test */
@@ -123,7 +129,7 @@ class RuleGeneratorTest extends TestCase
             'name' => ['unique' => true],
         ]);
 
-        $rule = new RuleGenerator($table, 'name');
+        $rule = $this->generator($table, 'name');
 
         $this->assertContains(
             'Rule::unique(\'schools\')->ignore($model)',
@@ -158,7 +164,7 @@ class RuleGeneratorTest extends TestCase
 
         $this->assertEquals(
             ["'required|integer'"],
-            (new RuleGenerator($table, 'foundation_year'))->generate()
+            $this->generator($table, 'foundation_year')->generate()
         );
 
         $this->assertEquals(
@@ -168,7 +174,7 @@ class RuleGeneratorTest extends TestCase
                 "    Rule::unique('schools')->ignore(\$model),",
                 ']',
             ],
-            (new RuleGenerator($table, 'motto'))->generate()
+            $this->generator($table, 'motto')->generate()
         );
     }
 
@@ -176,7 +182,7 @@ class RuleGeneratorTest extends TestCase
     {
         $this->assertContains(
             $value,
-            (new RuleGenerator($table, $column))->makeRules()
+            $this->generator($table, $column)->makeRules()
         );
     }
 
@@ -184,7 +190,7 @@ class RuleGeneratorTest extends TestCase
     {
         $this->assertNotContains(
             $value,
-            (new RuleGenerator($table, $column))->makeRules()
+            $this->generator($table, $column)->makeRules()
         );
     }
 
@@ -192,7 +198,7 @@ class RuleGeneratorTest extends TestCase
     {
         $this->assertEquals(
             $value,
-            (new RuleGenerator($table, $column))->makeRules()
+            $this->generator($table, $column)->makeRules()
         );
     }
 }
