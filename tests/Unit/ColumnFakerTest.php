@@ -5,19 +5,15 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Generators\ColumnFaker;
+use Ferreira\AutoCrud\Database\TableInformation;
 
 class ColumnFakerTest extends TestCase
 {
     // TODO: Mock with HP fun
 
-    /** @test */
-    public function it_accepts_a_table_information_and_a_column_name_as_arguments()
+    private function faker(TableInformation $table, string $column)
     {
-        $table = $this->mockTable('tablename');
-
-        $faker = new ColumnFaker($table, 'column');
-
-        $this->assertInstanceOf(ColumnFaker::class, $faker);
+        return app(ColumnFaker::class, ['table' => $table, 'column' => $column]);
     }
 
     /** @test */
@@ -27,7 +23,7 @@ class ColumnFakerTest extends TestCase
             'id' => ['primaryKey' => true],
         ]);
 
-        $faker = new ColumnFaker($table, 'id');
+        $faker = $this->faker($table, 'id');
 
         $this->assertEquals('', $faker->fake());
     }
@@ -38,7 +34,7 @@ class ColumnFakerTest extends TestCase
         $table = $this->mockTable('tablename');
 
         foreach (['created_at', 'updated_at'] as $column) {
-            $faker = new ColumnFaker($table, $column);
+            $faker = $this->faker($table, $column);
 
             $this->assertEquals('', $faker->fake());
         }
@@ -51,7 +47,7 @@ class ColumnFakerTest extends TestCase
             'deleted_at' => ['type' => Type::DATETIME, 'required' => false],
         ]);
 
-        $faker = new ColumnFaker($table, 'deleted_at');
+        $faker = $this->faker($table, 'deleted_at');
 
         $this->assertEquals(
             "\$faker->optional(0.9)->passthrough(\$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s'))",
@@ -84,7 +80,7 @@ class ColumnFakerTest extends TestCase
             'column' => ['type' => $type],
         ]);
 
-        $faker = new ColumnFaker($table, 'column');
+        $faker = $this->faker($table, 'column');
 
         $this->assertEquals("\$faker->$fake", $faker->fake());
     }
@@ -96,7 +92,7 @@ class ColumnFakerTest extends TestCase
             'color' => ['enum' => ['red', 'green', 'blue']],
         ]);
 
-        $faker = new ColumnFaker($table, 'color');
+        $faker = $this->faker($table, 'color');
 
         $this->assertEquals(
             '$faker->randomElement([\'red\', \'green\', \'blue\'])',
@@ -132,7 +128,7 @@ class ColumnFakerTest extends TestCase
             $column => [],
         ]);
 
-        $faker = new ColumnFaker($table, $column);
+        $faker = $this->faker($table, $column);
 
         $this->assertEquals("\$faker->$fakerProperty", $faker->fake());
     }
@@ -156,7 +152,7 @@ class ColumnFakerTest extends TestCase
 
             $this->assertNotEquals(
                 '$faker->name',
-                (new ColumnFaker($table, 'name'))->fake(),
+                $this->faker($table, 'name')->fake(),
                 "Column of type $type produced the wrong faker."
             );
         }
@@ -169,7 +165,7 @@ class ColumnFakerTest extends TestCase
             'column' => ['required' => false],
         ]);
 
-        $faker = new ColumnFaker($table, 'column');
+        $faker = $this->faker($table, 'column');
 
         $this->assertEquals(
             '$faker->optional(0.9)->sentence',
@@ -184,7 +180,7 @@ class ColumnFakerTest extends TestCase
             'pet' => ['required' => false, 'reference' => ['pets', 'id']],
         ]);
 
-        $faker = new ColumnFaker($table, 'pet');
+        $faker = $this->faker($table, 'pet');
 
         $this->assertCodeContains('
             $faker->optional(0.9)->passthrough(function () {
@@ -201,10 +197,10 @@ class ColumnFakerTest extends TestCase
             'column' => ['required' => false, 'type' => Type::DECIMAL],
         ]);
 
-        $faker = new ColumnFaker($table, 'email');
+        $faker = $this->faker($table, 'email');
         $this->assertEquals('$faker->optional(0.9)->email', $faker->fake());
 
-        $faker = new ColumnFaker($table, 'column');
+        $faker = $this->faker($table, 'column');
         $this->assertEquals('$faker->optional(0.9)->numerify(\'%##.##\')', $faker->fake());
     }
 
@@ -215,7 +211,7 @@ class ColumnFakerTest extends TestCase
             'email' => ['unique' => true],
         ]);
 
-        $faker = new ColumnFaker($table, 'email');
+        $faker = $this->faker($table, 'email');
 
         $this->assertEquals(
             '$faker->unique()->email',
@@ -230,7 +226,7 @@ class ColumnFakerTest extends TestCase
             'email' => ['unique' => true, 'required' => false],
         ]);
 
-        $faker = new ColumnFaker($table, 'email');
+        $faker = $this->faker($table, 'email');
 
         $this->assertEquals(
             '$faker->randomFloat() <= 0.9 ? $faker->unique()->email : null',
@@ -245,7 +241,7 @@ class ColumnFakerTest extends TestCase
             'user_id' => ['reference' => ['users', 'id']],
         ]);
 
-        $faker = new ColumnFaker($table, 'user_id');
+        $faker = $this->faker($table, 'user_id');
 
         $this->assertEquals(
             implode("\n", [
@@ -264,7 +260,7 @@ class ColumnFakerTest extends TestCase
             'user_id' => ['unique' => true, 'reference' => ['users', 'id']],
         ]);
 
-        $faker = new ColumnFaker($table, 'user_id');
+        $faker = $this->faker($table, 'user_id');
 
         $this->assertEquals(
             implode("\n", [
@@ -285,15 +281,15 @@ class ColumnFakerTest extends TestCase
             'parent' => ['required' => false, 'reference' => ['users', 'id']],
         ]);
 
-        $name = new ColumnFaker($table, 'name');
+        $name = $this->faker($table, 'name');
         $name->fake();
         $this->assertNull($name->referencedTable());
 
-        $avatar = new ColumnFaker($table, 'avatar_id');
+        $avatar = $this->faker($table, 'avatar_id');
         $avatar->fake();
         $this->assertEquals('avatars', $avatar->referencedTable());
 
-        $parent = new ColumnFaker($table, 'parent');
+        $parent = $this->faker($table, 'parent');
         $parent->fake();
         $this->assertEquals('users', $parent->referencedTable());
     }
@@ -308,7 +304,7 @@ class ColumnFakerTest extends TestCase
             ],
         ]);
 
-        $faker = new ColumnFaker($table, 'latest_detention');
+        $faker = $this->faker($table, 'latest_detention');
 
         $this->assertEquals(
             "\$faker->optional(0.9)->passthrough(\$faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d H:i:s'))",
