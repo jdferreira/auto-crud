@@ -41,20 +41,30 @@
 - [x] When asserting fields, if the model has a unique constraint on a boolean column, the method `beginAssertFields` must explicitly use the boolean value `false` associated with that column since the model created to check for uniqueness will already have the value `true`.
   - Solved by disallowing uniqueness on boolean columns
 
+- [x] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
+
+- [x] Words like "scissors" are tripping up the singular and plural conventions. (the route parameter is "scissors", but the parameter name in the controller is "scissor" for some reason...)
+  - Solved by not generating table names from nouns whose singular ends in s (sort of...)
+
 # Tasks to complete:
 
-- [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
+## Wish-list (non necessary but good to have):
 
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
 
 - [ ] On generated migrations, do not allow "weird" relationships. For example, table A, column X refers to id of table B, and then there is a pivot for tables A and B...
 
+- [ ] Detect weird schemata, and warn the user that unexpected results may be encountered. This includes, at least:
+  - columns whose name is also a foreign key relationship
+
 - [ ] On generated migrations, date-like columns should sometimes have a default value other than `CURRENT_TIMESTAMP`
 
-- [ ] On Table::reference, we can probably not save the name of the foreign column (it is always the primary key).
+- [ ] Allow `assertField` to test multiple fields simultaneously. This can potentially be used to test uniqueness of multiple columns or (if I'm brave enough) to test multiple-column foreign keys!
+
+## Configuration options:
 
 - [ ] Allow the user to specify the plural and singular forms of words, if they want
 
-- [ ] Words like "scissors" are tripping up the singular and plural conventions. (the route parameter is "scissors", but the parameter name in the controller is "scissor" for some reason...)
+- [ ] Fix for Laravel 8 (factories have been refactored and should be handled here)
 
-- [ ] Allow `assertField` to test multiple fields simultaneously. This can potentially be used to test uniqueness of multiple columns or (if I'm brave enough) to test multiple-column foreign keys!
+- [ ] Allow users to specify the actual generator to run for each command (defaults to the ones being currently used), as well as to simply change the stub to use but to keep the generator.
