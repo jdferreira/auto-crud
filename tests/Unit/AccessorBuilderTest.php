@@ -275,7 +275,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_snake_cases_route_parameters()
     {
-        $table = $this->mockTable('student', [
+        $table = $this->mockTable('students', [
             'school_id' => [
                 'reference' => ['magical_schools', 'id'],
             ],

@@ -261,7 +261,7 @@ class TestGeneratorTest extends TestCase
     public function it_does_not_test_default_values_on_the_create_form_when_the_table_has_none()
     {
         $code = $this->generator(
-            $this->mockTable('student', [
+            $this->mockTable('students', [
                 'pet_name' => ['default' => null],
             ])
         )->generate();
@@ -272,7 +272,7 @@ class TestGeneratorTest extends TestCase
         ', $code);
 
         $code = $this->generator(
-            $this->mockTable('student', [
+            $this->mockTable('students', [
                 'pet_name' => [],
             ])
         )->generate();

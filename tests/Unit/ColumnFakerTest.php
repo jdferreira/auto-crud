@@ -176,7 +176,7 @@ class ColumnFakerTest extends TestCase
     /** @test */
     public function it_fakes_null_on_nullable_foreign_keys_sometimes()
     {
-        $table = $this->mockTable('student', [
+        $table = $this->mockTable('students', [
             'pet' => ['required' => false, 'reference' => ['pets', 'id']],
         ]);
 

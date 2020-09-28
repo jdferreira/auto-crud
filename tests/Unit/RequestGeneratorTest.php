@@ -55,7 +55,7 @@ class RequestGeneratorTest extends TestCase
     public function it_uses_the_tablename_to_name_the_request()
     {
         $code = $this->generator(
-            $this->mockTable('student')
+            $this->mockTable('students')
         )->generate();
 
         $this->assertStringContainsString('use Illuminate\Foundation\Http\FormRequest;', $code);

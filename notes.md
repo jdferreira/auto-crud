@@ -55,3 +55,5 @@
 - [ ] Allow the user to specify the plural and singular forms of words, if they want
 
 - [ ] Words like "scissors" are tripping up the singular and plural conventions. (the route parameter is "scissors", but the parameter name in the controller is "scissor" for some reason...)
+
+- [ ] Allow `assertField` to test multiple fields simultaneously. This can potentially be used to test uniqueness of multiple columns or (if I'm brave enough) to test multiple-column foreign keys!
