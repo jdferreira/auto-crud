@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud\Generators;
 
+use Exception;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\Stub\StubRenderer;
 

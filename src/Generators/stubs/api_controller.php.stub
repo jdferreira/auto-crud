@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Http\ApiControllers;
+
+use {{ modelNamespace }}\{{ modelClass }};
+use Illuminate\Http\Response;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\{{ modelClass }}Request;
+
+class {{ modelClass }}Controller extends Controller
+{
+    public function index()
+    {
+        return {{ modelClass }}::paginate()->toJson();
+    }
+
+    public function show({{ modelClass }} {{ modelSingular }})
+    {
+        return {{ modelSingular }};
+    }
+
+    public function store({{ modelClass }}Request $request)
+    {
+        {{ modelSingular }} = {{ modelClass }}::create($request->validated());
+        {{ syncManyToManyRelationships }}
+
+        return response('', Response::HTTP_NO_CONTENT);
+    }
+
+    public function update({{ modelClass }} {{ modelSingular }}, {{ modelClass }}Request $request)
+    {
+        {{ modelSingular }}->update($request->validated());
+        {{ syncManyToManyRelationships }}
+
+        return response('', Response::HTTP_NO_CONTENT);
+    }
+
+    public function destroy({{ modelClass }} {{ modelSingular }})
+    {
+        {{ modelSingular }}->delete();
+
+        return response('', Response::HTTP_NO_CONTENT);
+    }
+}

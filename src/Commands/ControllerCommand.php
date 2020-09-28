@@ -4,6 +4,7 @@ namespace Ferreira\AutoCrud\Commands;
 
 use Illuminate\Console\Command;
 use Ferreira\AutoCrud\Generators\ControllerGenerator;
+use Ferreira\AutoCrud\Generators\ApiControllerGenerator;
 
 class ControllerCommand extends Command
 {
@@ -18,6 +19,7 @@ class ControllerCommand extends Command
         autocrud:controller
         {--table=* : The table names to base the generation on. Defaults to all tables in the database that are not pivot tables.}
         {--dir= : The directory where the models live.}
+        {--skip-api : Whether to skip generating API routes.}
     ';
 
     /**
@@ -33,5 +35,9 @@ class ControllerCommand extends Command
     public function handle()
     {
         $this->handleMultipleTables(ControllerGenerator::class);
+
+        if (! $this->option('skip-api')) {
+            $this->handleMultipleTables(ApiControllerGenerator::class);
+        }
     }
 }

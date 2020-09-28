@@ -35,12 +35,31 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
+    public function it_shows_existing_{{ tablename }}_in_the_api_index()
+    {
+        {{ modelVariablePlural }} = factory({{ modelClass }}::class, 2)->states('full_model')->create();
+
+        foreach ({{ modelVariablePlural }} as {{ modelVariableSingular }}) {
+            $this->get('/api/{{ tablename }}')
+                ->assertJsonFragment({{ modelVariableSingular }}->toArray());
+        }
+    }
+
+    /** @test */
     public function it_shows_the_values_of_{{ tablenameSingularWithArticle }}_in_the_show_view()
     {
         {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
 
         $this->get({{ modelVariableSingular }}->path())
             {{ assertSeeColumnValuesOnIndexOrShow }};
+    }
+
+    /** @test */
+    public function it_shows_the_values_of_{{ tablenameSingularWithArticle }}_in_the_api_show_view()
+    {
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+
+        $this->get('/api' . {{ modelVariableSingular }}->path())->assertExactJson({{ modelVariableSingular }}->toArray());
     }
 
     /** @test */
@@ -90,9 +109,10 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
-    public function it_keeps_old_values_on_unsuccessful_{{ tablenameSingular }}_update()
+    public function it_keeps_old_values_on_unsuccessful_updates_of_{{ tablename }}()
     {
         {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        $oldValue = {{ modelVariableSingular }}->{{ oneConstraintField }};
 
         $updated = {{ modelVariableSingular }}->toArray();
         $updated['{{ oneConstraintField }}'] = {{ oneInvalidValue }};
@@ -102,6 +122,24 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         $response = $this->put({{ modelVariableSingular }}->path(), $updated);
 
         $response->assertSessionHasInput('{{ oneConstraintField }}', {{ oneInvalidValue }});
+
+        $this->assertEquals($oldValue, {{ modelVariableSingular }}->fresh()->{{ oneConstraintField }});
+    }
+
+    /** @test */
+    public function it_keeps_old_values_on_unsuccessful_api_updates_of_{{ tablename }}()
+    {
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        $oldValue = {{ modelVariableSingular }}->{{ oneConstraintField }};
+
+        $updated = {{ modelVariableSingular }}->toArray();
+        $updated['{{ oneConstraintField }}'] = {{ oneInvalidValue }};
+
+        $this->withExceptionHandling();
+
+        $this->put('/api' . {{ modelVariableSingular }}->path(), $updated);
+
+        $this->assertEquals($oldValue, {{ modelVariableSingular }}->fresh()->{{ oneConstraintField }});
     }
 
     /** @test */
@@ -140,6 +178,15 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
+    public function it_validates_field_values_when_creating_{{ tablenameSingularWithArticle }}_with_api()
+    {
+        $new = factory({{ modelClass }}::class)->raw();
+        {{ updateNewWithManyToManyRelationships }}
+
+        $this->beginAssertFields('POST', '/api/{{ tablename }}', $new)->assertFields();
+    }
+
+    /** @test */
     public function it_creates_{{ tablename }}_when_asked_to()
     {
         $this->assertNull({{ modelClass }}::find(1));
@@ -148,6 +195,22 @@ class {{ modelClassPlural }}CrudTest extends TestCase
         {{ updateNewWithManyToManyRelationships }}
 
         $this->post('/{{ tablename }}', $new);
+
+        $this->assertNotNull({{ modelVariableSingular }} = {{ modelClass }}::find(1));
+
+        {{ assertNewEqualsModel }}
+        {{ assertNewEqualsModelForManyToManyRelationships }}
+    }
+
+    /** @test */
+    public function it_creates_{{ tablename }}_with_api_when_asked_to()
+    {
+        $this->assertNull({{ modelClass }}::find(1));
+
+        $new = factory({{ modelClass }}::class)->raw();
+        {{ updateNewWithManyToManyRelationships }}
+
+        $this->post('/api/{{ tablename }}', $new);
 
         $this->assertNotNull({{ modelVariableSingular }} = {{ modelClass }}::find(1));
 
@@ -170,6 +233,20 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
+    public function it_validates_field_values_when_updating_{{ tablenameSingularWithArticle }}_with_api()
+    {
+        $new = factory({{ modelClass }}::class)->raw();
+
+        {{ modelVariableSingular }} = new {{ modelClass }}($new);
+        {{ modelVariableSingular }}->save();
+
+        {{ modelVariableStoreSomeManyToManyRelationships }}
+        {{ updateNewWithManyToManyRelationships }}
+
+        $this->beginAssertFields('PUT', '/api' . {{ modelVariableSingular }}->path(), $new)->assertFields();
+    }
+
+    /** @test */
     public function it_updates_{{ tablename }}_when_asked_to()
     {
         {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
@@ -187,11 +264,38 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     }
 
     /** @test */
+    public function it_updates_{{ tablename }}_with_api_when_asked_to()
+    {
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableStoreSomeManyToManyRelationships }}
+
+        $new = factory({{ modelClass }}::class)->raw();
+        {{ updateNewWithManyToManyRelationships }}
+
+        $this->put('/api' . {{ modelVariableSingular }}->path(), $new);
+
+        {{ modelVariableSingular }} = {{ modelVariableSingular }}->fresh();
+
+        {{ assertNewEqualsModel }}
+        {{ assertNewEqualsModelForManyToManyRelationships }}
+    }
+
+    /** @test */
     public function it_deletes_{{ tablename }}_when_asked_to()
     {
         {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
 
         $this->delete({{ modelVariableSingular }}->path());
+
+        $this->assertNull({{ modelClass }}::find({{ modelVariableSingular }}->id));
+    }
+
+    /** @test */
+    public function it_deletes_{{ tablename }}_with_api_when_asked_to()
+    {
+        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+
+        $this->delete('/api' . {{ modelVariableSingular }}->path());
 
         $this->assertNull({{ modelClass }}::find({{ modelVariableSingular }}->id));
     }

@@ -7,7 +7,7 @@ use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 trait TableBasedCommand
 {
-    protected function handleMultipleTables($class)
+    protected function handleMultipleTables($class, $api = true)
     {
         $tablenames = $this->tablenames();
 
@@ -15,6 +15,10 @@ trait TableBasedCommand
             $table = $this->laravel->make(TableInformation::class, [
                 'name' => $name,
             ]);
+
+            if (! $api && method_exists($table, 'skipApi')) {
+                $table->skipApi();
+            }
 
             $this->laravel->make($class, [
                 'table' => $table,

@@ -17,6 +17,8 @@ class {{ modelClass }} extends Model
 
     {{ fillable }}
 
+    {{ hidden }}
+
     {{ relationships }}
 
     {{ path }}

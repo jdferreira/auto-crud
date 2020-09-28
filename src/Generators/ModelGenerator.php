@@ -53,6 +53,7 @@ class ModelGenerator extends TableBasedGenerator
             'customPrimaryKey' => $this->primaryKey(),
             'casts' => $this->casts(),
             'fillable' => $this->fillable(),
+            'hidden' => $this->hidden(),
             'relationships' => $this->relationships(),
             'path' => $this->path(),
         ];
@@ -129,12 +130,6 @@ class ModelGenerator extends TableBasedGenerator
                 continue;
             }
 
-            $isForeignKey = $this->table->reference($name) !== null;
-
-            if ($isForeignKey) {
-                continue;
-            }
-
             $type = $this->table->type($name);
 
             if (($cast = Arr::get($map, $type)) !== null) {
@@ -192,6 +187,15 @@ class ModelGenerator extends TableBasedGenerator
                 '];',
             ]
         );
+    }
+
+    protected function hidden()
+    {
+        if ($this->table->softDeletes()) {
+            return 'protected $hidden = [\'deleted_at\'];';
+        } else {
+            return '';
+        }
     }
 
     protected function relationships()

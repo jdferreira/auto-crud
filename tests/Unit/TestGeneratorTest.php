@@ -391,25 +391,35 @@ class TestGeneratorTest extends TestCase
     public function it_does_not_test_for_old_values_when_all_fields_are_unconstraint()
     {
         $code = $this->generator(
-            $this->mockTable('student', [
+            $this->mockTable('students', [
                 'pet_name' => ['required' => true],
             ])
         )->generate();
 
         $this->assertCodeContains('
             /** @test */
-            public function it_keeps_old_values_on_unsuccessful_student_update()
+            public function it_keeps_old_values_on_unsuccessful_updates_of_students()
+        ', $code);
+
+        $this->assertCodeContains('
+            /** @test */
+            public function it_keeps_old_values_on_unsuccessful_api_updates_of_students()
         ', $code);
 
         $code = $this->generator(
-            $this->mockTable('student', [
+            $this->mockTable('students', [
                 'pet_name' => ['required' => false],
             ])
         )->generate();
 
         $this->assertCodeNotContains('
             /** @test */
-            public function it_keeps_old_values_on_unsuccessful_student_update()
+            public function it_keeps_old_values_on_unsuccessful_updates_of_students()
+        ', $code);
+
+        $this->assertCodeNotContains('
+            /** @test */
+            public function it_keeps_old_values_on_unsuccessful_api_updates_of_students()
         ', $code);
     }
 
@@ -923,5 +933,19 @@ class TestGeneratorTest extends TestCase
                 $this->assertEquals($new[\'classes\'], $student->classes->pluck(\'id\')->all());
             }
         ', $this->generator($students)->generate());
+    }
+
+    /** @test */
+    public function it_can_skip_api_tests()
+    {
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->skipApi()->generate();
+
+        preg_match_all('/\/\*\* @test \*\/\n *.*function \w+/', $code, $matches);
+
+        foreach ($matches[0] as $match) {
+            $this->assertNotRegExp('/(?:_|\b)api(?:_|\b)/', $match);
+        }
     }
 }

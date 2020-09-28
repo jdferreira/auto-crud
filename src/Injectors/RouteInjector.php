@@ -108,12 +108,14 @@ class RouteInjector
 
     private function generateApiRoutes(): array
     {
-        $lines = [];
+        $lines = ['Route::group([\'namespace\' => \'\App\Http\ApiControllers\'], function () {'];
 
         foreach ($this->tables as $table) {
             $controller = Word::class($table) . 'Controller';
-            $lines[] = "Route::apiResource('/$table', '$controller');";
+            $lines[] = "    Route::apiResource('/$table', '$controller');";
         }
+
+        $lines[] = '});';
 
         return $lines;
     }

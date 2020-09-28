@@ -12,6 +12,9 @@ use Ferreira\AutoCrud\Database\ManyToMany;
 
 class TestGenerator extends TableBasedGenerator
 {
+    /** @var bool */
+    private $skipApi = false;
+
     /** @var null|string */
     private $oneConstraintField = null;
 
@@ -29,6 +32,16 @@ class TestGenerator extends TableBasedGenerator
     protected function filename(): string
     {
         return base_path('tests/Feature/' . Word::classPlural($this->table->name()) . 'CrudTest.php');
+    }
+
+    /**
+     * @return $this
+     */
+    public function skipApi(): self
+    {
+        $this->skipApi = true;
+
+        return $this;
     }
 
     protected function replacements(): array
@@ -83,7 +96,8 @@ class TestGenerator extends TableBasedGenerator
         }
 
         if ($this->oneConstraintField === null) {
-            $code = $this->removeMethod("it_keeps_old_values_on_unsuccessful_${placeholder}_update", $code);
+            $code = $this->removeMethod("it_keeps_old_values_on_unsuccessful_updates_of_${tablename}", $code);
+            $code = $this->removeMethod("it_keeps_old_values_on_unsuccessful_api_updates_of_${tablename}", $code);
         }
 
         if (count($this->table->allReferences()) === 0) {
@@ -92,6 +106,19 @@ class TestGenerator extends TableBasedGenerator
 
         if (count($this->db->manyToMany($this->table->name())) === 0) {
             $code = $this->removeMethod("it_populates_many_to_many_relationships_on_the_create_and_edit_forms_of_${tablename}", $code);
+        }
+
+        if ($this->skipApi) {
+            $singular = $this->tablenameSingularWithArticle();
+
+            $code = $this->removeMethod("it_shows_existing_{$tablename}_in_the_api_index", $code);
+            $code = $this->removeMethod("it_shows_the_values_of_{$singular}_in_the_api_show_view", $code);
+            $code = $this->removeMethod("it_keeps_old_values_on_unsuccessful_api_updates_of_{$tablename}", $code);
+            $code = $this->removeMethod("it_validates_field_values_when_creating_{$singular}_with_api", $code);
+            $code = $this->removeMethod("it_creates_{$tablename}_with_api_when_asked_to", $code);
+            $code = $this->removeMethod("it_validates_field_values_when_updating_{$singular}_with_api", $code);
+            $code = $this->removeMethod("it_updates_{$tablename}_with_api_when_asked_to", $code);
+            $code = $this->removeMethod("it_deletes_{$tablename}_with_api_when_asked_to", $code);
         }
 
         return $code;

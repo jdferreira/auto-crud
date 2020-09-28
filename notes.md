@@ -36,6 +36,8 @@
 - [x] Pivot tables should mean that one of the models has a dropdown for the other model
   - [x] This is computed as such: the first column in the pivot corresponds to the model that shows the dropdown (think `role_user` with columns `user_id` and `role_id`: in this case, it is the user that specifies the roles they have)
 
+- [x] Test APIs on the generated test classes
+
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
