@@ -12,6 +12,7 @@ use Illuminate\Database\Connection;
 use Doctrine\DBAL\Types\Type as DoctrineType;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
+use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Types as DoctrineTypes;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Database\DatabaseException;
@@ -292,8 +293,6 @@ class TableInformationTest extends TestCase
     {
         /** @var AbstractSchemaManager&MockInterface $doctrine */
         $doctrine = $this->mock(AbstractSchemaManager::class, function ($mock) {
-            // @var AbstractSchemaManager&MockInterface $mock
-
             $mock->shouldReceive('tablesExist')->withArgs(['tablename'])->andReturn(true);
 
             $mock
@@ -311,6 +310,47 @@ class TableInformationTest extends TestCase
         /** @var Connection&MockInterface $connection */
         $connection = $this->mock(Connection::class, function ($mock) use ($doctrine) {
             $mock->shouldReceive('getDoctrineSchemaManager')->andReturn($doctrine);
+        });
+
+        $this->addToAssertionCount(-$doctrine->mockery_getExpectationCount());
+        $this->addToAssertionCount(-$connection->mockery_getExpectationCount());
+
+        $this->assertException(DatabaseException::class, function () {
+            app(TableInformation::class, ['name' => 'tablename']);
+        });
+    }
+
+    /** @test */
+    public function it_disallows_non_nullable_unique_indexes_on_boolean_columns()
+    {
+        /** @var AbstractSchemaManager&MockInterface $doctrine */
+        $doctrine = $this->mock(AbstractSchemaManager::class, function ($mock) {
+            $mock->shouldReceive('tablesExist')->withArgs(['tablename'])->andReturn(true);
+
+            $mock
+                ->shouldReceive('listTableColumns')
+                ->withArgs(['tablename'])
+                ->andReturn([
+                    'status' => new Column('status', DoctrineType::getType(DoctrineTypes::BOOLEAN)),
+                ]);
+
+            $mock
+                ->shouldReceive('listTableIndexes')
+                ->andReturn([
+                    'unique' => new Index('', ['status'], true),
+                ]);
+
+            $mock
+                ->shouldReceive('listTableForeignKeys')
+                ->withArgs(['tablename'])
+                ->andReturn([]);
+        });
+
+        /** @var Connection&MockInterface $connection */
+        $connection = $this->mock(Connection::class, function ($mock) use ($doctrine) {
+            $mock->shouldReceive('getDoctrineSchemaManager')->andReturn($doctrine);
+
+            $mock->shouldReceive('getDriverName')->andReturn(null);
         });
 
         $this->addToAssertionCount(-$doctrine->mockery_getExpectationCount());

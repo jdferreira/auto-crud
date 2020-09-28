@@ -38,6 +38,9 @@
 
 - [x] Test APIs on the generated test classes
 
+- [x] When asserting fields, if the model has a unique constraint on a boolean column, the method `beginAssertFields` must explicitly use the boolean value `false` associated with that column since the model created to check for uniqueness will already have the value `true`.
+  - Solved by disallowing uniqueness on boolean columns
+
 # Tasks to complete:
 
 - [ ] Requests with time columns containing the value '25:00:00' are somehow being accepted. Why?
@@ -45,8 +48,6 @@
 - [ ] On models that have no specific need for the full_model (it still needs to exist!), simplify the state definition.
 
 - [ ] On generated migrations, do not allow "weird" relationships. For example, table A, column X refers to id of table B, and then there is a pivot for tables A and B...
-
-- [ ] When asserting fields, if the model has a unique constraint on a boolean column, the method `beginAssertFields` must explicitly use the boolean value `false` associated with that column since the model created to check for uniqueness will already have the value `true`.
 
 - [ ] On generated migrations, date-like columns should sometimes have a default value other than `CURRENT_TIMESTAMP`
 

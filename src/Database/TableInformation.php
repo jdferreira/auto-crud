@@ -78,6 +78,7 @@ class TableInformation
         $this->computeDefaults();
 
         $this->assertForeignKeysDontHaveDefaults();
+        $this->assertNonUniqueBooleans();
     }
 
     private function schema(): AbstractSchemaManager
@@ -204,6 +205,15 @@ class TableInformation
         foreach ($this->columns as $name => $column) {
             if ($this->reference($name) !== null && $column->getDefault() !== null) {
                 throw new DatabaseException("Column $name of table $this->name has a foreign key and a default value");
+            }
+        }
+    }
+
+    private function assertNonUniqueBooleans()
+    {
+        foreach ($this->columns() as $column) {
+            if ($this->type($column) === Type::BOOLEAN && $this->unique($column) && $this->required($column)) {
+                throw new DatabaseException("Column $column of table $this->name is a unique non-nullable boolean column");
             }
         }
     }
