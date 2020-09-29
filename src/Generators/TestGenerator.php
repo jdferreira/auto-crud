@@ -466,7 +466,7 @@ class TestGenerator extends TableBasedGenerator
 
                 $name = Word::kebab($foreignTable);
 
-                return new Collection([
+                return collect([
                     "    foreach ($foreignModels as $foreignModel) {",
                     '        $this->assertHTML($this->xpath(',
                     "            \"//select[@name='$name' and @multiple]/option[@value='%s' and .='%s']\",",

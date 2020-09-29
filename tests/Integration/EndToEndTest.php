@@ -4,8 +4,8 @@ namespace Tests\Integration;
 
 use Exception;
 use Tests\TestCase;
-use Tests\MigrationSetGenerator;
 use Illuminate\Support\Facades\Artisan;
+use Ferreira\AutoCrud\Generators\MigrationSetGenerator;
 
 class EndToEndTest extends TestCase
 {
