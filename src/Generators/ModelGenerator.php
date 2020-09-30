@@ -5,6 +5,8 @@ namespace Ferreira\AutoCrud\Generators;
 use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\App;
+use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\Database\OneToOne;
 use Ferreira\AutoCrud\Database\OneToMany;
 use Ferreira\AutoCrud\Database\ManyToMany;
@@ -44,7 +46,7 @@ class ModelGenerator extends TableBasedGenerator
      */
     protected function replacements(): array
     {
-        return [
+        $result = [
             'namespace' => $this->modelNamespace(),
             'modelClass' => $this->modelClass(),
             'importSoftDeletesTrait' => $this->importSoftDeletes(),
@@ -57,6 +59,13 @@ class ModelGenerator extends TableBasedGenerator
             'relationships' => $this->relationships(),
             'path' => $this->path(),
         ];
+
+        if (App::make(VersionChecker::class)->after('8.0.0')) {
+            $result['importHasFactory'] = 'use Illuminate\Database\Eloquent\Factories\HasFactory;';
+            $result['useHasFactory'] = 'use HasFactory;';
+        }
+
+        return $result;
     }
 
     protected function importSoftDeletes()

@@ -7,6 +7,7 @@ use Ferreira\AutoCrud\Type;
 use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\AccessorBuilder;
 use Ferreira\AutoCrud\Database\ManyToMany;
 
@@ -79,6 +80,9 @@ class TestGenerator extends TableBasedGenerator
             'modelVariableStoreSomeManyToManyRelationships' => $this->modelVariableStoreSomeManyToManyRelationships(),
             'assertFields' => $assertFields,
             'assertManyToManyFields' => $this->assertManyToManyFields(),
+            'simpleFactory' => $this->simpleFactory(),
+            'fullFactory' => $this->fullFactory(),
+            'fullFactoryForTwo' => $this->fullFactoryForTwo(),
         ];
     }
 
@@ -786,14 +790,14 @@ class TestGenerator extends TableBasedGenerator
             ->all();
 
         $model = str_replace('_', ' ', $this->tablenameSingular());
-        $modelClass = Word::class($this->table->name());
         $modelVariable = Word::variableSingular($this->table->name());
+        $factory = $this->fullFactory();
 
         if (count($initialState) > 0) {
             return array_merge(
                 [
                     "// Create one $model to test fields that should contain unique values",
-                    "$modelVariable = factory($modelClass::class)->state('full_model')->create([",
+                    "$modelVariable = {$factory}->create([",
                 ],
                 $initialState,
                 [
@@ -804,7 +808,7 @@ class TestGenerator extends TableBasedGenerator
         } else {
             return [
                 "// Create one $model to test fields that should contain unique values",
-                "$modelVariable = factory($modelClass::class)->state('full_model')->create();",
+                "$modelVariable = {$factory}->create();",
                 '',
             ];
         }
@@ -1013,6 +1017,39 @@ class TestGenerator extends TableBasedGenerator
         }
 
         return [];
+    }
+
+    public function simpleFactory()
+    {
+        $modelClass = Word::class($this->table->name());
+
+        if (app(VersionChecker::class)->before('8.0.0')) {
+            return "factory($modelClass::class)";
+        } else {
+            return "$modelClass::factory()";
+        }
+    }
+
+    public function fullFactory()
+    {
+        $modelClass = Word::class($this->table->name());
+
+        if (app(VersionChecker::class)->before('8.0.0')) {
+            return "factory($modelClass::class)->state('full')";
+        } else {
+            return "$modelClass::factory()->full()";
+        }
+    }
+
+    public function fullFactoryForTwo()
+    {
+        $modelClass = Word::class($this->table->name());
+
+        if (app(VersionChecker::class)->before('8.0.0')) {
+            return "factory($modelClass::class, 2)->states('full')";
+        } else {
+            return "$modelClass::factory()->times(2)->full()";
+        }
     }
 
     private function quoteValue($value): string

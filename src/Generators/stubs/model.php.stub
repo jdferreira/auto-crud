@@ -3,10 +3,13 @@
 namespace {{ namespace }};
 
 use Illuminate\Database\Eloquent\Model;
+{{ importHasFactory }}
 {{ importSoftDeletesTrait }}
 
 class {{ modelClass }} extends Model
 {
+    {{ useHasFactory }}
+
     {{ useSoftDeletesTrait }}
 
     {{ disableTimestamps }}

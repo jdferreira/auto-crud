@@ -68,6 +68,6 @@
 
 - [ ] Allow the user to specify the plural and singular forms of words, if they want
 
-- [ ] Fix for Laravel 8 (factories have been refactored and should be handled here)
+- [x] Fix for Laravel 8 (factories have been refactored and should be handled here)
 
 - [ ] Allow users to specify the actual generator to run for each command (defaults to the ones being currently used), as well as to simply change the stub to use but to keep the generator.

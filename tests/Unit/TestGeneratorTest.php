@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
+use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\Generators\TestGenerator;
 use Ferreira\AutoCrud\Database\TableInformation;
 
@@ -532,7 +533,7 @@ class TestGeneratorTest extends TestCase
 
         $this->assertEquals([
             '// Create one school to test fields that should contain unique values',
-            "\$school = factory(School::class)->state('full_model')->create([",
+            "\$school = factory(School::class)->state('full')->create([",
             "    'name' => 'John Doe',",
             ']);',
             '',
@@ -566,7 +567,7 @@ class TestGeneratorTest extends TestCase
 
         $this->assertEquals([
             '// Create one school to test fields that should contain unique values',
-            "\$school = factory(School::class)->state('full_model')->create();",
+            "\$school = factory(School::class)->state('full')->create();",
         ], array_slice($lines, 0, 2));
     }
 
@@ -947,5 +948,17 @@ class TestGeneratorTest extends TestCase
         foreach ($matches[0] as $match) {
             $this->assertNotRegExp('/(?:_|\b)api(?:_|\b)/', $match);
         }
+    }
+
+    /** @test */
+    public function is_uses_the_correct_factory_syntax_for_laravel_eight()
+    {
+        app(VersionChecker::class)->mockVersion('8.0.0');
+
+        $code = $this->generator(
+            $this->mockTable('students')
+        )->generate();
+
+        $this->assertStringContainsString('Student::factory()', $code);
     }
 }

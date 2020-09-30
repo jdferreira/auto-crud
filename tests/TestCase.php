@@ -6,6 +6,7 @@ use Exception;
 use Ferreira\AutoCrud\Type;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Connection;
+use Ferreira\AutoCrud\VersionChecker;
 use Illuminate\Filesystem\Filesystem;
 use Ferreira\AutoCrud\ServiceProvider;
 use Illuminate\Support\Facades\Artisan;
@@ -56,6 +57,8 @@ abstract class TestCase extends BaseTestCase
     public function setUp(): void
     {
         parent::setUp();
+
+        assert(app(VersionChecker::class)->before('8.0.0'));
 
         $this->files = app(Filesystem::class);
 

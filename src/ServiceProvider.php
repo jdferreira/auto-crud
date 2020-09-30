@@ -2,6 +2,7 @@
 
 namespace Ferreira\AutoCrud;
 
+use Illuminate\Support\Facades\App;
 use Ferreira\AutoCrud\Commands\TestCommand;
 use Ferreira\AutoCrud\Commands\ViewCommand;
 use Ferreira\AutoCrud\Commands\ModelCommand;
@@ -11,7 +12,9 @@ use Ferreira\AutoCrud\Commands\FactoryCommand;
 use Ferreira\AutoCrud\Commands\RequestCommand;
 use Ferreira\AutoCrud\Commands\AutoCrudCommand;
 use Ferreira\AutoCrud\Commands\ControllerCommand;
+use Ferreira\AutoCrud\Generators\FactoryGenerator;
 use Ferreira\AutoCrud\Database\DatabaseInformation;
+use Ferreira\AutoCrud\Generators\LegacyFactoryGenerator;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -32,5 +35,10 @@ class ServiceProvider extends BaseServiceProvider
         $this->commands(TestCommand::class);
 
         $this->app->singleton(DatabaseInformation::class);
+        $this->app->singleton(VersionChecker::class);
+
+        if (App::make(VersionChecker::class)->before('8.0.0')) {
+            $this->app->bind(FactoryGenerator::class, LegacyFactoryGenerator::class);
+        }
     }
 }

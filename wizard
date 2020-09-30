@@ -2,7 +2,6 @@
 
 use Illuminate\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Contracts\Foundation\Application;
 use Ferreira\AutoCrud\Generators\MigrationSetGenerator;
 
 require __DIR__ . '/vendor/autoload.php';
@@ -11,7 +10,7 @@ class SetupEmptyLaravel
 {
     public function run()
     {
-        exec('composer create-project laravel/laravel --prefer-dist . "7.*"');
+        exec('composer create-project laravel/laravel --prefer-dist . "8.*"');
 
         $this->initialize();
 
@@ -58,10 +57,7 @@ class SetupEmptyLaravel
         $contents = file_get_contents('phpunit.xml');
 
         $contents = preg_replace(
-            [
-                '/<!-- (<server name="DB_CONNECTION" value="sqlite"\/>) -->/',
-                '/<!-- (<server name="DB_DATABASE" value=":memory:"\/>) -->/',
-            ],
+            '/<!-- (<server name="DB_.*".*\/>) -->/',
             '$1',
             $contents
         );
@@ -76,7 +72,7 @@ class SetupEmptyLaravel
         $composer['require-dev']['jdferreira/autocrud'] = '@dev';
         $composer['repositories'][] = ['type' => 'path', 'url' => '/var/www'];
 
-        file_put_contents('composer.json', json_encode($composer));
+        file_put_contents('composer.json', json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         exec('composer update');
     }

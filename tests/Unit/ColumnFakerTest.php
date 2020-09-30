@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
+use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\Generators\ColumnFaker;
 use Ferreira\AutoCrud\Database\TableInformation;
 
@@ -185,6 +186,24 @@ class ColumnFakerTest extends TestCase
         $this->assertCodeContains('
             $faker->optional(0.9)->passthrough(function () {
                 return factory(Pet::class)->create()->id;
+            })
+        ', $faker->fake());
+    }
+
+    /** @test */
+    public function it_uses_the_correct_factory_syntax_for_laravel_eight()
+    {
+        app(VersionChecker::class)->mockVersion('8.0.0');
+
+        $table = $this->mockTable('students', [
+            'pet' => ['required' => false, 'reference' => ['pets', 'id']],
+        ]);
+
+        $faker = $this->faker($table, 'pet');
+
+        $this->assertCodeContains('
+            $this->faker->optional(0.9)->passthrough(function () {
+                return Pet::factory()->create()->id;
             })
         ', $faker->fake());
     }

@@ -26,7 +26,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_shows_existing_{{ tablename }}_in_the_index()
     {
-        {{ modelVariablePlural }} = factory({{ modelClass }}::class, 2)->states('full_model')->create();
+        {{ modelVariablePlural }} = {{ fullFactoryForTwo }}->create();
 
         foreach ({{ modelVariablePlural }} as {{ modelVariableSingular }}) {
             $this->get('/{{ tablename }}')
@@ -37,7 +37,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_shows_existing_{{ tablename }}_in_the_api_index()
     {
-        {{ modelVariablePlural }} = factory({{ modelClass }}::class, 2)->states('full_model')->create();
+        {{ modelVariablePlural }} = {{ fullFactoryForTwo }}->create();
 
         foreach ({{ modelVariablePlural }} as {{ modelVariableSingular }}) {
             $this->get('/api/{{ tablename }}')
@@ -48,7 +48,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_shows_the_values_of_{{ tablenameSingularWithArticle }}_in_the_show_view()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = {{ fullFactory }}->create();
 
         $this->get({{ modelVariableSingular }}->path())
             {{ assertSeeColumnValuesOnIndexOrShow }};
@@ -57,7 +57,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_shows_the_values_of_{{ tablenameSingularWithArticle }}_in_the_api_show_view()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = {{ fullFactory }}->create();
 
         $this->get('/api' . {{ modelVariableSingular }}->path())->assertExactJson({{ modelVariableSingular }}->toArray());
     }
@@ -87,7 +87,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_asks_for_all_columns_on_the_edit_form_of_{{ tablenameSingularWithArticle }}()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = {{ fullFactory }}->create();
 
         $document = $this->getDOMDocument(
             $this->get({{ modelVariableSingular }}->path() . '/edit')
@@ -99,7 +99,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_starts_the_edit_form_with_the_{{ tablenameSingular }}_current_values()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = {{ fullFactory }}->create();
 
         $document = $this->getDOMDocument(
             $this->get({{ modelVariableSingular }}->path() . '/edit')
@@ -111,7 +111,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_keeps_old_values_on_unsuccessful_updates_of_{{ tablename }}()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = {{ fullFactory }}->create();
         $oldValue = {{ modelVariableSingular }}->{{ oneConstraintField }};
 
         $updated = {{ modelVariableSingular }}->toArray();
@@ -129,7 +129,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_keeps_old_values_on_unsuccessful_api_updates_of_{{ tablename }}()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->states('full_model')->create();
+        {{ modelVariableSingular }} = {{ fullFactory }}->create();
         $oldValue = {{ modelVariableSingular }}->{{ oneConstraintField }};
 
         $updated = {{ modelVariableSingular }}->toArray();
@@ -161,7 +161,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
 
         {{ assertRequiredFields }}
 
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = {{ simpleFactory }}->create();
 
         $document = $this->getDOMDocument($this->get({{ modelVariableSingular }}->path() . '/edit'));
 
@@ -171,7 +171,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_validates_field_values_when_creating_{{ tablenameSingularWithArticle }}()
     {
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
         {{ updateNewWithManyToManyRelationships }}
 
         $this->beginAssertFields('POST', '/{{ tablename }}', $new)->assertFields();
@@ -180,7 +180,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_validates_field_values_when_creating_{{ tablenameSingularWithArticle }}_with_api()
     {
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
         {{ updateNewWithManyToManyRelationships }}
 
         $this->beginAssertFields('POST', '/api/{{ tablename }}', $new)->assertFields();
@@ -191,7 +191,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     {
         $this->assertNull({{ modelClass }}::find(1));
 
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
         {{ updateNewWithManyToManyRelationships }}
 
         $this->post('/{{ tablename }}', $new);
@@ -207,7 +207,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     {
         $this->assertNull({{ modelClass }}::find(1));
 
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
         {{ updateNewWithManyToManyRelationships }}
 
         $this->post('/api/{{ tablename }}', $new);
@@ -221,7 +221,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_validates_field_values_when_updating_{{ tablenameSingularWithArticle }}()
     {
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
 
         {{ modelVariableSingular }} = new {{ modelClass }}($new);
         {{ modelVariableSingular }}->save();
@@ -235,7 +235,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_validates_field_values_when_updating_{{ tablenameSingularWithArticle }}_with_api()
     {
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
 
         {{ modelVariableSingular }} = new {{ modelClass }}($new);
         {{ modelVariableSingular }}->save();
@@ -249,10 +249,10 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_updates_{{ tablename }}_when_asked_to()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = {{ simpleFactory }}->create();
         {{ modelVariableStoreSomeManyToManyRelationships }}
 
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
         {{ updateNewWithManyToManyRelationships }}
 
         $this->put({{ modelVariableSingular }}->path(), $new);
@@ -266,10 +266,10 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_updates_{{ tablename }}_with_api_when_asked_to()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = {{ simpleFactory }}->create();
         {{ modelVariableStoreSomeManyToManyRelationships }}
 
-        $new = factory({{ modelClass }}::class)->raw();
+        $new = {{ simpleFactory }}->raw();
         {{ updateNewWithManyToManyRelationships }}
 
         $this->put('/api' . {{ modelVariableSingular }}->path(), $new);
@@ -283,7 +283,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_deletes_{{ tablename }}_when_asked_to()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = {{ simpleFactory }}->create();
 
         $this->delete({{ modelVariableSingular }}->path());
 
@@ -293,7 +293,7 @@ class {{ modelClassPlural }}CrudTest extends TestCase
     /** @test */
     public function it_deletes_{{ tablename }}_with_api_when_asked_to()
     {
-        {{ modelVariableSingular }} = factory({{ modelClass }}::class)->create();
+        {{ modelVariableSingular }} = {{ simpleFactory }}->create();
 
         $this->delete('/api' . {{ modelVariableSingular }}->path());
 

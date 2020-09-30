@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
+use Illuminate\Support\Facades\App;
+use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\Database\TableInformation;
 use Ferreira\AutoCrud\Generators\ModelGenerator;
 
@@ -352,5 +354,34 @@ class ModelGeneratorTest extends TestCase
         $code = $generator->generate();
 
         $this->assertStringContainsString('public $timestamps = false;', $code);
+    }
+
+    /** @test */
+    public function it_checks_for_laravel_version()
+    {
+        App::shouldReceive('make')
+        ->with(VersionChecker::class)
+            ->atLeast()->once()
+            ->andReturn(new VersionChecker);
+
+        $this->generator($this->mockTable('students'))->generate();
+    }
+
+    /** @test */
+    public function it_handles_factories_on_laravel_eight()
+    {
+        app(VersionChecker::class)->mockVersion('7.0.0');
+
+        $code = $this->generator($this->mockTable('students'))->generate();
+
+        $this->assertCodeNotContains('use Illuminate\Database\Eloquent\Factories\HasFactory;', $code);
+        $this->assertCodeNotContains('use HasFactory;', $code);
+
+        app(VersionChecker::class)->mockVersion('8.0.0');
+
+        $code = $this->generator($this->mockTable('students'))->generate();
+
+        $this->assertCodeContains('use Illuminate\Database\Eloquent\Factories\HasFactory;', $code);
+        $this->assertCodeContains('use HasFactory;', $code);
     }
 }

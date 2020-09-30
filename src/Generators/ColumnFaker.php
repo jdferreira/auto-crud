@@ -7,6 +7,7 @@ use Ferreira\AutoCrud\Word;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\Database\TableInformation;
 
 class ColumnFaker
@@ -89,7 +90,7 @@ class ColumnFaker
                 // both `unique()` and `optional(0.9)`. However, since Faker is
                 // not prepared to handle both modifiers simultaneously, we must
                 // roll out the potential for null ourselves.
-                return "\$faker->randomFloat() <= 0.9 ? $fake : null";
+                return $this->fakerPrefix() . "->randomFloat() <= 0.9 ? $fake : null";
             } else {
                 return $fake;
             }
@@ -102,17 +103,26 @@ class ColumnFaker
         return $fake;
     }
 
+    private function fakerPrefix(): string
+    {
+        return app(VersionChecker::class)->before('8.0.0')
+            ? '$faker'
+            : '$this->faker';
+    }
+
     private function addModifier(string $modifier, string $fake)
     {
-        if (Str::startsWith($fake, '$faker->')) {
-            $partial = Str::substr($fake, Str::length('$faker->'));
+        $prefix = $this->fakerPrefix() . '->';
+
+        if (Str::startsWith($fake, $prefix)) {
+            $partial = Str::substr($fake, Str::length($prefix));
 
             if (! Str::contains($partial, '->')) {
-                return "\$faker->{$modifier}->$partial";
+                return $this->fakerPrefix() . "->$modifier->$partial";
             }
         }
 
-        return "\$faker->{$modifier}->passthrough($fake)";
+        return $this->fakerPrefix() . "->{$modifier}->passthrough($fake)";
     }
 
     private function default()
@@ -123,7 +133,7 @@ class ColumnFaker
         ];
 
         if (($fake = Arr::get($map, $this->table->type($this->column))) !== null) {
-            return "\$faker->$fake";
+            return $this->fakerPrefix() . "->$fake";
         }
     }
 
@@ -134,7 +144,7 @@ class ColumnFaker
                 return '\'' . str_replace('\'', '\\\'', str_replace('\\', '\\\\', $value)) . '\'';
             })->join(', ');
 
-            return '$faker->randomElement([' . $choices . '])';
+            return $this->fakerPrefix() . "->randomElement([$choices])";
         }
     }
 
@@ -147,13 +157,23 @@ class ColumnFaker
 
             $modelClass = Word::class($foreignTable, true);
 
-            $state = $this->forceRequired
-                ? "->state('full_model')"
-                : '';
+            $laravelSeven = app(VersionChecker::class)->before('8.0.0');
+
+            if ($laravelSeven) {
+                $factory = "factory($modelClass)";
+            } else {
+                $factory = 'Pet::factory()';
+            }
+
+            if ($this->forceRequired) {
+                $factory .= $laravelSeven
+                    ? '->state(\'full\')'
+                    : '->full()';
+            }
 
             return implode("\n", [
                 'function () {',
-                "    return factory($modelClass){$state}->create()->$foreignColumn;",
+                "    return {$factory}->create()->$foreignColumn;",
                 '}',
             ]);
         }
@@ -171,7 +191,7 @@ class ColumnFaker
         ];
 
         if (($fake = Arr::get($map, $this->table->type($this->column))) !== null) {
-            return "\$faker->$fake";
+            return $this->fakerPrefix() . "->$fake";
         }
     }
 
@@ -186,7 +206,7 @@ class ColumnFaker
 
         foreach ($potential as $name) {
             if ($this->fakerHasFormatter($name)) {
-                return "\$faker->$name";
+                return $this->fakerPrefix() . "->$name";
             }
         }
     }

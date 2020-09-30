@@ -4,28 +4,22 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use Ferreira\AutoCrud\Type;
-use Ferreira\AutoCrud\VersionChecker;
 use Ferreira\AutoCrud\Generators\ColumnFaker;
 use Ferreira\AutoCrud\Database\TableInformation;
-use Ferreira\AutoCrud\Generators\FactoryGenerator;
+use Ferreira\AutoCrud\Generators\LegacyFactoryGenerator;
 
-class FactoryGeneratorTest extends TestCase
+class LegacyFactoryGeneratorTest extends TestCase
 {
     /**
      * Create a generator that can be used to generate or save the expected file.
      *
      * @param TableInformation $table
      *
-     * @return FactoryGenerator
+     * @return LegacyFactoryGenerator
      */
-    private function generator($table): FactoryGenerator
+    private function generator($table): LegacyFactoryGenerator
     {
-        // Bind the generator we want to test (because the actual generator
-        // class may be a different one, since we can be running on laravel < 8)
-        app(VersionChecker::class)->mockVersion('8.0.0');
-        app()->bind(FactoryGenerator::class);
-
-        return app(FactoryGenerator::class, ['table' => $table]);
+        return app(LegacyFactoryGenerator::class, ['table' => $table]);
     }
 
     /** @test */
@@ -59,13 +53,8 @@ class FactoryGeneratorTest extends TestCase
             $this->mockTable('students')
         )->generate();
 
-        $this->assertCodeContains('
-            use Illuminate\Database\Eloquent\Factories\Factory;
-        ', $code);
-
-        $this->assertCodeContains('
-            class StudentFactory extends Factory
-        ', $code);
+        $this->assertStringContainsString('use Faker\Generator as Faker;', $code);
+        $this->assertStringContainsString('$factory->define(Student::class', $code);
     }
 
     /** @test */
@@ -99,16 +88,10 @@ class FactoryGeneratorTest extends TestCase
             ])
         )->generate();
 
-        $this->assertCodeContains('
-            public function full()
-            {
-                return $this->state(function (array $attributes) {
-                    return [
-                        \'pet\' => $this->faker->sentence,
-                    ];
-                });
-            }
-        ', $code);
+        $this->assertStringContainsString(
+            "\$factory->state(Student::class, 'full'",
+            $code
+        );
     }
 
     /** @test */
@@ -123,14 +106,15 @@ class FactoryGeneratorTest extends TestCase
             ])
         )->generate();
 
-        $this->assertCodeContains(
-                '
-            \'pet_id\' => function () {
-                return Pet::factory()->full()->create()->id;
-            },
-        ',
-            $code
-        );
+        $this->assertCodeContains("
+            \$factory->state(Student::class, 'full', function (Faker \$faker) {
+                return [
+                    'pet_id' => function () {
+                        return factory(Pet::class)->state('full')->create()->id;
+                    },
+                ];
+            });
+        ", $code);
     }
 
     /** @test */
