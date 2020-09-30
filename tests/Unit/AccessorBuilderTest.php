@@ -12,6 +12,11 @@ use Ferreira\AutoCrud\Database\DatabaseInformation;
 
 class AccessorBuilderTest extends TestCase
 {
+    private function builder(TableInformation $table): AccessorBuilder
+    {
+        return app(AccessorBuilder::class, ['table' => $table]);
+    }
+
     /**
      * Mocks the `DatabaseInformation` such that we can specify the label column
      * of any specific table. Note that only the last call to this method takes
@@ -37,7 +42,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_builds_labels_and_accessor()
     {
-        $builder = new AccessorBuilder($this->mockTable('tablename', [
+        $builder = $this->builder($this->mockTable('tablename', [
             'column' => [],
         ]));
 
@@ -49,7 +54,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_capitalizes_labels()
     {
-        $builder = new AccessorBuilder($this->mockTable('tablename', [
+        $builder = $this->builder($this->mockTable('tablename', [
             'name' => [],
             'wants_email' => [],
         ]));
@@ -61,7 +66,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_builds_simple_accessors()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'name' => [],
         ]));
 
@@ -79,7 +84,7 @@ class AccessorBuilderTest extends TestCase
 
         $this->mockLabelColumn('teams', 'name');
 
-        $builder = new AccessorBuilder($table);
+        $builder = $this->builder($table);
 
         $this->assertEquals('$player->team->name', $builder->simpleAccessor('team_id'));
     }
@@ -95,7 +100,7 @@ class AccessorBuilderTest extends TestCase
 
         $this->mockLabelColumn('shirts', null);
 
-        $builder = new AccessorBuilder($table);
+        $builder = $this->builder($table);
 
         $this->assertEquals('$player->shirt_id', $builder->simpleAccessor('shirt_id'));
     }
@@ -124,7 +129,7 @@ class AccessorBuilderTest extends TestCase
             });
         });
 
-        $builder = new AccessorBuilder($table);
+        $builder = $this->builder($table);
 
         $this->assertEquals(
             'factory(Player::class)->create()->name',
@@ -140,7 +145,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_builds_accessors_usable_in_views()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'name' => [],
         ]));
 
@@ -150,7 +155,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_formats_date_accessors_in_views()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'date' => ['type' => Type::DATE],
             'time' => ['type' => Type::TIME],
             'when' => ['type' => Type::DATETIME],
@@ -164,7 +169,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_formats_boolean_values()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'is_good' => ['type' => Type::BOOLEAN],
         ]));
 
@@ -174,7 +179,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_formats_nullable_boolean_values()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'is_good' => [
                 'type' => Type::BOOLEAN,
                 'required' => false,
@@ -190,7 +195,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_formats_only_when_the_value_is_not_null()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'date' => [
                 'type' => Type::DATE,
                 'required' => false,
@@ -214,7 +219,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_chops_text_columns_to_30_characters_in_views()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'notes' => [
                 'type' => Type::TEXT,
             ],
@@ -245,7 +250,7 @@ class AccessorBuilderTest extends TestCase
             });
         });
 
-        $builder = new AccessorBuilder($table);
+        $builder = $this->builder($table);
 
         $this->assertEquals(
             '<a href="{{ route(\'teams.show\', [\'team\' => $player->team_id]) }}">{{ $player->team->name }}</a>',
@@ -264,7 +269,7 @@ class AccessorBuilderTest extends TestCase
 
         $this->mockLabelColumn('teams', null);
 
-        $builder = new AccessorBuilder($table);
+        $builder = $this->builder($table);
 
         $this->assertEquals(
             '<a href="{{ route(\'teams.show\', [\'team\' => $player->team_id]) }}">Team #{{ $player->team_id }}</a>',
@@ -283,7 +288,7 @@ class AccessorBuilderTest extends TestCase
 
         $this->mockLabelColumn('magical_schools', null);
 
-        $builder = new AccessorBuilder($table);
+        $builder = $this->builder($table);
 
         $this->assertEquals(
             '<a href="{{ route(\'magical_schools.show\', [\'magical_school\' => $student->school_id]) }}">Magical school #{{ $student->school_id }}</a>',
@@ -294,7 +299,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_treats_sql_keywords_as_general_words()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'primary' => [],
         ]));
 
@@ -306,7 +311,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_does_not_cast_simple_accessors()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'birthday' => [
                 'type' => Type::DATE,
             ],
@@ -321,7 +326,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_casts_view_accessors_according_to_column_type()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'birthday' => [
                 'type' => Type::DATE,
             ],
@@ -336,7 +341,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_can_format_simple_accessors()
     {
-        $builder = new AccessorBuilder($this->mockTable('players', [
+        $builder = $this->builder($this->mockTable('players', [
             'date' => ['type' => Type::DATE],
             'time' => ['type' => Type::TIME],
             'when' => ['type' => Type::DATETIME],
@@ -361,7 +366,7 @@ class AccessorBuilderTest extends TestCase
         ]);
         $this->mockDatabase($students, $pets);
 
-        $builder = new AccessorBuilder($pets);
+        $builder = $this->builder($pets);
         $accessor = $builder->simpleAccessor('human_owner');
         $expectedRelationshipName = Str::between($accessor, '$pet->', '->name');
 
@@ -378,7 +383,7 @@ class AccessorBuilderTest extends TestCase
     /** @test */
     public function it_labels_id_columns_in_all_upper_case()
     {
-        $builder = new AccessorBuilder($this->mockTable('students', [
+        $builder = $this->builder($this->mockTable('students', [
             'id' => [],
         ]));
 

@@ -17,11 +17,10 @@ class AccessorBuilder
      */
     private $db;
 
-    public function __construct(TableInformation $table)
+    public function __construct(DatabaseInformation $db, TableInformation $table)
     {
+        $this->db = $db;
         $this->table = $table;
-
-        $this->db = app(DatabaseInformation::class);
     }
 
     public function label(string $column): string
