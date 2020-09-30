@@ -11,6 +11,9 @@
             <directory>./tests/Integration</directory>
         </testsuite>
     </testsuites>
+    <extensions>
+        <extension class="Ferreira\AutoCrud\TestDurationHook"/>
+    </extensions>
     <php>
         <env name="DB_CONNECTION" value="testing"/>
         <env name="DB_FOREIGN_KEYS" value="true"/>

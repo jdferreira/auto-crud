@@ -61,6 +61,9 @@
 
 - [ ] Allow `assertField` to test multiple fields simultaneously. This can potentially be used to test uniqueness of multiple columns or (if I'm brave enough) to test multiple-column foreign keys!
 
+- [ ] Speed up the tests
+  - This is not done (really! Some tests take more than 20 seconds... :|), but the scaffolding to easily detect long tests has been set in place.
+
 ## Configuration options:
 
 - [ ] Allow the user to specify the plural and singular forms of words, if they want
